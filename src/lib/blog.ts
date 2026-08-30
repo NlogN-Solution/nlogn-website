@@ -6,7 +6,11 @@ import { slugify } from "@/lib/utils";
 
 const BLOG_DIR = path.join(process.cwd(), "src/content/blog");
 
+/** Insights are the strategic pieces; posts are the practical ones. */
+export type PostKind = "insight" | "post";
+
 export type PostFrontmatter = {
+  kind?: PostKind;
   title: string;
   description: string;
   date: string;
@@ -61,6 +65,16 @@ export function getAllPosts(): Post[] {
     .filter((f) => /\.mdx?$/.test(f))
     .map(readPost)
     .sort((a, b) => +new Date(b.date) - +new Date(a.date));
+}
+
+/** Everything under one heading. Categories, tags and RSS stay across both. */
+export function getPostsByKind(kind: PostKind): Post[] {
+  return getAllPosts().filter((p) => (p.kind ?? "post") === kind);
+}
+
+/** The lead item for a listing — the flagged one, else the newest. */
+export function getLead(posts: Post[]): Post | undefined {
+  return posts.find((p) => p.featured) ?? posts[0];
 }
 
 export function getPost(slug: string): Post | undefined {

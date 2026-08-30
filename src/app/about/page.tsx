@@ -3,6 +3,7 @@ import { PageHero } from "@/components/site/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Method } from "@/components/about/method";
+import { TeamGrid } from "@/components/about/team-grid";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBand } from "@/components/site/cta-band";
 import { GrowthCurve } from "@/components/ui/growth-curve";
@@ -111,22 +112,7 @@ export default function AboutPage() {
           title="Everyone here does the work"
           lead="Four people. No layer between you and the person writing the code, the copy or the campaign."
         />
-        <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {team.map((member, i) => (
-            <Reveal as="li" key={member.name} delay={i * 0.07}>
-              <div className="h-full rounded-[24px] border border-line bg-surface p-8">
-                <span className="grid size-14 place-items-center rounded-2xl bg-ink font-display text-sm font-bold text-white">
-                  {member.initials}
-                </span>
-                <h3 className="mt-6 font-display text-lg font-bold tracking-tight text-ink">
-                  {member.name}
-                </h3>
-                <p className="mt-1 text-sm font-medium text-violet-deep">{member.role}</p>
-                <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted">{member.bio}</p>
-              </div>
-            </Reveal>
-          ))}
-        </ul>
+        <TeamGrid />
       </section>
 
       <section className="container-x pb-8">

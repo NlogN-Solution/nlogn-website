@@ -14,7 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "yearly", priority: 0.7 },
     { url: absoluteUrl("/process"), lastModified: now, changeFrequency: "yearly", priority: 0.7 },
     { url: absoluteUrl("/contact"), lastModified: now, changeFrequency: "yearly", priority: 0.8 },
+    { url: absoluteUrl("/resources"), lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: absoluteUrl("/insights"), lastModified: posts[0] ? new Date(posts[0].date) : now, changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/blog"), lastModified: posts[0] ? new Date(posts[0].date) : now, changeFrequency: "weekly", priority: 0.9 },
+    { url: absoluteUrl("/case-studies"), lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: absoluteUrl("/privacy"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: absoluteUrl("/terms"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
@@ -22,7 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticRoutes,
     ...works.map((w) => ({
-      url: absoluteUrl(`/works/${w.slug}`),
+      url: absoluteUrl(`/case-studies/${w.slug}`),
       lastModified: now,
       changeFrequency: "yearly" as const,
       priority: 0.7,

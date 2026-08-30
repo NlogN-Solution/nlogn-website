@@ -86,7 +86,7 @@ function ProjectCard({ project }: { project: CapabilityProject }) {
 
   return (
     <Link
-      href={`/works/${work.slug}`}
+      href={`/case-studies/${work.slug}`}
       className="group flex h-full flex-col rounded-[18px] border border-white/[0.09] bg-white/[0.025] p-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-violet/35 hover:bg-white/[0.05]"
     >
       {project.video && (

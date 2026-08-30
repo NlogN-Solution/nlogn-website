@@ -21,12 +21,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const work = works.find((w) => w.slug === slug);
   if (!work)
-    return buildMetadata({ title: "Case study not found", description: "", path: "/works", noIndex: true });
+    return buildMetadata({ title: "Case study not found", description: "", path: "/case-studies", noIndex: true });
 
   return buildMetadata({
     title: `${work.client} case study — ${work.title}`,
     description: work.summary,
-    path: `/works/${work.slug}`,
+    path: `/case-studies/${work.slug}`,
     type: "article",
   });
 }
@@ -41,8 +41,8 @@ export default async function WorkPage({ params }: Params) {
 
   const crumbs = [
     { name: "Home", path: "/" },
-    { name: "Works", path: "/works" },
-    { name: work.client, path: `/works/${work.slug}` },
+    { name: "Case studies", path: "/case-studies" },
+    { name: work.client, path: `/case-studies/${work.slug}` },
   ];
 
   return (
@@ -174,7 +174,7 @@ export default async function WorkPage({ params }: Params) {
               </div>
 
               <Link
-                href={`/works/${next.slug}`}
+                href={`/case-studies/${next.slug}`}
                 className="group mt-5 flex items-center justify-between gap-4 rounded-[26px] border border-line bg-surface p-8 transition-colors hover:border-violet/30"
               >
                 <span>
@@ -187,7 +187,7 @@ export default async function WorkPage({ params }: Params) {
               </Link>
 
               <Link
-                href="/works"
+                href="/case-studies"
                 className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-ink"
               >
                 <ArrowLeft className="size-4" aria-hidden />
@@ -207,7 +207,7 @@ export default async function WorkPage({ params }: Params) {
             "@type": "Article",
             headline: `${work.client}: ${work.title}`,
             description: work.summary,
-            url: absoluteUrl(`/works/${work.slug}`),
+            url: absoluteUrl(`/case-studies/${work.slug}`),
             author: { "@id": absoluteUrl("/#organization") },
             publisher: { "@id": absoluteUrl("/#organization") },
             datePublished: `${work.year}-01-01`,

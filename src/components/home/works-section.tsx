@@ -10,7 +10,7 @@ export function WorkCard({ work }: { work: (typeof works)[number] }) {
   const [headline, ...rest] = work.metrics;
   return (
     <Link
-      href={`/works/${work.slug}`}
+      href={`/case-studies/${work.slug}`}
       className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift"
     >
       <div
@@ -80,7 +80,7 @@ export function WorksSection() {
         }
         lead="Every project below lists what changed and by how much. Where a number is missing, it is because the client asked us not to publish it — not because it did not move."
         action={
-          <Button href="/works" variant="secondary" arrow>
+          <Button href="/case-studies" variant="secondary" arrow>
             All case studies
           </Button>
         }

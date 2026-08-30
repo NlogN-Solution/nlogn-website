@@ -34,11 +34,17 @@ const nextConfig: NextConfig = {
     return [
       { source: "/blog/feed", destination: "/blog/rss.xml", permanent: true },
       { source: "/rss.xml", destination: "/blog/rss.xml", permanent: true },
-      { source: "/portfolio", destination: "/works", permanent: true },
-      { source: "/case-studies", destination: "/works", permanent: true },
-      { source: "/case-studies/:slug", destination: "/works/:slug", permanent: true },
-      { source: "/services/web-design", destination: "/services/web-development", permanent: true },
-      { source: "/services/seo", destination: "/services/seo-and-content", permanent: true },
+      { source: "/portfolio", destination: "/case-studies", permanent: true },
+      // Case studies moved off /works, which is now the areas-of-work page.
+      { source: "/works/:slug", destination: "/case-studies/:slug", permanent: true },
+      // The per-service pages are gone; the disciplines live on /works. Listed
+      // explicitly so this can never shadow a static file under /public/services.
+      {
+        source:
+          "/services/:slug(web-development|seo-and-content|digital-marketing|it-solutions|brand-and-design|growth-retainers|web-design|seo)",
+        destination: "/works",
+        permanent: true,
+      },
       { source: "/about-us", destination: "/about", permanent: true },
       { source: "/contact-us", destination: "/contact", permanent: true },
     ];

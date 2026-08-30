@@ -70,7 +70,7 @@ export default function WorksPage() {
             mentions: works.map((work) => ({
               "@type": "CreativeWork",
               name: `${work.client} — ${work.title}`,
-              url: absoluteUrl(`/works/${work.slug}`),
+              url: absoluteUrl(`/case-studies/${work.slug}`),
             })),
           },
         ]}

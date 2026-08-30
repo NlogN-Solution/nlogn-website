@@ -10,7 +10,7 @@ import { getCategories } from "@/lib/blog";
 const company = [
   { label: "About us", href: "/about" },
   { label: "Our process", href: "/process" },
-  { label: "Case studies", href: "/works" },
+  { label: "Case studies", href: "/case-studies" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
@@ -86,7 +86,7 @@ export function SiteFooter() {
               {works.slice(0, 3).map((w) => (
                 <li key={w.slug}>
                   <Link
-                    href={`/works/${w.slug}`}
+                    href={`/case-studies/${w.slug}`}
                     className="text-[0.9375rem] text-muted transition-colors hover:text-ink"
                   >
                     {w.client}

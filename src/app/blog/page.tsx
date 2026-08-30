@@ -6,7 +6,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { NewsletterForm } from "@/components/site/newsletter-form";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { getAllPosts, getCategories, getFeaturedPost } from "@/lib/blog";
+import { getCategories, getLead, getPostsByKind } from "@/lib/blog";
 import { absoluteUrl } from "@/lib/utils";
 
 export const metadata: Metadata = buildMetadata({
@@ -22,8 +22,8 @@ const crumbs = [
 ];
 
 export default function BlogPage() {
-  const posts = getAllPosts();
-  const featured = getFeaturedPost();
+  const posts = getPostsByKind("post");
+  const featured = getLead(posts);
   const rest = posts.filter((p) => p.slug !== featured?.slug);
   const categories = getCategories();
 

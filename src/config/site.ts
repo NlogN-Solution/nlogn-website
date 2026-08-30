@@ -33,13 +33,40 @@ export const siteConfig = {
   videoUrl: process.env.NEXT_PUBLIC_SHOWREEL_URL ?? "",
 } as const;
 
-export const nav = [
+export type NavItem = {
+  label: string;
+  href: string;
+  /** Renders as a dropdown in the header and a nested list on mobile. */
+  children?: { label: string; href: string; description: string }[];
+};
+
+export const nav: NavItem[] = [
   { label: "Work", href: "/works" },
   { label: "Pricing", href: "/services" },
   { label: "About", href: "/about" },
   { label: "Process", href: "/process" },
-  { label: "Insights", href: "/blog" },
-] as const;
+  {
+    label: "Resources",
+    href: "/resources",
+    children: [
+      {
+        label: "Insights",
+        href: "/insights",
+        description: "Long-form pieces on what actually moves a number",
+      },
+      {
+        label: "Blog",
+        href: "/blog",
+        description: "Practical field notes from the build",
+      },
+      {
+        label: "Case studies",
+        href: "/case-studies",
+        description: "Client work with the baseline and the result",
+      },
+    ],
+  },
+];
 
 export type Service = {
   slug: string;
@@ -585,11 +612,39 @@ export const values = [
   },
 ];
 
+/**
+ * Source photos differ a lot — two studio headshots, two environmental shots —
+ * so each carries its own focal point for the 4:5 crop.
+ */
 export const team = [
-  { name: "Kabin Bhattarai", role: "Founder & Engineering Lead", initials: "KB", bio: "Fifteen years building web platforms. Writes the Node.js that the dashboards run on." },
-  { name: "Prasamsa Rai", role: "Design Director", initials: "PR", bio: "Leads identity and product design. Believes a design system is a maintenance decision." },
-  { name: "Nabin Gurung", role: "Head of Growth", initials: "NG", bio: "Runs SEO and paid. Reads server logs for fun and finds crawl budget nobody knew they were wasting." },
-  { name: "Sneha Maharjan", role: "Content Strategist", initials: "SM", bio: "Turns subject-matter interviews into content that ranks without sounding like it was written to rank." },
+  {
+    name: "Nischal Katwal",
+    role: "Growth & Business",
+    initials: "NK",
+    photo: "/teams/Nischal-Katwal.jpeg",
+    focus: "50% 42%",
+  },
+  {
+    name: "Kabin Ghimire",
+    role: "Technology & Systems",
+    initials: "KG",
+    photo: "/teams/Kabin-Ghimire.jpg",
+    focus: "48% 45%",
+  },
+  {
+    name: "Niroj Chamlagain",
+    role: "Marketing & Media",
+    initials: "NC",
+    photo: "/teams/Niroj-Chamlagain.jpeg",
+    focus: "50% 22%",
+  },
+  {
+    name: "Richard Pokhrel",
+    role: "Creative & Brand",
+    initials: "RP",
+    photo: "/teams/Richard-Pokhrel.jpeg",
+    focus: "56% 45%",
+  },
 ];
 
 export const testimonials = [
