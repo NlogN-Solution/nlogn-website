@@ -51,6 +51,17 @@ export const CLIENT_TABS: { id: ClientCategory; label: string }[] = [
 
 export const clientProjects: ClientProject[] = [
   {
+    id: "ignition",
+    clientName: "Ignition",
+    projectName: "Study in the UK",
+    category: "websites",
+    sector: "Education",
+    description:
+      "A UK study platform covering course and university search, a career quiz that narrows the options, and an application journey that runs from first visit through to enrolment.",
+    thumbnail: "/clients/ignition.png",
+    projectUrl: "https://ignition-website.vercel.app/",
+  },
+  {
     id: "ananta-legal",
     clientName: "Ananta Legal",
     projectName: "The Entrepreneur's Lawyers",
@@ -83,18 +94,6 @@ export const clientProjects: ClientProject[] = [
     thumbnail: "/clients/dream-high.png",
     projectUrl: "https://dream-high-education-academy.onrender.com/",
   },
-  {
-    id: "ignition",
-    clientName: "Ignition",
-    projectName: "Study in the UK",
-    category: "websites",
-    sector: "Education",
-    description:
-      "A UK study platform covering course and university search, a career quiz that narrows the options, and an application journey that runs from first visit through to enrolment.",
-    thumbnail: "/clients/ignition.png",
-    projectUrl: "https://ignition-website.vercel.app/",
-  },
-
   /*
    * Software builds go here, for example:
    *
