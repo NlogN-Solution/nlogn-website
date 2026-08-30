@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2678400,
+    // Next 16 only serves qualities listed here — anything else is coerced to
+    // the nearest one. 95 is for photography (the team portraits), which visibly
+    // softens at the 75 default.
+    qualities: [75, 95],
   },
 
   async headers() {
