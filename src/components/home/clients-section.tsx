@@ -118,74 +118,211 @@ function ProjectCard({ project }: { project: ClientProject }) {
   );
 }
 
-/* ── a video ────────────────────────────────────────────────────────────── */
+/* ── a film ─────────────────────────────────────────────────────────────── */
 
-function VideoCard({ video }: { video: ClientVideo }) {
+/**
+ * Films are shown as cinema cards: a dark stage holding the frame, a marquee
+ * across the top, and a ticket stub torn off underneath carrying the credits.
+ * The stage is sized to the source — 9:16 for a reel, 16:9 for a feature — so
+ * nothing is ever cropped or letterboxed to fit a grid.
+ */
+function FilmCard({ video, feature = false }: { video: ClientVideo; feature?: boolean }) {
   const [playing, setPlaying] = useState(false);
   const poster = video.videoPoster ?? cloudinaryPoster(video.videoUrl);
   const portrait = video.aspect === "portrait";
 
-  return (
-    <figure className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-violet/30 hover:shadow-lift">
-      <div
-        className={cn(
-          "relative overflow-hidden bg-ink",
-          portrait ? "aspect-[9/16]" : "aspect-video",
-        )}
-      >
-        {playing ? (
-          <video
-            src={cloudinaryVideo(video.videoUrl)}
-            poster={poster}
-            controls
-            autoPlay
-            playsInline
-            preload="metadata"
-            className="size-full object-cover"
-          >
-            <track kind="captions" />
-          </video>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setPlaying(true)}
-            aria-label={`Play ${video.clientName} — ${video.projectName}`}
-            className="absolute inset-0 size-full"
-          >
-            {poster && (
-              // Cloudinary serves the still; next/image would need the domain
-              // allow-listed, and this is already an optimised delivery URL.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={poster}
-                alt=""
-                loading="lazy"
-                className="size-full object-cover opacity-90 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
-              />
-            )}
-            <span
-              aria-hidden
-              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,11,15,0.15),rgba(11,11,15,0.45))]"
+  const stage = (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[20px] bg-black ring-1 ring-white/10",
+        portrait ? "aspect-[9/16]" : "aspect-video",
+      )}
+    >
+      {playing ? (
+        <video
+          src={cloudinaryVideo(video.videoUrl)}
+          poster={poster}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          className="size-full object-cover"
+        >
+          <track kind="captions" />
+        </video>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          aria-label={`Play ${video.clientName} — ${video.projectName}`}
+          className="absolute inset-0 size-full"
+        >
+          {poster && (
+            // Cloudinary serves the still; next/image would need the domain
+            // allow-listed, and this is already an optimised delivery URL.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={poster}
+              alt=""
+              loading="lazy"
+              className="size-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
             />
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-lift transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-            >
-              <Play className="size-6 translate-x-0.5 fill-ink" />
+          )}
+
+          {/* house lights: a vignette that lifts as the card is hovered */}
+          <span
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_45%,transparent_25%,rgba(4,2,10,0.55)_100%)] transition-opacity duration-700 group-hover:opacity-70"
+          />
+          <span
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(180deg,transparent,rgba(4,2,10,0.85))]"
+          />
+
+          {/* the projector button */}
+          <span
+            aria-hidden
+            className={cn(
+              "absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-ink shadow-[0_18px_45px_-12px_rgba(0,0,0,0.8)] backdrop-blur transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:bg-white",
+              feature ? "size-[4.5rem]" : "size-14",
+            )}
+          >
+            <span className="absolute inset-0 rounded-full ring-1 ring-white/40 transition-all duration-700 group-hover:scale-[1.35] group-hover:opacity-0" />
+            <Play className={cn("translate-x-0.5 fill-ink", feature ? "size-7" : "size-5")} />
+          </span>
+
+          {/* the title card, over the scrim */}
+          <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5">
+            <span className="min-w-0">
+              <span className="block truncate font-display text-[1.0625rem] font-bold tracking-[-0.03em] text-white">
+                {video.clientName}
+              </span>
+              <span className="mt-0.5 block truncate text-[0.8125rem] font-medium text-violet-soft">
+                {video.projectName}
+              </span>
             </span>
-          </button>
-        )}
+            <span className="label shrink-0 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[0.5625rem] text-white/80 backdrop-blur">
+              {portrait ? "9:16" : "16:9"}
+            </span>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+
+  const credits = (
+    <div className="relative">
+      {/* the tear — a perforated line, notched into both edges of the card */}
+      {/* 2.25rem = the card's two paddings (0.5 + 0.5) plus the stub's own
+          0.75, plus half a notch — which puts each circle's centre exactly on
+          the card edge, where `overflow-hidden` bites the other half off. */}
+      <span
+        aria-hidden
+        className="absolute -left-9 top-0 size-4 -translate-y-1/2 rounded-full bg-canvas"
+      />
+      <span
+        aria-hidden
+        className="absolute -right-9 top-0 size-4 -translate-y-1/2 rounded-full bg-canvas"
+      />
+      <span aria-hidden className="block border-t border-dashed border-white/20" />
+
+      <div className={cn("pt-5", feature ? "" : "min-h-[6.5rem]")}>
+        <p className="label text-violet-soft">{video.sector}</p>
+        <p className="mt-2.5 text-[0.875rem] leading-relaxed text-white/65">
+          {video.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <figure
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(165deg,#16101f_0%,#0b0810_60%,#0d0716_100%)] p-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/40 hover:shadow-[0_30px_70px_-30px_rgba(69,38,201,0.65)]",
+      )}
+    >
+      {/* marquee */}
+      <div className="flex items-center justify-between gap-3 px-3.5 py-3">
+        <span className="flex items-center gap-2">
+          <Clapperboard className="size-3.5 text-violet-soft" strokeWidth={2} aria-hidden />
+          <span className="label text-[0.5625rem] text-white/55">
+            {feature ? "Feature" : "Reel"}
+          </span>
+        </span>
+        <span aria-hidden className="flex items-center gap-1">
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} className="block h-1 w-3 rounded-full bg-white/12" />
+          ))}
+        </span>
       </div>
 
-      <figcaption className="flex flex-1 flex-col p-6 md:p-7">
-        <p className="label text-violet">{video.sector}</p>
-        <h4 className="mt-3 font-display text-lg font-bold tracking-[-0.03em] text-ink">
-          {video.clientName}
-        </h4>
-        <p className="mt-1 text-[0.9375rem] font-medium text-violet-deep">{video.projectName}</p>
-        <p className="mt-3 flex-1 text-[0.875rem] leading-relaxed text-muted">{video.description}</p>
-      </figcaption>
+      {feature ? (
+        <div className="grid flex-1 gap-5 p-2 lg:grid-cols-[1.35fr_1fr] lg:gap-7">
+          {stage}
+          <figcaption className="flex flex-col justify-center pb-3 pr-3 lg:py-4">
+            <p className="label text-violet-soft">{video.sector}</p>
+            <h4 className="mt-4 font-display text-[clamp(1.35rem,1rem+1vw,1.9rem)] font-bold leading-[1.1] tracking-[-0.035em] text-white">
+              {video.clientName}
+            </h4>
+            <p className="mt-2 text-[1.0625rem] font-medium text-violet-soft">
+              {video.projectName}
+            </p>
+            <p className="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-white/65">
+              {video.description}
+            </p>
+            <span aria-hidden className="mt-7 block h-px w-full bg-white/12">
+              <span className="block h-px w-10 bg-[linear-gradient(90deg,#a78bfa,#6c47ff)] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
+            </span>
+          </figcaption>
+        </div>
+      ) : (
+        <div className="flex flex-1 flex-col p-2">
+          {stage}
+          <figcaption className="mt-5 px-3 pb-3">{credits}</figcaption>
+        </div>
+      )}
     </figure>
+  );
+}
+
+/** The films, arranged as a bill: the wide cut plays as the feature, the
+ *  vertical cuts sit under it as the supporting reels. */
+function MediaShowcase({ videos }: { videos: ClientVideo[] }) {
+  const features = videos.filter((v) => v.aspect === "landscape");
+  const reels = videos.filter((v) => v.aspect !== "landscape");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-4">
+        <span className="flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-2">
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-violet opacity-60" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-violet" />
+          </span>
+          <span className="label text-ink-soft">Now showing</span>
+        </span>
+        <span aria-hidden className="h-px flex-1 bg-line" />
+        <span className="label text-muted">
+          {videos.length} {videos.length === 1 ? "film" : "films"}
+        </span>
+      </div>
+
+      {features.map((video, i) => (
+        <Reveal key={video.id} delay={i * 0.06}>
+          <FilmCard video={video} feature />
+        </Reveal>
+      ))}
+
+      {reels.length > 0 && (
+        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {reels.map((video, i) => (
+            <Reveal as="li" key={video.id} delay={(i % 3) * 0.07} className="h-full">
+              <FilmCard video={video} />
+            </Reveal>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -295,28 +432,17 @@ export function ClientsSection() {
             transition={{ duration: 0.4, ease: EASE }}
           >
             {count > 0 ? (
-              <ul
-                className={cn(
-                  "grid gap-5",
-                  isMedia ? "sm:grid-cols-2 lg:grid-cols-4" : "lg:grid-cols-2",
-                )}
-              >
-                {videos.map((video, i) => (
-                  <Reveal
-                    as="li"
-                    key={video.id}
-                    delay={(i % 4) * 0.07}
-                    className={cn("h-full", video.aspect === "landscape" && "sm:col-span-2")}
-                  >
-                    <VideoCard video={video} />
-                  </Reveal>
-                ))}
-                {projects.map((project, i) => (
-                  <Reveal as="li" key={project.id} delay={(i % 2) * 0.08} className="h-full">
-                    <ProjectCard project={project} />
-                  </Reveal>
-                ))}
-              </ul>
+              isMedia ? (
+                <MediaShowcase videos={videos} />
+              ) : (
+                <ul className="grid gap-5 lg:grid-cols-2">
+                  {projects.map((project, i) => (
+                    <Reveal as="li" key={project.id} delay={(i % 2) * 0.08} className="h-full">
+                      <ProjectCard project={project} />
+                    </Reveal>
+                  ))}
+                </ul>
+              )
             ) : (
               <div className="flex min-h-[26rem] flex-col items-start justify-center gap-6 rounded-[26px] border border-dashed border-line bg-surface p-10 md:flex-row md:items-center md:justify-between md:p-12">
                 <div className="flex items-start gap-5">

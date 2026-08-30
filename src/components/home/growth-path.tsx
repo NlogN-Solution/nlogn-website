@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
  *    assumed a tall viewport and clipped its own heading and outcome text off
  *    the top and bottom of a laptop screen.
  *  · Stacked — everywhere else. No pinning, no scroll scrubbing, nothing that
- *    can clip: each stage is simply laid out in full and revealed on entry.
+ *    can clip: each stage is simply laid out in full, one after the other.
  *
  * Nothing animates layout. Stage changes are opacity/transform only, and the
  * readout bars scale rather than resize, so the whole section stays on the
@@ -40,7 +40,7 @@ const STAGE_VH = 85;
 
 /** The pinned rendering needs both the width for two columns and the height to
  *  show a stage without cropping it. Below either, the stack is the better UI. */
-const PINNABLE = "(min-width: 1024px) and (min-height: 500px)";
+const PINNABLE = "(min-width: 1024px) and (min-height: 640px)";
 
 const LENS_ICONS = [Megaphone, Search, MonitorSmartphone, Workflow] as const;
 
@@ -393,12 +393,15 @@ function StageCopy({ step, compact }: { step: GrowthStep; compact?: boolean }) {
 
       <div className={compact ? "relative" : undefined}>
         <AnimatePresence mode="popLayout" initial={false}>
+          {/* The outgoing stage leaves quickly and the incoming one waits that
+              long before starting, so the two never sit legibly on top of each
+              other — and because the exit is out of flow, nothing jumps. */}
           <motion.div
             key={step.n}
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            transition={{ duration: 0.4, ease: EASE }}
+            exit={{ opacity: 0, y: -12, transition: { duration: 0.16, ease: "easeIn" } }}
+            transition={{ duration: 0.34, ease: EASE, delay: 0.16 }}
           >
             <h3
               className={cn(
@@ -508,12 +511,11 @@ function PinnedPath() {
   const total = growthPath.length;
 
   /*
-   * Scroll is read here rather than with `useScroll`. Given a target and a
-   * view-timeline-shaped offset, that hook hands progress to a native
-   * ScrollTimeline — which drives accelerated animations but leaves the
-   * MotionValue itself sitting at 0 in JS, so neither the stage index nor the
-   * rail ever moved. One rAF-throttled read gives both, and makes `goTo`
-   * arithmetic that exactly matches what the section reports back.
+   * Scroll is read here rather than through `useScroll` so that one piece of
+   * arithmetic drives all three consumers — the stage index, the rail's live
+   * segment and the `goTo` jump — and a click on stop four therefore lands
+   * exactly where stage four begins. One rAF-throttled read per frame, on a
+   * passive listener; the section itself never re-renders per frame.
    */
   const progress = useMotionValue(0);
 
