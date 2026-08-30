@@ -1,26 +1,271 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────────────────────
+   nlogn design tokens
+   Canvas: warm-neutral off-white. Ink: near-black.
+   Accent: a single violet ramp, spent only on growth signals.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --color-ink: #0b0b0f;
+  --color-ink-soft: #3f3f4a;
+  --color-muted: #74747f;
+  --color-canvas: #f4f1f9;
+  --color-canvas-2: #eae5f4;
+  --color-surface: #ffffff;
+  --color-line: #e8e4f2;
+  --color-line-soft: #f0edf7;
+
+  --color-violet: #6c47ff;
+  --color-violet-soft: #a78bfa;
+  --color-violet-deep: #4526c9;
+  --color-violet-wash: #f1edff;
+
+  /* Dark hero */
+  --color-night: #0a0611;
+  --color-night-2: #150c24;
+  --color-night-3: #1d1233;
+  --color-magenta: #e879f9;
+  --color-night-line: #ffffff1a;
+  --color-night-muted: #a5a0b5;
+
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 34px;
+
+  --shadow-soft: 0 1px 2px rgb(11 11 15 / 0.04), 0 8px 24px -12px rgb(11 11 15 / 0.10);
+  --shadow-lift: 0 2px 4px rgb(11 11 15 / 0.04), 0 24px 48px -20px rgb(11 11 15 / 0.18);
+  --shadow-glass: 0 30px 80px -30px rgb(69 38 201 / 0.35);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-marquee: marquee 42s linear infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 14s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -18px, 0); }
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes streak {
+  0%, 100% { opacity: 0.12; transform: scaleY(0.75); }
+  50% { opacity: 0.5; transform: scaleY(1); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  /*
+   * The layout is drawn against a 16px root, which reads oversized on a laptop
+   * — type, spacing and radii all scale from it. Stepping the root down on wide
+   * viewports shrinks the whole system proportionally instead of retuning every
+   * section. Media queries always resolve rem against the initial 16px, so no
+   * breakpoint moves.
+   */
+  @media (min-width: 1024px) {
+    html { font-size: 93.75%; } /* 15px */
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-violet);
+    color: #fff;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  :focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Utility label — mono, tracked out. Used for eyebrows and data. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .container-x {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .container-x { padding-inline: 2rem; } }
+
+  /* The hero runs slightly wider than the rest of the site, per the design. */
+  .container-hero {
+    width: 100%;
+    max-width: 1304px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .container-hero { padding-inline: 2rem; } }
+  @media (min-width: 1280px) { .container-x { padding-inline: 2.5rem; } }
+
+  /* "real growth." — light violet deepening into indigo, left to right */
+  .text-gradient-hero {
+    background: linear-gradient(94deg, #a78bfa 0%, #8b5cf6 24%, #6c47ff 50%, #4526c9 78%, #2f0f9e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-violet {
+    background: linear-gradient(96deg, var(--color-violet) 0%, var(--color-violet-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: linear-gradient(150deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.42));
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.85);
+  }
+  .hairline { border-color: var(--color-line); }
+
+  /* Above-the-fold entrances run in CSS, so nothing depends on JS to be seen. */
+  .anim-in {
+    animation: fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .anim-pop {
+    animation: pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+}
+
+/* Prose for MDX blog posts */
+.prose-nlogn {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-ink-soft);
+}
+.prose-nlogn > * + * { margin-top: 1.35em; }
+.prose-nlogn h2 {
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 1.95rem);
+  color: var(--color-ink);
+  font-weight: 700;
+  margin-top: 2.6em;
+  scroll-margin-top: 7rem;
+}
+.prose-nlogn h3 {
+  font-size: 1.25rem;
+  color: var(--color-ink);
+  font-weight: 700;
+  margin-top: 2em;
+  scroll-margin-top: 7rem;
+}
+.prose-nlogn a {
+  color: var(--color-violet-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.prose-nlogn a:hover { color: var(--color-violet); }
+/* rehype-autolink-headings wraps heading text in an anchor — keep it a heading. */
+.prose-nlogn :is(h2, h3) a {
+  color: inherit;
+  text-decoration: none;
+}
+.prose-nlogn :is(h2, h3) a:hover {
+  color: var(--color-violet-deep);
+}
+.prose-nlogn strong { color: var(--color-ink); font-weight: 600; }
+.prose-nlogn ul, .prose-nlogn ol { padding-left: 1.15rem; }
+.prose-nlogn ul { list-style: disc; }
+.prose-nlogn ol { list-style: decimal; }
+.prose-nlogn li::marker { color: var(--color-violet-soft); }
+.prose-nlogn li + li { margin-top: 0.5em; }
+.prose-nlogn blockquote {
+  border-left: 2px solid var(--color-violet);
+  padding-left: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.55;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+.prose-nlogn code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--color-canvas-2);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  color: var(--color-violet-deep);
+}
+.prose-nlogn pre {
+  background: #0b0b0f;
+  color: #e7e7ef;
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.prose-nlogn pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+.prose-nlogn img { border-radius: var(--radius-md); }
+.prose-nlogn hr { border-color: var(--color-line); margin-block: 2.5em; }
+.prose-nlogn table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.prose-nlogn th, .prose-nlogn td { border: 1px solid var(--color-line); padding: 0.7rem 0.9rem; text-align: left; }
+.prose-nlogn th { background: var(--color-canvas); color: var(--color-ink); font-weight: 600; }
+
+/* sugar-high tokens */
+.prose-nlogn pre .sh__token--keyword { color: #c4b5fd; }
+.prose-nlogn pre .sh__token--string { color: #a5e6b8; }
+.prose-nlogn pre .sh__token--comment { color: #6b6b7a; }
+.prose-nlogn pre .sh__token--identifier { color: #e7e7ef; }
+.prose-nlogn pre .sh__token--property { color: #93c5fd; }
+.prose-nlogn pre .sh__token--entity { color: #fcd34d; }
+
+/* Scroll reveals are an enhancement: without scripting, show everything. */
+@media (scripting: none) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

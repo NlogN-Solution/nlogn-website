@@ -1,0 +1,125 @@
+---
+title: "Choosing a Next.js rendering strategy, page type by page type"
+description: "Static, dynamic, streamed or client-rendered — the decision is per route, not per project. Here is the table we use, and what each choice costs in practice."
+date: "2026-06-18"
+category: "Web Development"
+tags: ["Next.js", "React", "Architecture", "Performance"]
+author: "Kabin Bhattarai"
+authorRole: "Founder & Engineering Lead"
+keywords: ["next.js rendering", "app router", "ISR", "server components", "streaming SSR"]
+---
+
+"Should we use SSR or SSG?" is the wrong question, and it has been for a while. In the App Router the unit of decision is the route, and most real applications use three or four strategies at once.
+
+<Takeaway>
+Default to static. Move to revalidation when content changes without a deploy. Move to dynamic only when the response genuinely depends on the request. Stream the parts that are slow instead of making the whole page wait.
+</Takeaway>
+
+## The decision table
+
+| Page type | Strategy | Why |
+| --- | --- | --- |
+| Marketing, about, pricing | Static | Changes on deploy. Nothing to gain from rendering per request. |
+| Blog posts, docs | Static + on-demand revalidation | Publish without redeploying; keep CDN speed. |
+| Product listings | ISR, 60–300s | Prices and stock move, but not per visitor. |
+| Search results | Dynamic | Depends entirely on the query. |
+| Dashboards | Dynamic + streaming | Per-user data, but the shell can paint immediately. |
+| Checkout | Dynamic | Cookies, session, inventory checks. |
+
+## Static is the default, and it is easy to lose
+
+A route in the App Router is static unless something makes it dynamic. The things that make it dynamic are easy to introduce by accident:
+
+- `cookies()`, `headers()`, or `searchParams` read during render
+- `fetch` with `cache: "no-store"`
+- `export const dynamic = "force-dynamic"`
+- Any of the above in a component *anywhere* in the tree
+
+That last point is the one that catches teams. A layout-level analytics component reading headers will make every page under it dynamic. Check the build output:
+
+```
+Route (app)                     Size     First Load JS
+┌ ○ /                           2.1 kB          98 kB
+├ ○ /services                   1.8 kB          94 kB
+├ ● /blog/[slug]                3.4 kB         102 kB
+└ ƒ /dashboard                  4.2 kB         112 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML with generateStaticParams
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+Any `ƒ` you did not intend is a bug, and usually a 500ms TTFB regression.
+
+## Revalidation instead of redeployment
+
+For content that editors change, `revalidate` gives you static delivery with editorial freshness:
+
+```ts
+// Time-based: at most one regeneration per minute
+export const revalidate = 60;
+```
+
+For a CMS, on-demand is better than a timer — regenerate exactly when something changes:
+
+```ts
+// app/api/revalidate/route.ts
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+export async function POST(request: Request) {
+  const secret = request.headers.get("x-webhook-secret");
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return NextResponse.json({ error: "Not authorised" }, { status: 401 });
+  }
+
+  const { slug } = await request.json();
+  revalidatePath(`/blog/${slug}`);
+  revalidatePath("/blog");
+
+  return NextResponse.json({ revalidated: true });
+}
+```
+
+Point your CMS webhook at it. Publishing now updates the live page in about a second, and every other request still hits the CDN.
+
+## Streaming is for slow data, not all data
+
+Streaming lets you send the shell immediately and fill in slow regions as their data resolves. It is a real win when one part of a page is genuinely slow — a third-party API, an expensive aggregate — and a mistake when applied to everything, because each boundary is a layout shift the user watches.
+
+```jsx
+export default function DashboardPage() {
+  return (
+    <>
+      <DashboardHeader />          {/* instant */}
+      <Suspense fallback={<StatsSkeleton />}>
+        <RevenueStats />           {/* 800ms aggregate query */}
+      </Suspense>
+      <Suspense fallback={<FeedSkeleton />}>
+        <ActivityFeed />           {/* third-party API */}
+      </Suspense>
+    </>
+  );
+}
+```
+
+The rule we use: a boundary is justified if the wrapped region takes more than 300ms and the page is useful without it.
+
+## Where Node.js still earns its place
+
+Server Components cover data fetching for rendering. They do not cover everything an application needs, and we still run a Node.js layer for:
+
+- **Webhooks and integrations** — payment callbacks, CRM syncs, CMS publish hooks
+- **Scheduled work** — nightly imports, report generation, cache warming
+- **Long-running jobs** — anything past a serverless timeout
+- **Transactional email** — nodemailer needs the Node runtime, so route handlers that send mail declare `export const runtime = "nodejs"`
+
+Keeping this layer separate from rendering keeps the rendering path fast and the background work observable.
+
+## The short version
+
+Start static. Add revalidation when editors need control. Go dynamic only where the request genuinely determines the response, and stream the slow parts rather than the whole page. Then read the build output on every pull request to make sure nobody has quietly turned your homepage dynamic.
+
+We build this way on every project — [see how the process runs](/process).

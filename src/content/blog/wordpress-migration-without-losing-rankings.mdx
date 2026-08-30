@@ -1,0 +1,107 @@
+---
+title: "Migrating off WordPress without losing your rankings"
+description: "We have moved fourteen sites to Next.js. The three that dipped all made the same mistake, and it was not a technical one."
+date: "2026-03-14"
+category: "Web Development"
+tags: ["Site Migration", "WordPress", "Next.js", "Technical SEO"]
+author: "Kabin Bhattarai"
+authorRole: "Founder & Engineering Lead"
+keywords: ["wordpress to next.js", "site migration", "301 redirects", "seo migration checklist"]
+---
+
+The fear is reasonable. You have spent years earning rankings and a migration puts all of them on the table at once. But of the fourteen migrations we have run, eleven gained organic traffic within six weeks and the three that dipped share one cause: content was changed at the same time as URLs.
+
+<Takeaway>
+Migrate the platform and the content in separate releases. When both change at once and traffic drops, you cannot tell which one did it — and you cannot roll back a rewrite.
+</Takeaway>
+
+## Phase 1: inventory, before anything is built
+
+Export every URL that exists, from four sources, and deduplicate:
+
+```bash
+# 1. The sitemap
+curl -s https://example.com/sitemap_index.xml -o sitemaps.xml
+
+# 2. Pages with organic clicks (Search Console export, last 16 months)
+# 3. Pages with backlinks (Ahrefs / Search Console links report)
+# 4. A full crawl of the live site
+```
+
+The fourth source always finds URLs the first three miss: old campaign pages, PDFs, author archives, attachment pages. WordPress in particular generates attachment URLs, tag archives and paginated series that nobody remembers creating.
+
+For each URL record organic sessions, entrance conversions, and referring domains for the last twelve months. This spreadsheet is the migration.
+
+## Phase 2: decide the fate of every URL
+
+Three options only:
+
+- **Keep** — same content, same or new URL, 301 if changed
+- **Merge** — content folds into another page, 301 to that page
+- **Retire** — genuinely dead, return 410 rather than 301
+
+Redirecting a retired page to the homepage is the worst option. Google treats it as a soft 404, and you have taught your users nothing. A 410 is honest and gets the URL out of the index cleanly.
+
+Two rules that prevent most of the damage:
+
+1. Never redirect into a chain. Every old URL points directly at its final target.
+2. Never redirect across intent. A product page redirects to a product page, not to a category.
+
+## Phase 3: build with the old URLs in hand
+
+The redirect map should exist before routing is designed, because it constrains the URL structure. If `/services/web-design/` has 400 backlinks, you have a decision to make about whether the new site uses that path or accepts a redirect. Make that decision deliberately, in week two, rather than discovering it in launch week.
+
+Content model next. WordPress content is HTML soup with shortcodes; the migration is your chance to turn it into structured fields. Write the importer as a script you can run repeatedly, not a one-off manual pass:
+
+```ts
+// Pull from the WordPress REST API and normalise into your content model
+const res = await fetch(`${WP}/wp-json/wp/v2/posts?per_page=100&page=${page}`);
+const posts = await res.json();
+
+return posts.map((p) => ({
+  slug: p.slug,
+  title: decode(p.title.rendered),
+  date: p.date_gmt,
+  html: p.content.rendered,
+  categories: p.categories,
+  legacyUrl: p.link,          // this is what feeds the redirect map
+}));
+```
+
+Keeping `legacyUrl` on every record means the redirect map generates itself and stays correct as content is re-imported.
+
+## Phase 4: launch week
+
+The order matters.
+
+1. Deploy to a staging domain with `noindex` and crawl it fully. Fix every 404, chain and missing canonical.
+2. Test the redirect map against the full inventory — automatically, not by sampling.
+3. Ship with DNS TTL lowered to 300 seconds the day before, so a rollback is minutes rather than hours.
+4. Submit the new sitemap in Search Console immediately. Keep the old sitemap live and submitted for two weeks; it accelerates redirect discovery.
+5. Use the URL Inspection tool on your top twenty pages to request indexing directly.
+
+```bash
+# Verify every legacy URL resolves in one hop to a 200
+while read -r url; do
+  code=$(curl -o /dev/null -s -w "%{http_code}" -L --max-redirs 2 "$url")
+  hops=$(curl -o /dev/null -s -w "%{num_redirects}" -L "$url")
+  [ "$code" != "200" ] || [ "$hops" -gt 1 ] && echo "$code $hops $url"
+done < legacy-urls.txt
+```
+
+Anything this prints is a launch blocker.
+
+## Phase 5: the four weeks after
+
+Expect a wobble. Rankings typically move around for ten to twenty days while Google re-crawls and re-evaluates. What you are watching for is the difference between noise and a problem:
+
+- **Normal:** individual keywords moving a few positions, impressions flat, coverage stable
+- **Problem:** indexed page count dropping, "Crawled — currently not indexed" growing, a whole template's worth of pages losing position together
+
+Check Search Console daily for the first fortnight. Most real migration problems announce themselves within 72 hours, and almost all of them are a redirect that was missed or a template that ships the wrong canonical.
+
+## And the content rewrite
+
+Do it in the release after. Six weeks later, when the migration has settled and you have a clean baseline, rewrite the pages you always meant to rewrite. Then you will know what the rewrite did, because it will be the only thing that changed.
+
+We run this process on every migration — [see the full engagement structure](/process), or [tell us about your current site](/contact).

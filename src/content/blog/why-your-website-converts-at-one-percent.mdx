@@ -1,0 +1,73 @@
+---
+title: "Why your website converts at 1%, and the three fixes that changed it"
+description: "Across eleven audits, the same three problems accounted for most of the gap between traffic and enquiries. None of them was the design."
+date: "2026-05-28"
+category: "Growth"
+tags: ["Conversion", "UX", "Analytics", "Landing Pages"]
+author: "Sneha Maharjan"
+authorRole: "Content Strategist"
+keywords: ["conversion rate optimisation", "website conversion", "landing page", "lead generation"]
+---
+
+A client came to us last year with 12,000 monthly visits and 40 enquiries. Their assumption, reasonably, was that the site looked dated. We rebuilt it — and before touching the visual design, we found three problems that were costing far more than the aesthetics.
+
+<Takeaway>
+Most conversion problems are not design problems. They are a mismatch between what the visitor arrived to do and what the page asks them to do next.
+</Takeaway>
+
+## Problem 1: the page answers a different question than the visitor asked
+
+Their highest-traffic page ranked for "how much does a solar system cost in Nepal". It received 3,000 visits a month. It was a company overview page with a "Contact us" button.
+
+Someone typing that query has one question. If the page does not answer it in the first screen, they go back to the results and ask someone else. The fix was not a redesign; it was answering the question — a price range, the three variables that move it, and a calculator that produced a personal number.
+
+Enquiries from that page went from 4 a month to 31. The design did not change.
+
+To find your version of this, open Search Console, sort landing pages by impressions, and for each of the top ten write down the question the query implies. Then open the page and time how long it takes to answer it. Anything over five seconds is a leak.
+
+## Problem 2: the form asks for more than the visit is worth
+
+Their contact form had eleven fields, including "How did you hear about us?" and a required phone number. Field-level analytics showed 68% of people who started the form abandoned it, most at the phone field.
+
+The trade is simple: every field costs you completions and buys you qualification. Ask only for what you need to have the next conversation.
+
+- **Cold traffic, top of funnel:** email only, plus one qualifying question
+- **Warm traffic, pricing page:** name, email, one sentence about the need
+- **Sales-ready, demo request:** add company and budget, since the qualification is now worth the drop-off
+
+We cut their form to four fields and moved the phone number to a post-submission thank-you step, where it is optional. Completions rose 2.4x. Lead quality, measured as the proportion that reached a call, did not change.
+
+## Problem 3: nothing measures what actually matters
+
+Their analytics recorded pageviews. It did not record form starts, form completions, calculator use, or which pages preceded a conversion. Every conversation about performance was therefore an argument about opinions.
+
+The minimum instrumentation:
+
+```ts
+// Fire on real intent, not on page load
+export function trackEvent(name: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  window.dataLayer?.push({ event: name, ...params });
+}
+
+// form start (first field focus), form submit, calculator complete,
+// pricing viewed, phone number revealed
+```
+
+With that in place, "the site is not converting" becomes "the form starts at a healthy rate and dies at field seven", which is a fixable statement.
+
+## What we did not change
+
+We kept their photography, their colour scheme and their logo. We rewrote the top four landing pages, cut the form, and instrumented the funnel. Conversion went from 0.9% to 3.1% before the visual redesign shipped.
+
+That is not an argument against design. Good design makes the answer easier to read, the form less daunting and the trust signals credible. It is an argument for fixing the message and the mechanics first, because they are cheaper and they move more.
+
+## The order to work in
+
+1. Map your top ten landing pages to the query intent that brings people there.
+2. Rewrite the first screen of each to answer that question directly.
+3. Cut every form field that does not change your next action.
+4. Instrument form starts, completions and any interactive tool.
+5. Wait four weeks, read the data, then redesign what the data says is broken.
+
+Want us to run this on your site? [Tell us your current numbers](/contact) and we will tell you where the leak is.

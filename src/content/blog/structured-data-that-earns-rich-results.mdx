@@ -1,0 +1,99 @@
+---
+title: "Structured data that actually earns rich results"
+description: "Most schema markup on the web is valid and useless. The difference between the markup that earns a rich result and the markup that does nothing comes down to four rules."
+date: "2026-04-30"
+category: "SEO"
+tags: ["Structured Data", "Schema.org", "Technical SEO", "Rich Results"]
+author: "Nabin Gurung"
+authorRole: "Head of Growth"
+keywords: ["structured data", "schema markup", "rich results", "json-ld", "faq schema"]
+---
+
+Adding schema markup is easy. Adding schema markup that changes how you appear in search is not, and validity has almost nothing to do with it. We have seen sites with immaculate JSON-LD across every template and not a single rich result to show for it.
+
+<Takeaway>
+Google shows a rich result when the markup describes something a user can see on the page, in a type it currently supports, on a page good enough to rank in the first place. Miss any of the three and valid markup earns nothing.
+</Takeaway>
+
+## Rule 1: mark up what is visible
+
+This is the rule that gets sites into trouble. Markup must describe content the visitor can see. `FAQPage` markup on a page with no visible FAQ, review ratings the page does not display, prices that differ from the ones shown — each is a policy violation, and the penalty is losing rich results across the whole site rather than on the one page.
+
+The test is simple: could a person looking at the rendered page verify every property in your JSON-LD? If not, remove the property.
+
+## Rule 2: use the types that are actually supported
+
+Schema.org defines hundreds of types. Google's search gallery supports around thirty, and it changes. As of now, the ones that reliably earn a visual difference for business sites:
+
+- `Product` with `Offer` — price, availability and rating in the result
+- `Article` / `BlogPosting` — publish date and author attribution
+- `BreadcrumbList` — the path replaces the URL line
+- `LocalBusiness` — hours, address and phone in local results
+- `Event`, `Recipe`, `Course`, `JobPosting` — for the obvious verticals
+- `VideoObject` — thumbnail and key moments
+
+`FAQPage` and `HowTo` are still worth adding for entity understanding, but their visual treatment has been reduced to a narrow set of sites. Do not build a content strategy around them.
+
+Everything else — `Service`, `Organization`, `WebSite` — is about entity understanding rather than pixels. Still worth it, but do not expect a visible change.
+
+## Rule 3: connect the entities with @id
+
+Most sites emit disconnected islands of markup: an `Organization` on one page, a `BlogPosting` on another, no relationship between them. Using `@id` references turns the pieces into a graph:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nlogn.com/#organization",
+      "name": "nlogn",
+      "url": "https://nlogn.com"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://nlogn.com/#website",
+      "url": "https://nlogn.com",
+      "publisher": { "@id": "https://nlogn.com/#organization" }
+    },
+    {
+      "@type": "BlogPosting",
+      "headline": "Structured data that actually earns rich results",
+      "isPartOf": { "@id": "https://nlogn.com/#website" },
+      "publisher": { "@id": "https://nlogn.com/#organization" },
+      "author": {
+        "@type": "Person",
+        "name": "Nabin Gurung",
+        "worksFor": { "@id": "https://nlogn.com/#organization" }
+      }
+    }
+  ]
+}
+```
+
+Every page now says the same thing about who published it. That consistency is what builds an entity Google is confident about, and confidence is what gets you the knowledge panel and the brand-name result treatment.
+
+## Rule 4: the page still has to rank
+
+Structured data is not a ranking factor. It changes how a result is displayed, not whether it appears. A page on the third result page with perfect `Product` markup gets nothing, because nobody sees the third page.
+
+Which means the order of work is: earn the ranking first, then add the markup that makes the ranking more clickable. Teams that reverse this spend a quarter on schema and wonder why traffic did not move.
+
+## Implementation notes
+
+Emit JSON-LD in a script tag, server-rendered. Google reads JSON-LD in the rendered DOM, but server-rendering removes an entire class of problem. Escape the closing angle bracket to avoid breaking out of the script tag:
+
+```jsx
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify(payload).replace(/</g, "\\u003c"),
+  }}
+/>
+```
+
+Validate with the Rich Results Test rather than the Schema Markup Validator — the first tells you what Google will use, the second only tells you the syntax is legal. Then watch the Enhancements reports in Search Console for a fortnight after launch; that is where errors that only appear at scale show up.
+
+## What to expect
+
+On a site that already ranks, adding correct `Product` or `LocalBusiness` markup typically lifts click-through rate by 10 to 30% on affected queries. On a site that does not rank, it changes nothing at all. Set expectations accordingly, and [start with the audit](/process) rather than the markup.
