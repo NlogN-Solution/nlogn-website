@@ -45,7 +45,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Growth",
     model: "Monthly retainer",
     icon: "megaphone",
-    from: "$650/mo",
+    from: "$250/mo",
     intro:
       "A complete content and acquisition system designed to turn attention into qualified leads — content, paid media, and the analytics that tell you which of it worked.",
     tiers: [
@@ -54,7 +54,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Show up consistently, and start measuring.",
         summary:
           "For small businesses running serious digital marketing for the first time. Enough output to build a habit, with one paid campaign to test demand.",
-        from: "$650/mo",
+        from: "$250/mo",
         bestFor: "Cafés, restaurants, clinics, local businesses",
         highlights: [
           "6 short-form videos and 4 carousels a month",
@@ -113,7 +113,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A content engine that generates leads every week.",
         summary:
           "Our main package. Enough volume to compound, a real paid-media programme behind it, and reporting that ties spend to leads.",
-        from: "$1,400/mo",
+        from: "$650/mo",
         bestFor: "Businesses ready for consistent lead generation",
         highlights: [
           "10 Reels a month, scripted, shot-directed and edited",
@@ -181,7 +181,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Your external growth team.",
         summary:
           "For established businesses that want NLOGN to own acquisition: full-funnel strategy, multi-channel media, and a lead pipeline wired into your CRM.",
-        from: "$2,900/mo",
+        from: "$1200/mo",
         bestFor: "Established businesses scaling acquisition",
         highlights: [
           "15 Reels, 8 carousels, 8 statics, 20–30 stories",
@@ -252,7 +252,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Search",
     model: "Monthly retainer",
     icon: "search",
-    from: "$700/mo",
+    from: "$200/mo",
     intro:
       "Sold as a 6–12 month growth system, not a ranking promise. We fix the crawl, build the topic clusters, and publish on a cadence you can sustain.",
     tiers: [
@@ -261,7 +261,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Fix what is broken, then start publishing.",
         summary:
           "One-time technical setup plus monthly management. The right starting point for any site that has never had SEO done properly.",
-        from: "$700/mo",
+        from: "$200/mo",
         bestFor: "Sites with technical debt and no content engine",
         highlights: [
           "Full technical audit and fix list",
@@ -322,7 +322,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Compete properly in search.",
         summary:
           "Everything in Foundation, plus the publishing volume, off-page work and local presence needed to move competitive terms.",
-        from: "$1,500/mo",
+        from: "$650/mo",
         bestFor: "Businesses competing on commercial keywords",
         highlights: [
           "8 SEO articles and 2 landing pages a month",
@@ -446,7 +446,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Products",
     model: "Project",
     icon: "code",
-    from: "$1,800",
+    from: "$1,000",
     intro:
       "Project-based builds on Next.js and Node.js — fast, accessible, and structured so your team can run it without a developer on standby.",
     tiers: [
@@ -493,7 +493,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A website that works as a sales channel.",
         summary:
           "Ten to fifteen pages with a CMS your team controls, a blog, booking, and the integrations that turn visits into enquiries.",
-        from: "$4,500",
+        from: "$2500",
         bestFor: "Businesses that need the site to generate leads",
         highlights: [
           "10–15 pages, custom UI/UX and premium animations",
@@ -530,7 +530,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A custom digital platform.",
         summary:
           "UX research, a real design system, authentication, dashboards and payments — a website that behaves like a product.",
-        from: "$12,000",
+        from: "$6,000",
         bestFor: "Companies needing a platform, not a brochure",
         highlights: [
           "UX research and a custom design system",
@@ -578,7 +578,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Products",
     model: "Project",
     icon: "server",
-    from: "$6,000",
+    from: "$3,000",
     intro:
       "We build software around how your business actually works — not around a template. Discovery first, architecture second, code third.",
     tiers: [
@@ -626,7 +626,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Replace the spreadsheets and the manual handoffs.",
         summary:
           "A full internal platform: staff and customer portals, role-based permissions, integrations, reporting and payments.",
-        from: "$18,000",
+        from: "$9,000",
         bestFor: "Established businesses outgrowing manual process",
         highlights: [
           "Custom web application with admin and staff dashboards",
@@ -722,7 +722,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "AI & Automation",
     model: "System build",
     icon: "bot",
-    from: "$1,200",
+    from: "$800",
     intro:
       "We do not sell 'AI automation'. We remove repetitive work from your business — then show you the hours it gave back.",
     tiers: [
@@ -731,7 +731,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Three workflows that stop costing you evenings.",
         summary:
           "Pick the three jobs your team repeats most. We automate them, wire them to the tools you already use, and hand over the documentation.",
-        from: "$1,200",
+        from: "$900",
         bestFor: "First automation project",
         highlights: [
           "Up to 3 automated workflows",
@@ -767,7 +767,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Your lead-to-sale path runs itself.",
         summary:
           "Seven to ten connected workflows covering leads, appointments, support and sales — with reporting on what each one saved.",
-        from: "$3,500",
+        from: "$2000",
         bestFor: "Teams drowning in inbound admin",
         highlights: [
           "7–10 automated workflows",
@@ -849,7 +849,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "AI & Automation",
     model: "System build",
     icon: "message",
-    from: "$900",
+    from: "$600",
     intro:
       "An assistant that answers, qualifies and books — trained on your own material and handing over to a human at the right moment.",
     tiers: [
@@ -887,7 +887,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "It qualifies and books while you sleep.",
         summary:
           "Everything in Starter, plus qualification, recommendations, appointment booking and CRM sync.",
-        from: "$2,400",
+        from: "$1500",
         bestFor: "Businesses where speed to lead decides the sale",
         highlights: [
           "Lead qualification",
@@ -951,7 +951,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Growth",
     model: "Monthly retainer",
     icon: "video",
-    from: "$450/mo",
+    from: "$250/mo",
     intro:
       "Production only, for teams who run their own channels but cannot keep up with the output. Concept, script, shoot direction and edit.",
     tiers: [
@@ -959,7 +959,7 @@ export const packageFamilies: PackageFamily[] = [
         name: "Content Starter",
         tagline: "Enough output to stay visible.",
         summary: "A steady monthly drop of short-form video and social creative, captioned and scheduled.",
-        from: "$450/mo",
+        from: "$250/mo",
         bestFor: "Teams managing their own channels",
         highlights: ["6 Reels", "4 carousels", "4 static posts", "10 stories", "Captions and content calendar"],
         groups: [
@@ -974,7 +974,7 @@ export const packageFamilies: PackageFamily[] = [
         badge: "Most chosen",
         tagline: "Production volume that actually moves reach.",
         summary: "Double the output, with scripting and creative strategy behind each piece.",
-        from: "$900/mo",
+        from: "$600/mo",
         bestFor: "Brands posting daily",
         highlights: [
           "10 Reels",
@@ -1006,7 +1006,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A studio on retainer.",
         summary:
           "Professional scripting, advanced editing, motion graphics and monthly shoot planning.",
-        from: "$1,800/mo",
+        from: "$1,000/mo",
         bestFor: "Brands treating content as a channel",
         highlights: [
           "15 Reels",
@@ -1045,7 +1045,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Growth",
     model: "Monthly retainer",
     icon: "target",
-    from: "$550/mo",
+    from: "$300/mo",
     intro:
       "Catch demand that already exists. Search first, then the channels that scale it — with conversion tracking you can trust.",
     tiers: [
@@ -1053,7 +1053,7 @@ export const packageFamilies: PackageFamily[] = [
         name: "Google Ads Starter",
         tagline: "Capture the searches you are already losing.",
         summary: "One search campaign, set up properly, with conversion tracking and monthly optimisation.",
-        from: "$550/mo",
+        from: "$300/mo",
         bestFor: "First Google Ads programme",
         highlights: [
           "Account setup and keyword research",
@@ -1082,7 +1082,7 @@ export const packageFamilies: PackageFamily[] = [
         badge: "Most chosen",
         tagline: "Search, display and remarketing working together.",
         summary: "Multiple campaigns with landing-page optimisation and weekly testing.",
-        from: "$1,100/mo",
+        from: "$6,000/mo",
         bestFor: "Businesses ready to scale spend",
         highlights: [
           "Search, display and remarketing",
@@ -1112,7 +1112,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Every surface Google sells, managed as one funnel.",
         summary:
           "Search, display, YouTube and Performance Max, optimised against funnel stage rather than channel.",
-        from: "$2,200/mo",
+        from: "$1500/mo",
         bestFor: "High-spend accounts",
         highlights: [
           "Search, display, YouTube and Performance Max",
@@ -1148,7 +1148,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Brand",
     model: "Project",
     icon: "palette",
-    from: "$1,400",
+    from: "$900",
     intro:
       "The system every other service draws from: how you look, how you sound, and the templates that keep it consistent when you are not in the room.",
     tiers: [
@@ -1156,7 +1156,7 @@ export const packageFamilies: PackageFamily[] = [
         name: "Brand Starter",
         tagline: "Tidy up what you have.",
         summary: "Logo refinement, a proper colour and type system, and the templates your team uses daily.",
-        from: "$1,400",
+        from: "$900",
         bestFor: "Businesses with a logo but no system",
         highlights: [
           "Logo refinement",
@@ -1186,7 +1186,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Position first, then design.",
         summary:
           "Strategy, identity and a graphic system that holds up across a website, an app, a deck and a shopfront.",
-        from: "$3,600",
+        from: "$2000",
         bestFor: "Rebrands and new market positioning",
         highlights: [
           "Brand strategy",
