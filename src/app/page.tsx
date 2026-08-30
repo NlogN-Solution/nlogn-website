@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/home/hero";
+import { ClientsSection } from "@/components/home/clients-section";
 import { GrowthPath } from "@/components/home/growth-path";
 import { PackagesPreview } from "@/components/home/packages-preview";
 import { VideoShowcase } from "@/components/home/video-showcase";
@@ -56,6 +57,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <ClientsSection />
       <GrowthPath />
       <PackagesPreview />
       <VideoShowcase />

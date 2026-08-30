@@ -137,28 +137,25 @@ function DeckCard({
 }) {
   const step = 1 / total;
   const start = index * step;
-  const isFirst = index === 0;
-  const isLast = index === total - 1;
 
-  // Four stops: arriving, settled, settled, leaving — all inside [0,1] so the
-  // input range stays monotonic and in the scroll domain. The first card starts
-  // settled and the last one never leaves.
-  // Arriving, settled, settled, leaving. The next card starts arriving exactly
-  // as this one starts leaving, so the handoff is quick and unambiguous.
+  // Every card uses the identical curve — no first/last special cases, which is
+  // what broke card one: a zero-width [0, 0.0001] segment poisoned its range.
+  // The parent instead hands over a progress value already inset by half a
+  // slice, so the first and last cards sit settled at the two extremes.
   const keys = [
-    isFirst ? 0 : start - step * 0.34,
-    isFirst ? 0.0001 : start + step * 0.02,
-    isLast ? 0.9999 : start + step * 0.64,
-    isLast ? 1 : start + step,
+    start - step * 0.34,
+    start + step * 0.02,
+    start + step * 0.64,
+    start + step,
   ];
 
-  const opacity = useTransform(progress, keys, [isFirst ? 1 : 0, 1, 1, isLast ? 1 : 0]);
+  const opacity = useTransform(progress, keys, [0, 1, 1, 0]);
   // The middle pair are not identical: the card keeps drifting a few pixels
   // while it holds, so every scroll produces visible movement.
-  const x = useTransform(progress, keys, [isFirst ? 0 : 88, 6, -6, isLast ? 0 : -78]);
-  const y = useTransform(progress, keys, [isFirst ? 0 : 24, 2, -2, isLast ? 0 : -18]);
-  const scale = useTransform(progress, keys, [isFirst ? 1 : 0.93, 0.995, 1, isLast ? 1 : 0.955]);
-  const rotate = useTransform(progress, keys, [isFirst ? 0 : 2, 0.2, -0.2, isLast ? 0 : -1.6]);
+  const x = useTransform(progress, keys, [88, 6, -6, -78]);
+  const y = useTransform(progress, keys, [24, 2, -2, -18]);
+  const scale = useTransform(progress, keys, [0.93, 0.995, 1, 0.955]);
+  const rotate = useTransform(progress, keys, [2, 0.2, -0.2, -1.6]);
 
   // Derived from the value, not from state, so a card never re-renders on scroll.
   const pointerEvents = useTransform(opacity, (o) => (o > 0.85 ? "auto" : "none"));
@@ -179,9 +176,13 @@ function DeckCard({
  */
 function DeckStatus({
   progress,
+  bar,
   total,
 }: {
+  /** Inset deck position, for the index. */
   progress: MotionValue<number>;
+  /** Raw section progress, so the bar still runs empty to full. */
+  bar: MotionValue<number>;
   total: number;
 }) {
   const [index, setIndex] = useState(0);
@@ -204,7 +205,7 @@ function DeckStatus({
 
       <div className="mt-4 h-px w-full max-w-xs bg-line">
         <motion.div
-          style={{ scaleX: progress }}
+          style={{ scaleX: bar }}
           className="h-px w-full origin-left bg-[linear-gradient(90deg,#a78bfa,#6c47ff)]"
         />
       </div>
@@ -237,6 +238,11 @@ export function PackagesPreview() {
     target: section,
     offset: ["start start", "end end"],
   });
+
+  // Half a slice of head and tail room, so card one is already settled when the
+  // panel pins and the last one is still settled when it releases.
+  const inset = 0.5 / total;
+  const deck = useTransform(scrollYProgress, [0, 1], [inset, 1 - inset]);
 
   const cta = (
     <div className="flex flex-col items-start gap-6 rounded-[24px] border border-violet/20 bg-violet-wash p-8 md:flex-row md:items-center md:justify-between md:p-10">
@@ -310,7 +316,7 @@ export function PackagesPreview() {
                 into a growth stack built around your business.
               </p>
 
-              <DeckStatus progress={scrollYProgress} total={total} />
+              <DeckStatus progress={deck} bar={scrollYProgress} total={total} />
 
               <div className="mt-8 flex flex-wrap items-center gap-5">
                 <Button href="/services#packages" variant="secondary" arrow>
@@ -328,7 +334,7 @@ export function PackagesPreview() {
                   family={family}
                   index={i}
                   total={total}
-                  progress={scrollYProgress}
+                  progress={deck}
                 />
               ))}
             </div>

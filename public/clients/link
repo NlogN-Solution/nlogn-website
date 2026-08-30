@@ -1,0 +1,595 @@
+You are an expert creative frontend developer specializing in premium interactive websites, GSAP animations, ScrollTrigger, smooth scrolling, React, TypeScript, and modern UI/UX.
+
+I want you to redesign and implement the NLOGN “How We Work / Process” section as a highly interactive, cinematic experience.
+
+Core Concept
+
+Combine these two animation concepts:
+
+Morphing Interface
+Animated SVG Journey Path
+
+The result should feel like the user is moving through a single evolving NLOGN business growth system, rather than scrolling through five ordinary cards.
+
+Main Interaction
+
+Create a large pinned scroll section.
+
+While the user scrolls, the section remains pinned to the viewport.
+
+The user's scroll progress controls the journey through 5 stages:
+
+01 → Diagnose
+02 → Audit
+03 → Model
+04 → Build
+05 → Compound
+Use the exsiting process and info the same no need to change anything on the content process and process details all are the same including the right side card info
+
+The animation must feel continuous and connected.
+
+Do NOT simply fade one section out and fade another section in.
+
+Instead, create a persistent layout where the content and UI morph and evolve between stages.
+
+Layout Structure
+Left Side — Process Information
+
+The left side remains structurally consistent.
+
+It contains:
+
+01 / 05
+
+DIAGNOSE
+
+Diagnose before
+we prescribe.
+
+We look beyond the symptoms to understand what is
+actually slowing your business down. Before recommending
+marketing, software, automation, or AI, we identify the
+real constraint.
+
+Below the description:
+
+OUTCOME
+
+Clarity on the real problem, opportunities,
+and where to focus first.
+Left-side behavior
+
+As the user scrolls to each step:
+
+Step number animates smoothly.
+Eyebrow changes.
+Title changes.
+Main headline changes.
+Description changes.
+Outcome changes.
+Typography should animate with subtle vertical movement.
+Previous text exits upward.
+New text enters from below.
+Avoid abrupt replacement.
+
+Use staggered animations and smooth opacity/translate transitions.
+
+Right Side — Persistent Morphing System Interface
+
+The right side should contain one large persistent glass/white interface container.
+
+The outer container should NEVER disappear between steps.
+
+Instead, the internal UI should transform based on the active process stage.
+
+The card should have:
+
+White / slightly translucent background
+Subtle lavender/blue shadows
+Rounded corners
+Thin border
+Premium SaaS/dashboard aesthetic
+NLOGN's purple/blue accent color
+Minimalistic design
+No excessive gradients
+No generic illustrations
+Animated SVG Journey Path
+
+Create a custom SVG path that visually connects all five process stages.
+
+IMPORTANT:
+
+Do NOT use a boring straight vertical line.
+
+Create a modern flowing path with subtle curves and directional movement.
+
+Conceptually:
+
+01 ●━━━━━━━━╮
+             │
+             ● 02
+          ╱
+03 ●━━━━━╯
+        ╲
+         ●━━━━━━ 04
+                  ╲
+                   ● 05
+
+The actual design should be elegant and minimal.
+
+SVG Animation Behavior
+
+As the user scrolls:
+
+The SVG path progressively draws itself.
+Use stroke-dasharray and stroke-dashoffset.
+The drawing progress should directly correspond to scroll progress.
+Each process node activates when the path reaches it.
+The active node should glow subtly.
+A small animated particle/light should travel along the path.
+Previous nodes remain completed.
+Future nodes remain subtle and inactive.
+
+The SVG path should feel like a journey through a business system.
+
+Do not make it look like a game UI.
+
+The 5 Process Stages
+STEP 01 — DIAGNOSE or whatver the stage name is
+Eyebrow
+01 / DISCOVERY or whatver the stage name is
+Title
+DIAGNOSE
+Headline
+Diagnose before
+we prescribe.
+Description
+We look beyond the symptoms to understand what is actually
+slowing your business down. Before recommending marketing,
+software, automation, or AI, we identify the real constraint.
+Outcome
+Clarity on the real problem, opportunities,
+and where to focus first.
+Right-side UI
+
+Create a:
+
+BUSINESS DIAGNOSTIC MAP
+
+Include four diagnostic areas:
+
+Marketing & Creative
+Search & Paid
+Website & Product
+Software & Automation
+
+Each item should have:
+
+Minimal icon
+Category
+Focus area
+Short explanation
+Animated analysis/progress indicator
+
+Example labels:
+
+ATTENTION
+VISIBILITY
+CONVERSION
+EFFICIENCY
+
+The UI should have subtle scanning behavior:
+
+A scanning line moves across the interface.
+Progress indicators animate.
+Small ANALYZING indicators pulse.
+At the end, show a completed insight.
+STEP 02 — STRATEGIZE
+Headline
+Turn insight into
+a clear direction.
+Description
+Once we understand the real constraint, we prioritize the
+opportunities and create a focused roadmap for growth.
+Outcome
+A clear strategy with priorities,
+actions, and measurable goals.
+Right-side morph
+
+The Business Diagnostic Map should morph into a:
+
+GROWTH STRATEGY MAP
+
+Show:
+
+Problem
+↓
+Opportunity
+↓
+Priority
+↓
+Roadmap
+
+Animate nodes connecting together.
+
+Ideas:
+
+Diagnostic rows compress.
+Elements reorganize.
+Lines connect the information.
+Cards shift into strategic blocks.
+A roadmap draws itself.
+
+It should feel like the data from Diagnose is being transformed into a strategy.
+
+STEP 03 — BUILD
+Headline
+Build what the
+business actually needs.
+Description
+We turn strategy into digital products, systems, campaigns,
+and technology designed around your specific business goals.
+Outcome
+A focused digital solution built
+to solve the right problem.
+Right-side morph
+
+Transform the Strategy Map into:
+
+SOLUTION BUILD SYSTEM
+
+Show components assembling together:
+
+WEBSITE ───────┐
+MARKETING ─────┤
+AUTOMATION ────┼──► SOLUTION
+SOFTWARE ──────┤
+AI ────────────┘
+
+Animation:
+
+Components slide into position.
+Connection lines draw.
+Components lock together.
+A central system activates.
+Progress increases.
+
+Avoid excessive motion.
+
+Make it precise and satisfying.
+
+STEP 04 — AUTOMATE
+Headline
+Remove friction.
+Multiply output.
+Description
+We connect the systems and automate repetitive processes so
+your business can operate faster with less manual effort.
+Outcome
+Connected workflows that save time,
+reduce friction, and increase efficiency.
+Right-side morph
+
+Transform the Build System into:
+
+AUTOMATION FLOW
+
+Example:
+
+LEAD
+ ↓
+AI QUALIFICATION
+ ↓
+CRM
+ ↓
+FOLLOW-UP
+ ↓
+CONVERSION
+
+Animation:
+
+A data particle continuously moves through the workflow.
+Each node activates as the particle passes.
+Connections glow subtly.
+Completed processes remain active.
+
+This should visually communicate automation and flow.
+
+STEP 05 — SCALE or whatver the stage name is
+Headline
+Build momentum.
+Then scale it.
+Description
+Once the right systems are working, we optimize, improve,
+and scale what delivers the strongest results.
+Outcome
+A repeatable growth system ready
+to scale with your business.
+Right-side morph
+
+Transform the Automation Flow into:
+
+GROWTH ENGINE
+
+Visual concept:
+
+          ↗ GROWTH
+
+      ↗
+
+SYSTEMS ━━━━━━━━━━━► SCALE
+
+Or a modern growth graph/system.
+
+Animation:
+
+Growth lines extend.
+Metrics increase subtly.
+Nodes multiply.
+The system expands outward.
+Final state should feel powerful but elegant.
+
+At the end, show:
+
+SYSTEM READY TO SCALE
+Scroll Animation Architecture
+
+Use:
+
+GSAP
+ScrollTrigger
+Existing Lenis smooth scrolling if already installed
+
+Do not introduce unnecessary dependencies.
+
+Pinning
+
+The entire process section should be pinned.
+
+Example concept:
+
+ScrollTrigger.create({
+  trigger: ".process-section",
+  start: "top top",
+  end: "+=500%",
+  pin: true,
+  scrub: 1
+});
+
+The total scroll distance should give enough room for each of the 5 stages.
+
+Do not make transitions too fast.
+
+Scroll Progress Logic
+
+Split the scroll into five ranges.
+
+Example:
+
+0% ─────────── 20% → Diagnose
+20% ────────── 40% → Strategize
+40% ────────── 60% → Build
+60% ────────── 80% → Automate
+80% ───────── 100% → Scale
+
+However, transitions should overlap slightly.
+
+For example:
+
+At around 18%–25%:
+
+Diagnose UI begins reorganizing.
+Text transitions.
+SVG journey reaches node 02.
+Strategy interface emerges.
+
+The transitions should feel continuous.
+
+Important: True Morphing Behavior
+
+Do NOT do this:
+
+fade out entire card
+↓
+fade in new card
+
+Instead:
+
+Diagnostic rows
+↓
+compress + reposition
+↓
+connect together
+↓
+become strategy nodes
+↓
+strategy nodes reorganize
+↓
+become build components
+↓
+components connect
+↓
+become automation flow
+↓
+automation expands
+↓
+becomes growth system
+
+This continuity is extremely important.
+
+The user should feel that:
+
+Every step naturally creates the next step.
+
+Motion Principles
+
+Use premium, restrained motion.
+
+Use
+transform
+opacity
+scale
+subtle blur
+SVG path drawing
+stagger animations
+smooth easing
+spring-like micro interactions
+Avoid
+excessive bouncing
+random floating objects
+aggressive parallax
+too much rotation
+flashy neon effects
+excessive glassmorphism
+heavy particles
+distracting animations
+
+Recommended easing:
+
+power3.out
+power4.inOut
+expo.out
+
+Use scrub for scroll-linked motion.
+
+Visual Style
+
+Match this design direction:
+
+Minimal
+Premium
+Modern technology consultancy
+Editorial typography
+Soft white background
+Very subtle lavender / cool blue accents
+Dark navy/black typography
+Purple/indigo accent
+Thin borders
+Large rounded containers
+Generous whitespace
+
+Accent color should be used strategically.
+
+Do not overuse purple.
+
+Additional Micro-interactions
+
+Add subtle details:
+
+Active step number
+
+The number should have a subtle progress ring.
+
+◉ 01
+
+The ring progresses as the user moves through that stage.
+
+Journey particle
+
+A tiny glowing particle moves along the SVG path.
+
+Interface status
+
+Use contextual labels:
+
+ANALYZING
+MAPPING
+BUILDING
+AUTOMATING
+SCALING
+
+These change with each stage.
+
+Progress indicator
+
+Show:
+
+01 / 05
+
+with a subtle progress line.
+
+Responsive Design
+Desktop
+
+Two-column layout:
+
+LEFT INFORMATION        RIGHT SYSTEM INTERFACE
+
+The section should feel immersive.
+
+Tablet
+
+Reduce spacing and scale.
+
+Keep the two-column layout where possible.
+
+Mobile
+
+Do NOT simply shrink the desktop design.
+
+Instead:
+
+STEP INDICATOR
+
+TEXT CONTENT
+
+↓
+
+SYSTEM INTERFACE
+
+↓
+
+SVG JOURNEY / PROGRESS
+
+The pinned animation can be simplified for mobile if performance becomes an issue.
+
+Prioritize:
+
+Readability
+Smooth performance
+Touch devices
+No horizontal overflow
+
+Use reduced-motion support.
+
+Performance Requirements
+Animate only performant properties.
+Prefer transforms and opacity.
+Avoid expensive layout calculations during scroll.
+Use will-change carefully.
+Clean up all GSAP ScrollTriggers on component unmount.
+Use gsap.context() or proper React cleanup.
+Ensure the section works correctly after resize.
+Deliverable
+
+Implement the complete production-ready component.
+
+Use clean, reusable data-driven architecture.
+
+Suggested data structure:
+
+const processSteps = [
+  {
+    number: "01",
+    label: "DISCOVERY",
+    title: "DIAGNOSE",
+    headline: "Diagnose before we prescribe.",
+    description: "...",
+    outcome: "...",
+    status: "ANALYZING"
+  },
+  ...
+];
+
+Do not hardcode five completely separate page sections.
+
+Build one reusable process system where:
+
+Text is data-driven.
+Active step is scroll-driven.
+Right-side interface transitions intelligently.
+SVG journey is shared across the entire experience.
+
+The final result should feel like a premium interactive product experience, similar to a high-end technology company explaining its operating system—not a standard agency “Our Process” section.
+
+Prioritize creativity, smooth continuity, and visual storytelling over generic scroll animations.
