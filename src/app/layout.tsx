@@ -30,7 +30,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "nlogn — Digital growth agency for websites, SEO and software",
+    default: "nlogn — Digital growth agency for your business",
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     type: "website",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: "nlogn — Digital growth agency for websites, SEO and software",
+    title: "nlogn — Digital growth agency for for your business",
     description: siteConfig.description,
     locale: "en_US",
   },

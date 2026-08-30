@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -97,6 +98,21 @@ export default async function PostPage({ params }: Params) {
           </div>
         </header>
 
+        {post.image && (
+          <div className="container-x -mt-8 md:-mt-10">
+            <figure className="relative aspect-[16/9] overflow-hidden rounded-[26px] border border-line bg-canvas-2 md:aspect-[21/9]">
+              <Image
+                src={post.image}
+                alt={post.imageAlt ?? post.title}
+                fill
+                priority
+                sizes="(max-width: 1280px) 92vw, 75rem"
+                className="object-cover"
+              />
+            </figure>
+          </div>
+        )}
+
         <div className="container-x py-14 md:py-20">
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_230px] lg:gap-16">
             <div className="max-w-2xl">
@@ -186,6 +202,7 @@ export default async function PostPage({ params }: Params) {
             wordCount: post.content.split(/\s+/).length,
             timeRequired: `PT${post.readingMinutes}M`,
             articleSection: post.category,
+            ...(post.image ? { image: [absoluteUrl(post.image)] } : {}),
             keywords: (post.keywords ?? post.tags).join(", "),
             inLanguage: "en",
             author: {

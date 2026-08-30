@@ -13,6 +13,9 @@ export type PostFrontmatter = {
   kind?: PostKind;
   title: string;
   description: string;
+  /** Card and article artwork, under /public. Cards fall back to a mark when absent. */
+  image?: string;
+  imageAlt?: string;
   date: string;
   updated?: string;
   category: string;

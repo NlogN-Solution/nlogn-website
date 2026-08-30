@@ -18,9 +18,9 @@ import { capabilities } from "@/config/capabilities";
 import { absoluteUrl } from "@/lib/utils";
 
 export const metadata: Metadata = buildMetadata({
-  title: "nlogn — Digital growth agency for websites, SEO and software",
+  title: "nlogn — Digital growth agency for your business",
   description:
-    "nlogn builds fast Next.js websites, custom Node.js software and SEO programmes that turn visitors into customers. Fixed-price scope, measurable results, code you own.",
+    "We help businesses grow, reach more customers, and operate smarter through digital growth strategies, marketing, automation, and technology.",
   path: "/",
 });
 
