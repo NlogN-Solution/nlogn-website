@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
-import { SiteHeader } from "@/components/site/header";
-import { SiteFooter } from "@/components/site/footer";
-import { JsonLd } from "@/components/seo/json-ld";
-import { organizationSchema, websiteSchema } from "@/lib/seo";
+import { CONSENT_BOOTSTRAP } from "@/lib/consent";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
@@ -93,20 +91,31 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * The document shell, and nothing else.
+ *
+ * The marketing chrome lives in `(site)/layout.tsx` and the dashboard chrome in
+ * `admin/(shell)/layout.tsx`, so neither product inherits the other's — and
+ * this layout stays static, which is what keeps the public pages prerendered.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${inter.variable} ${mono.variable}`}>
       <body className="min-h-screen antialiased">
+        {/* Consent Mode defaults, set ahead of every other script so no Google
+            tag can store anything before the visitor has chosen. */}
+        <Script
+          id="consent-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: CONSENT_BOOTSTRAP }}
+        />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-medium focus:text-white"
         >
           Skip to content
         </a>
-        <SiteHeader />
-        <main id="main">{children}</main>
-        <SiteFooter />
-        <JsonLd schema={[organizationSchema(), websiteSchema()]} id="site-schema" />
+        {children}
       </body>
     </html>
   );

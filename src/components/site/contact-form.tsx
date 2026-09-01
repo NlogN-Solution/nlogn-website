@@ -6,7 +6,7 @@ import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { capabilities } from "@/config/capabilities";
 import { cn } from "@/lib/utils";
 
-const budgets = ["Under $5k", "$5k – $15k", "$15k – $40k", "$40k+", "Not sure yet"];
+const budgets = ["Under $2k", "$2k – 5k", "$8k – $20k", "$30k+", "Not sure yet"];
 
 const field =
   "w-full rounded-2xl border border-line bg-surface px-5 py-3.5 text-[0.9375rem] text-ink outline-none transition-colors placeholder:text-muted focus:border-violet/60";
@@ -31,7 +31,15 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, budget }),
+        body: JSON.stringify({
+          ...payload,
+          budget,
+          // Carried from a package card or the growth-stack builder so the
+          // enquiry arrives knowing what the visitor was looking at.
+          packageName: pkg || undefined,
+          planSummary: prefill || undefined,
+          source: pkg ? "PACKAGE_ENQUIRY" : prefill ? "GROWTH_STACK" : "CONTACT_FORM",
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "We could not send that. Try again?");

@@ -1,0 +1,359 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String
+  /// Argon2-class hash from bcrypt. Never a plaintext password.
+  passwordHash String
+  role         AdminRole      @default(VIEWER)
+  avatarUrl    String?
+  isActive     Boolean        @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  activity     ActivityLog[]
+  sessions     AdminSession[]
+  blogs        Blog[]
+  caseStudies  CaseStudy[]
+  insights     Insight[]
+  media        Media[]
+
+  @@index([email])
+}
+
+/// Server-side session records, so a logout or a disabled account revokes
+/// access immediately — a stateless JWT alone could not.
+model AdminSession {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 of the token. A leaked database row cannot be replayed as a cookie.
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  blogs       Blog[]
+  caseStudies CaseStudy[]
+  insights    Insight[]
+
+  @@index([slug])
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  createdAt   DateTime    @default(now())
+  blogs       Blog[]      @relation("BlogToTag")
+  caseStudies CaseStudy[] @relation("CaseStudyToTag")
+  insights    Insight[]   @relation("InsightToTag")
+
+  @@index([slug])
+}
+
+/// Fields every published content type carries. Repeated rather than modelled
+/// as inheritance because Prisma has none, and because a shared table would
+/// make the per-type queries the admin lists actually run slower.
+model Blog {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String?
+  /// TipTap JSON. Structured, so it can be re-rendered safely without trusting
+  /// stored HTML; `contentHtml` is the sanitised render kept for fast reads.
+  content        Json?
+  contentHtml    String?
+  status         ContentStatus @default(DRAFT)
+  featured       Boolean       @default(false)
+  authorId       String?
+  /// Free-text byline for guest authors who have no admin account.
+  authorName     String?
+  authorRole     String?
+  categoryId     String?
+  coverMediaId   String?
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogTitle        String?
+  ogDescription  String?
+  ogImageId      String?
+  noIndex        Boolean       @default(false)
+  readingMinutes Int?
+  publishedAt    DateTime?
+  /// Set to publish in the future; the read path treats it as a draft until due.
+  scheduledFor   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  author         AdminUser?    @relation(fields: [authorId], references: [id])
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  coverMedia     Media?        @relation("BlogCover", fields: [coverMediaId], references: [id])
+  ogImage        Media?        @relation("BlogOg", fields: [ogImageId], references: [id])
+  tags           Tag[]         @relation("BlogToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+  @@index([categoryId])
+}
+
+model Insight {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String?
+  content        Json?
+  contentHtml    String?
+  status         ContentStatus @default(DRAFT)
+  featured       Boolean       @default(false)
+  authorId       String?
+  authorName     String?
+  authorRole     String?
+  categoryId     String?
+  coverMediaId   String?
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogTitle        String?
+  ogDescription  String?
+  ogImageId      String?
+  noIndex        Boolean       @default(false)
+  readingMinutes Int?
+  publishedAt    DateTime?
+  scheduledFor   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  author         AdminUser?    @relation(fields: [authorId], references: [id])
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  coverMedia     Media?        @relation("InsightCover", fields: [coverMediaId], references: [id])
+  ogImage        Media?        @relation("InsightOg", fields: [ogImageId], references: [id])
+  tags           Tag[]         @relation("InsightToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+/// A case study is structured, not a long blog post — the public template reads
+/// discrete fields (challenge, approach, metrics) rather than one content blob.
+model CaseStudy {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  status           ContentStatus @default(DRAFT)
+  featured         Boolean       @default(false)
+  projectName      String
+  clientName       String
+  industry         String?
+  projectType      String?
+  shortDescription String?
+  summary          String?
+  challenge        String?
+  approach         Json?
+  solution         String?
+  implementation   String?
+  outcome          String?
+  technologies     String[]      @default([])
+  servicesUsed     String[]      @default([])
+  clientObjective  String?
+  /// [{ value: "+240%", label: "Direct online orders" }]
+  metrics          Json?
+  timeline         String?
+  year             String?
+  /// Brand accent used by the public template's header wash.
+  accent           String?       @default("#6c47ff")
+  testimonialQuote String?
+  testimonialName  String?
+  testimonialRole  String?
+  heroMediaId      String?
+  thumbnailId      String?
+  categoryId       String?
+  authorId         String?
+  seoTitle         String?
+  seoDescription   String?
+  canonicalUrl     String?
+  ogImageId        String?
+  noIndex          Boolean       @default(false)
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  author           AdminUser?    @relation(fields: [authorId], references: [id])
+  category         Category?     @relation(fields: [categoryId], references: [id])
+  heroMedia        Media?        @relation("CaseHero", fields: [heroMediaId], references: [id])
+  ogImage          Media?        @relation("CaseOg", fields: [ogImageId], references: [id])
+  thumbnail        Media?        @relation("CaseThumb", fields: [thumbnailId], references: [id])
+  gallery          Media[]       @relation("CaseGallery")
+  tags             Tag[]         @relation("CaseStudyToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+/// A slug that used to be live. The public route 301s to `toPath` so changing a
+/// published URL never orphans an indexed page.
+model Redirect {
+  id         String   @id @default(cuid())
+  fromPath   String   @unique
+  toPath     String
+  statusCode Int      @default(301)
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  @@index([fromPath])
+}
+
+/// One row per Cloudinary asset. The app never stores bytes itself.
+model Media {
+  id            String      @id @default(cuid())
+  publicId      String      @unique
+  secureUrl     String
+  resourceType  String
+  type          MediaType   @default(IMAGE)
+  format        String?
+  width         Int?
+  height        Int?
+  bytes         Int         @default(0)
+  duration      Float?
+  originalName  String?
+  folder        String?
+  alt           String?
+  caption       String?
+  uploadedById  String?
+  createdAt     DateTime    @default(now())
+  blogCovers    Blog[]      @relation("BlogCover")
+  blogOg        Blog[]      @relation("BlogOg")
+  caseHeroes    CaseStudy[] @relation("CaseHero")
+  caseOg        CaseStudy[] @relation("CaseOg")
+  caseThumbs    CaseStudy[] @relation("CaseThumb")
+  insightCovers Insight[]   @relation("InsightCover")
+  insightOg     Insight[]   @relation("InsightOg")
+  uploadedBy    AdminUser?  @relation(fields: [uploadedById], references: [id])
+  caseGalleries CaseStudy[] @relation("CaseGallery")
+
+  @@index([type, createdAt])
+  @@index([folder])
+}
+
+model ContactMessage {
+  id             String        @id @default(cuid())
+  name           String
+  email          String
+  company        String?
+  phone          String?
+  service        String?
+  budget         String?
+  message        String
+  source         MessageSource @default(CONTACT_FORM)
+  /// The package or built stack the visitor was looking at when they wrote in.
+  context        Json?
+  status         MessageStatus @default(NEW)
+  isRead         Boolean       @default(false)
+  notes          String?
+  /// Whether the notification and acknowledgement emails actually went out.
+  emailDelivered Boolean       @default(false)
+  ip             String?
+  userAgent      String?
+  referer        String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@index([source])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  isActive       Boolean   @default(true)
+  source         String?
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([email])
+}
+
+/// Key/value site settings, so the WhatsApp number, social links and SEO
+/// defaults stop being hardcoded across components.
+model SiteSetting {
+  key       String   @id
+  value     Json
+  group     String   @default("general")
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id         String     @id @default(cuid())
+  userId     String?
+  /// Kept so the trail survives the account being deleted.
+  userEmail  String?
+  action     String
+  resource   String
+  resourceId String?
+  summary    String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime   @default(now())
+  user       AdminUser? @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([resource, resourceId])
+}
+
+/// Coarse roles. Fine-grained checks live in `src/server/permissions.ts` so a
+/// new capability is a table edit there rather than a migration here.
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  MARKETING_MANAGER
+  VIEWER
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+  SPAM
+}
+
+/// Where a submission came from, so the pricing enquiries can be read apart
+/// from general contact without a second table.
+enum MessageSource {
+  CONTACT_FORM
+  PACKAGE_ENQUIRY
+  CUSTOM_QUOTE
+  GROWTH_STACK
+  NEWSLETTER
+  CHAT_WIDGET
+}

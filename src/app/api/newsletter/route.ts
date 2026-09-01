@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { sendMail } from "@/lib/mail";
+import { prisma, databaseConfigured } from "@/server/db";
+import { newsletterSchema } from "@/server/schemas/messages";
+import { newsletterWelcome, sendMail } from "@/server/integrations/email";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { siteConfig } from "@/config/site";
+
+/**
+ * Newsletter signup. Subscribers are stored so the list is exportable, and the
+ * response is deliberately identical for a new address and one already on the
+ * list — otherwise the endpoint becomes a way to test whether an address is
+ * subscribed.
+ */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const schema = z.object({
-  email: z.string().trim().email("That email address does not look right."),
-});
 
 export async function POST(request: Request) {
   const ip = clientIp(request.headers);
@@ -25,16 +30,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We could not read that submission." }, { status: 400 });
   }
 
-  const parsed = schema.safeParse(body);
+  const parsed = newsletterSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 422 });
   }
 
-  // Swap this for your ESP's API (Mailchimp, Klaviyo, Buttondown) when you have one.
-  await sendMail({
-    subject: "New Growth Brief subscriber",
-    text: `${parsed.data.email} subscribed from the website (${ip}).`,
-  });
+  const email = parsed.data.email.toLowerCase();
 
-  return NextResponse.json({ message: "You're on the list. First issue lands next month." });
+  try {
+    let isNew = true;
+
+    if (databaseConfigured) {
+      const existing = await prisma.newsletterSubscriber.findUnique({ where: { email } });
+      isNew = !existing || !existing.isActive;
+
+      await prisma.newsletterSubscriber.upsert({
+        where: { email },
+        create: { email, source: parsed.data.source ?? "website", confirmedAt: new Date() },
+        update: { isActive: true, unsubscribedAt: null },
+      });
+    }
+
+    if (isNew) {
+      const welcome = newsletterWelcome(email);
+      await sendMail({
+        to: email,
+        subject: welcome.subject,
+        html: welcome.html,
+        text: welcome.text,
+      });
+      await sendMail({
+        to: process.env.CONTACT_TO ?? siteConfig.email,
+        subject: "New Growth Brief subscriber",
+        html: `<p>${email} subscribed from the website.</p>`,
+        text: `${email} subscribed from the website.`,
+      });
+    }
+
+    return NextResponse.json({ message: "You're on the list. First issue lands next month." });
+  } catch (error) {
+    console.error("[newsletter] signup failed:", error);
+    return NextResponse.json({ error: "We could not sign you up just now." }, { status: 502 });
+  }
 }

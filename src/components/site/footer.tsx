@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { NewsletterForm } from "@/components/site/newsletter-form";
+import { CookieSettingsLink } from "@/components/site/cookie-settings-link";
 import { GrowthCurve } from "@/components/ui/growth-curve";
 import { siteConfig, works } from "@/config/site";
 import { capabilities } from "@/config/capabilities";
@@ -154,6 +155,7 @@ export function SiteFooter() {
             <Link href="/terms" className="transition-colors hover:text-ink">
               Terms
             </Link>
+            <CookieSettingsLink />
             <a href="/blog/rss.xml" className="transition-colors hover:text-ink">
               RSS
             </a>

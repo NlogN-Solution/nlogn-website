@@ -1,11 +1,17 @@
 import type { MetadataRoute } from "next";
-import { works } from "@/config/site";
-import { getAllPosts, getCategories, getTags } from "@/lib/blog";
+import { softwareProducts } from "@/config/software";
+import { getCategories, getTags } from "@/lib/blog";
+import { getMergedAllPosts, getMergedWorks } from "@/server/public-content";
 import { absoluteUrl } from "@/lib/utils";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+/**
+ * Both sources, one sitemap. If the database is unreachable the merge layer
+ * falls back to the committed content, so the sitemap degrades rather than 500s.
+ */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const posts = getAllPosts();
+  const posts = await getMergedAllPosts();
+  const caseStudies = await getMergedWorks();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "weekly", priority: 1 },
@@ -18,17 +24,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/insights"), lastModified: posts[0] ? new Date(posts[0].date) : now, changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/blog"), lastModified: posts[0] ? new Date(posts[0].date) : now, changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/case-studies"), lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: absoluteUrl("/software"), lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: absoluteUrl("/privacy"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: absoluteUrl("/terms"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   return [
     ...staticRoutes,
-    ...works.map((w) => ({
+    ...caseStudies.map((w) => ({
       url: absoluteUrl(`/case-studies/${w.slug}`),
       lastModified: now,
       changeFrequency: "yearly" as const,
       priority: 0.7,
+    })),
+    ...softwareProducts.map((p) => ({
+      url: absoluteUrl(`/software/${p.slug}`),
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
     })),
     ...posts.map((p) => ({
       url: absoluteUrl(`/blog/${p.slug}`),

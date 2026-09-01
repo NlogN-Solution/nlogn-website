@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { sendMail } from "@/lib/mail";
+import { enquirySchema } from "@/server/schemas/messages";
+import { recordEnquiry } from "@/server/services/message.service";
+import { adminNotification, enquiryAcknowledgement, sendMail } from "@/server/integrations/email";
+import { databaseConfigured } from "@/server/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { siteConfig } from "@/config/site";
 
-// Runs on the Node.js runtime: nodemailer and the SMTP transport need it.
+/**
+ * The public enquiry endpoint: the contact form, package enquiries and the
+ * custom-quote flow all post here.
+ *
+ * The response shape is unchanged from the original handler (`{ message }` on
+ * success, `{ error }` on failure) so the existing form component keeps working
+ * exactly as it did.
+ *
+ * Without a database the submission still goes out by email rather than being
+ * refused — losing a lead to a missing environment variable would be the worst
+ * possible failure mode for this route.
+ */
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const schema = z.object({
-  name: z.string().trim().min(2, "Please tell us your name.").max(120),
-  email: z.string().trim().email("That email address does not look right."),
-  company: z.string().trim().max(160).optional().or(z.literal("")),
-  service: z.string().trim().max(120).optional().or(z.literal("")),
-  budget: z.string().trim().max(60).optional().or(z.literal("")),
-  message: z.string().trim().min(20, "A sentence or two more, please.").max(4000),
-  company_website: z.string().max(0).optional(), // honeypot
-});
 
 export async function POST(request: Request) {
   const ip = clientIp(request.headers);
@@ -23,8 +28,14 @@ export async function POST(request: Request) {
 
   if (!limit.ok) {
     return NextResponse.json(
-      { error: "That is a few too many messages. Try again in a few minutes, or email us directly." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } },
+      {
+        error:
+          "That is a few too many messages. Try again in a few minutes, or email us directly.",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) },
+      },
     );
   }
 
@@ -35,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We could not read that submission." }, { status: 400 });
   }
 
-  const parsed = schema.safeParse(body);
+  const parsed = enquirySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Please check the form and try again." },
@@ -43,28 +54,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const data = parsed.data;
-
-  // Silently accept honeypot hits so bots do not learn anything.
-  if (data.company_website) {
-    return NextResponse.json({ message: "Thanks — we have it." });
+  // The honeypot is silently accepted rather than rejected — a bot told it
+  // failed simply tries again with the field cleared.
+  if (parsed.data.company_website) {
+    return NextResponse.json({ message: "Message received." });
   }
 
-  await sendMail({
-    subject: `New enquiry — ${data.name}${data.company ? ` (${data.company})` : ""}`,
-    replyTo: data.email,
-    text: [
-      `Name:    ${data.name}`,
-      `Email:   ${data.email}`,
-      `Company: ${data.company || "—"}`,
-      `Service: ${data.service || "Not specified"}`,
-      `Budget:  ${data.budget || "Not specified"}`,
-      "",
-      data.message,
-      "",
-      `— sent from the nlogn website (${ip})`,
-    ].join("\n"),
-  });
+  const meta = {
+    ip,
+    userAgent: request.headers.get("user-agent"),
+    referer: request.headers.get("referer"),
+  };
 
-  return NextResponse.json({ message: "Thanks — we have it." });
+  try {
+    if (databaseConfigured) {
+      await recordEnquiry(parsed.data, meta);
+    } else {
+      const payload = { ...parsed.data, source: parsed.data.source.replace(/_/g, " ").toLowerCase() };
+      const notification = adminNotification(payload);
+      await sendMail({
+        to: process.env.CONTACT_TO ?? siteConfig.email,
+        subject: notification.subject,
+        html: notification.html,
+        text: notification.text,
+        replyTo: parsed.data.email,
+      });
+      const ack = enquiryAcknowledgement(payload);
+      await sendMail({
+        to: parsed.data.email,
+        subject: ack.subject,
+        html: ack.html,
+        text: ack.text,
+      });
+    }
+
+    return NextResponse.json({
+      message: "Message received — we will be in touch within one working day.",
+    });
+  } catch (error) {
+    console.error("[contact] submission failed:", error);
+    return NextResponse.json(
+      { error: "We could not send that just now. Please email us directly." },
+      { status: 502 },
+    );
+  }
 }

@@ -29,6 +29,12 @@ export const siteConfig = {
     dribbble: "https://dribbble.com/nlogn",
   },
   twitterHandle: "@nlogn",
+  /**
+   * GA4 measurement ID. Public by design — it ships in the page source either
+   * way — so it lives here rather than only in the deploy environment, and the
+   * site is tagged the moment it is built. NEXT_PUBLIC_GA_ID overrides it.
+   */
+  gaId: "G-2H6500B256",
   // Optional: point this at a hosted MP4 to replace the built-in process reel.
   videoUrl: process.env.NEXT_PUBLIC_SHOWREEL_URL ?? "",
 } as const;
@@ -63,6 +69,11 @@ export const nav: NavItem[] = [
         label: "Case studies",
         href: "/case-studies",
         description: "Client work with the baseline and the result",
+      },
+      {
+        label: "Software",
+        href: "/software",
+        description: "The platforms we build and run, written up in full",
       },
     ],
   },

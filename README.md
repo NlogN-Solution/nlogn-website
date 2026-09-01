@@ -91,3 +91,53 @@ logged rather than emailed, so previews never fail on missing secrets.
 Nearly all copy lives in `src/config/site.ts`: services, case studies, process steps,
 team, values, stats, testimonials and FAQs. Change it there and every page that uses it
 updates, including the schema and the sitemap.
+
+## Admin CMS
+
+The dashboard lives at `/admin` in this same app — one deployment, one domain,
+no CORS. `docs/API.md` is the endpoint reference.
+
+### Setup
+
+```bash
+npm install                 # postinstall runs `prisma generate`
+npm run db:migrate          # create the tables
+npm run db:seed             # first super admin + default settings
+npm run dev                 # sign in at /admin/login
+```
+
+`db:seed` prints a generated password once if `ADMIN_PASSWORD` is unset. It is
+safe to re-run: existing accounts are never overwritten.
+
+### How it coexists with the existing content
+
+The committed MDX posts in `src/content/blog` and the hardcoded case studies in
+`src/config/site.ts` **are not migrated and not touched**. They render exactly
+as before. `src/server/public-content.ts` merges them with anything published in
+the CMS, adapting CMS records into the same `Post` and `Work` shapes the
+existing components already take — which is why no card or template had to
+change to display them.
+
+Two rules hold that together:
+
+- **A static slug always wins.** A CMS item whose slug collides with a committed
+  file is dropped from listings rather than shadowing it, because the file's URL
+  is the one already indexed.
+- **A CMS outage is not a website outage.** Every database read on a public page
+  is wrapped; if Postgres is unreachable the page serves the static content and
+  returns 200.
+
+Public pages stay prerendered and revalidate every 60 seconds, so publishing
+reaches the site within the minute without giving up static delivery — and a
+build never needs the database to be reachable.
+
+### Environment
+
+| Variable | Needed for |
+|---|---|
+| `DATABASE_URL` | The CMS. The public site renders without it. |
+| `CLOUDINARY_*` | Media uploads |
+| `SMTP_*`, `CONTACT_TO` | Enquiry notifications and acknowledgements |
+| `ANTHROPIC_API_KEY` | The chat widget's AI assistant (falls back to WhatsApp) |
+| `NEXT_PUBLIC_GA_ID` | Overrides the built-in GA4 property |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Overrides the number in Settings |

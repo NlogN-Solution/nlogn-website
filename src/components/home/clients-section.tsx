@@ -17,14 +17,16 @@ import {
   type ClientProject,
   type ClientVideo,
 } from "@/config/clients";
+import { softwareProducts, productsByReadiness } from "@/config/software";
+import { SoftwareCard } from "@/components/home/software-card";
 import { cn } from "@/lib/utils";
 
 /**
- * Recent client work, split by category with a media showcase beneath.
+ * Recent work, split by category — films, software products, and websites.
  *
- * Everything renders from `config/clients.ts`; nothing here is hardcoded. Videos
- * stream from Cloudinary and only mount a <video> once played, so opening the
- * page never pulls four files down.
+ * Nothing here is hardcoded: films and sites render from `config/clients.ts`,
+ * products from `config/software.ts`. Videos stream from Cloudinary and only
+ * mount a <video> once played, so opening the page never pulls four files down.
  */
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -37,12 +39,12 @@ function ProjectCard({ project }: { project: ClientProject }) {
   const body = (
     <>
       {/* browser chrome, so the shot reads as a live site rather than an image */}
-      <div className="flex items-center gap-2 border-b border-line bg-canvas px-5 py-3.5">
-        <span aria-hidden className="size-2 rounded-full bg-line" />
-        <span aria-hidden className="size-2 rounded-full bg-line" />
-        <span aria-hidden className="size-2 rounded-full bg-line" />
+      <div className="flex min-w-0 items-center gap-2 border-b border-line bg-canvas px-4 py-3.5 sm:px-5">
+        <span aria-hidden className="size-2 shrink-0 rounded-full bg-line" />
+        <span aria-hidden className="size-2 shrink-0 rounded-full bg-line" />
+        <span aria-hidden className="size-2 shrink-0 rounded-full bg-line" />
         {host && (
-          <span className="ml-3 truncate rounded-full bg-surface px-3 py-1 font-mono text-[0.6875rem] text-muted">
+          <span className="ml-3 min-w-0 truncate rounded-full bg-surface px-3 py-1 font-mono text-[0.6875rem] text-muted">
             {host}
           </span>
         )}
@@ -118,26 +120,19 @@ function ProjectCard({ project }: { project: ClientProject }) {
   );
 }
 
-/* ── a film ─────────────────────────────────────────────────────────────── */
+/* ── films ──────────────────────────────────────────────────────────────── */
 
 /**
- * Films are shown as cinema cards: a dark stage holding the frame, a marquee
- * across the top, and a ticket stub torn off underneath carrying the credits.
- * The stage is sized to the source — 9:16 for a reel, 16:9 for a feature — so
- * nothing is ever cropped or letterboxed to fit a grid.
+ * The player. A Cloudinary still stands in until someone presses play, at which
+ * point the real <video> mounts — so four films on one tab cost four images,
+ * not four downloads.
  */
-function FilmCard({ video, feature = false }: { video: ClientVideo; feature?: boolean }) {
+function VideoStage({ video, className }: { video: ClientVideo; className?: string }) {
   const [playing, setPlaying] = useState(false);
   const poster = video.videoPoster ?? cloudinaryPoster(video.videoUrl);
-  const portrait = video.aspect === "portrait";
 
-  const stage = (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[20px] bg-black ring-1 ring-white/10",
-        portrait ? "aspect-[9/16]" : "aspect-video",
-      )}
-    >
+  return (
+    <div className={cn("relative overflow-hidden bg-ink", className)}>
       {playing ? (
         <video
           src={cloudinaryVideo(video.videoUrl)}
@@ -146,7 +141,7 @@ function FilmCard({ video, feature = false }: { video: ClientVideo; feature?: bo
           autoPlay
           playsInline
           preload="metadata"
-          className="size-full object-cover"
+          className="absolute inset-0 size-full object-cover"
         >
           <track kind="captions" />
         </video>
@@ -165,159 +160,90 @@ function FilmCard({ video, feature = false }: { video: ClientVideo; feature?: bo
               src={poster}
               alt=""
               loading="lazy"
-              className="size-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
+              className="size-full object-cover opacity-90 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
             />
           )}
-
-          {/* house lights: a vignette that lifts as the card is hovered */}
           <span
             aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_45%,transparent_25%,rgba(4,2,10,0.55)_100%)] transition-opacity duration-700 group-hover:opacity-70"
+            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,11,15,0.15),rgba(11,11,15,0.45))]"
           />
           <span
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(180deg,transparent,rgba(4,2,10,0.85))]"
-          />
-
-          {/* the projector button */}
-          <span
-            aria-hidden
-            className={cn(
-              "absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-ink shadow-[0_18px_45px_-12px_rgba(0,0,0,0.8)] backdrop-blur transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:bg-white",
-              feature ? "size-[4.5rem]" : "size-14",
-            )}
+            className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-lift transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
           >
-            <span className="absolute inset-0 rounded-full ring-1 ring-white/40 transition-all duration-700 group-hover:scale-[1.35] group-hover:opacity-0" />
-            <Play className={cn("translate-x-0.5 fill-ink", feature ? "size-7" : "size-5")} />
-          </span>
-
-          {/* the title card, over the scrim */}
-          <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5">
-            <span className="min-w-0">
-              <span className="block truncate font-display text-[1.0625rem] font-bold tracking-[-0.03em] text-white">
-                {video.clientName}
-              </span>
-              <span className="mt-0.5 block truncate text-[0.8125rem] font-medium text-violet-soft">
-                {video.projectName}
-              </span>
-            </span>
-            <span className="label shrink-0 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[0.5625rem] text-white/80 backdrop-blur">
-              {portrait ? "9:16" : "16:9"}
-            </span>
+            <Play className="size-6 translate-x-0.5 fill-ink" />
           </span>
         </button>
       )}
     </div>
   );
+}
 
-  const credits = (
-    <div className="relative">
-      {/* the tear — a perforated line, notched into both edges of the card */}
-      {/* 2.25rem = the card's two paddings (0.5 + 0.5) plus the stub's own
-          0.75, plus half a notch — which puts each circle's centre exactly on
-          the card edge, where `overflow-hidden` bites the other half off. */}
-      <span
-        aria-hidden
-        className="absolute -left-9 top-0 size-4 -translate-y-1/2 rounded-full bg-canvas"
-      />
-      <span
-        aria-hidden
-        className="absolute -right-9 top-0 size-4 -translate-y-1/2 rounded-full bg-canvas"
-      />
-      <span aria-hidden className="block border-t border-dashed border-white/20" />
-
-      <div className={cn("pt-5", feature ? "" : "min-h-[6.5rem]")}>
-        <p className="label text-violet-soft">{video.sector}</p>
-        <p className="mt-2.5 text-[0.875rem] leading-relaxed text-white/65">
-          {video.description}
-        </p>
-      </div>
-    </div>
-  );
-
+/**
+ * A widescreen film, given the full width of the panel with its credits set
+ * beside it rather than beneath. Mixing a 16:9 frame into a grid of 9:16 reels
+ * leaves a hole in the row, so the wide cut leads instead.
+ */
+function FeatureFilmCard({ video }: { video: ClientVideo }) {
   return (
-    <figure
-      className={cn(
-        "group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(165deg,#16101f_0%,#0b0810_60%,#0d0716_100%)] p-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/40 hover:shadow-[0_30px_70px_-30px_rgba(69,38,201,0.65)]",
-      )}
-    >
-      {/* marquee */}
-      <div className="flex items-center justify-between gap-3 px-3.5 py-3">
-        <span className="flex items-center gap-2">
-          <Clapperboard className="size-3.5 text-violet-soft" strokeWidth={2} aria-hidden />
-          <span className="label text-[0.5625rem] text-white/55">
-            {feature ? "Feature" : "Reel"}
-          </span>
-        </span>
-        <span aria-hidden className="flex items-center gap-1">
-          {[0, 1, 2, 3].map((i) => (
-            <span key={i} className="block h-1 w-3 rounded-full bg-white/12" />
-          ))}
-        </span>
-      </div>
+    <figure className="group grid overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-violet/30 hover:shadow-lift lg:grid-cols-[1.6fr_1fr]">
+      <VideoStage video={video} className="aspect-video" />
 
-      {feature ? (
-        <div className="grid flex-1 gap-5 p-2 lg:grid-cols-[1.35fr_1fr] lg:gap-7">
-          {stage}
-          <figcaption className="flex flex-col justify-center pb-3 pr-3 lg:py-4">
-            <p className="label text-violet-soft">{video.sector}</p>
-            <h4 className="mt-4 font-display text-[clamp(1.35rem,1rem+1vw,1.9rem)] font-bold leading-[1.1] tracking-[-0.035em] text-white">
-              {video.clientName}
-            </h4>
-            <p className="mt-2 text-[1.0625rem] font-medium text-violet-soft">
-              {video.projectName}
-            </p>
-            <p className="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-white/65">
-              {video.description}
-            </p>
-            <span aria-hidden className="mt-7 block h-px w-full bg-white/12">
-              <span className="block h-px w-10 bg-[linear-gradient(90deg,#a78bfa,#6c47ff)] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
-            </span>
-          </figcaption>
-        </div>
-      ) : (
-        <div className="flex flex-1 flex-col p-2">
-          {stage}
-          <figcaption className="mt-5 px-3 pb-3">{credits}</figcaption>
-        </div>
-      )}
+      <figcaption className="flex flex-col justify-center p-7 md:p-10">
+        <span className="label w-fit rounded-full bg-violet-wash px-3 py-1.5 text-violet-deep">
+          Featured film
+        </span>
+        <p className="label mt-6 text-violet">{video.sector}</p>
+        <h4 className="mt-3 font-display text-[clamp(1.4rem,1.1rem+1vw,1.9rem)] font-bold tracking-[-0.03em] text-ink">
+          {video.clientName}
+        </h4>
+        <p className="mt-1.5 text-[1.0625rem] font-medium text-violet-deep">{video.projectName}</p>
+        <p className="mt-5 text-[0.9375rem] leading-relaxed text-muted">{video.description}</p>
+      </figcaption>
     </figure>
   );
 }
 
-/** The films, arranged as a bill: the wide cut plays as the feature, the
- *  vertical cuts sit under it as the supporting reels. */
-function MediaShowcase({ videos }: { videos: ClientVideo[] }) {
+/** A vertical reel. Sits in a row with the others, all the same shape. */
+function ReelCard({ video }: { video: ClientVideo }) {
+  return (
+    <figure className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift">
+      <VideoStage video={video} className="aspect-[9/16]" />
+
+      <figcaption className="flex flex-1 flex-col p-6 md:p-7">
+        <p className="label text-violet">{video.sector}</p>
+        <h4 className="mt-3 font-display text-lg font-bold tracking-[-0.03em] text-ink">
+          {video.clientName}
+        </h4>
+        <p className="mt-1 text-[0.9375rem] font-medium text-violet-deep">{video.projectName}</p>
+        <p className="mt-3 flex-1 text-[0.875rem] leading-relaxed text-muted">{video.description}</p>
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * The media tab: wide films first as full-width features, then the vertical
+ * reels in one aligned row. Shape decides placement, not the order in config,
+ * so adding a film never leaves a ragged grid behind.
+ */
+function MediaPanel({ videos }: { videos: ClientVideo[] }) {
   const features = videos.filter((v) => v.aspect === "landscape");
-  const reels = videos.filter((v) => v.aspect !== "landscape");
+  const reels = videos.filter((v) => v.aspect === "portrait");
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-4">
-        <span className="flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-2">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-violet opacity-60" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-violet" />
-          </span>
-          <span className="label text-ink-soft">Now showing</span>
-        </span>
-        <span aria-hidden className="h-px flex-1 bg-line" />
-        <span className="label text-muted">
-          {videos.length} {videos.length === 1 ? "film" : "films"}
-        </span>
-      </div>
-
       {features.map((video, i) => (
-        <Reveal key={video.id} delay={i * 0.06}>
-          <FilmCard video={video} feature />
+        <Reveal key={video.id} delay={i * 0.08}>
+          <FeatureFilmCard video={video} />
         </Reveal>
       ))}
 
       {reels.length > 0 && (
-        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {reels.map((video, i) => (
             <Reveal as="li" key={video.id} delay={(i % 3) * 0.07} className="h-full">
-              <FilmCard video={video} />
+              <ReelCard video={video} />
             </Reveal>
           ))}
         </ul>
@@ -338,19 +264,20 @@ const EMPTY: Record<ClientCategory, { title: string; body: string }> = {
   },
   software: {
     title: "Software write-ups are in progress",
-    body: "Most of what we build here runs behind a login, so the detail goes into a case study rather than a public link. Ask and we will walk you through one.",
+    body: "Most of what we build here runs behind a login, so the detail goes into a write-up rather than a public link. Ask and we will walk you through one.",
   },
 };
 
 /* ── the section ────────────────────────────────────────────────────────── */
 
 export function ClientsSection() {
-  const [tab, setTab] = useState<ClientCategory>("websites");
+  const [tab, setTab] = useState<ClientCategory>("media");
 
   const isMedia = tab === "media";
-  const projects = isMedia ? [] : projectsByCategory(tab);
   const videos = isMedia ? publishedVideos() : [];
-  const count = isMedia ? videos.length : projects.length;
+  const products = tab === "software" ? productsByReadiness() : [];
+  const projects = tab === "websites" ? projectsByCategory(tab) : [];
+  const count = videos.length + products.length + projects.length;
 
   return (
     <section id="clients" className="container-x py-16 md:py-28">
@@ -358,10 +285,10 @@ export function ClientsSection() {
         eyebrow="Recent clients"
         title={
           <>
-            Work that is <span className="text-gradient-violet">live and in the wild</span>
+            Clients and Projects <span className="text-gradient-violet">we have worked with</span>
           </>
         }
-        lead="Sites, films and systems we built for clients, running in production today. Open any of them — they are not mockups."
+        lead="Films, software products and websites — client work running in production, and the platforms we build and run ourselves."
         action={
           <Button href="/case-studies" variant="secondary" arrow>
             Read the case studies
@@ -379,7 +306,11 @@ export function ClientsSection() {
           {CLIENT_TABS.map((item) => {
             const active = tab === item.id;
             const tally =
-              item.id === "media" ? publishedVideos().length : projectsByCategory(item.id).length;
+              item.id === "media"
+                ? publishedVideos().length
+                : item.id === "software"
+                  ? softwareProducts.length
+                  : projectsByCategory(item.id).length;
             return (
               <button
                 key={item.id}
@@ -431,19 +362,23 @@ export function ClientsSection() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.4, ease: EASE }}
           >
-            {count > 0 ? (
-              isMedia ? (
-                <MediaShowcase videos={videos} />
-              ) : (
-                <ul className="grid gap-5 lg:grid-cols-2">
-                  {projects.map((project, i) => (
-                    <Reveal as="li" key={project.id} delay={(i % 2) * 0.08} className="h-full">
-                      <ProjectCard project={project} />
-                    </Reveal>
-                  ))}
-                </ul>
-              )
+            {count === 0 ? null : isMedia ? (
+              <MediaPanel videos={videos} />
             ) : (
+              <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
+                {products.map((product, i) => (
+                  <Reveal as="li" key={product.slug} delay={(i % 2) * 0.08} className="h-full">
+                    <SoftwareCard product={product} />
+                  </Reveal>
+                ))}
+                {projects.map((project, i) => (
+                  <Reveal as="li" key={project.id} delay={(i % 2) * 0.08} className="h-full">
+                    <ProjectCard project={project} />
+                  </Reveal>
+                ))}
+              </ul>
+            )}
+            {count === 0 && (
               <div className="flex min-h-[26rem] flex-col items-start justify-center gap-6 rounded-[26px] border border-dashed border-line bg-surface p-10 md:flex-row md:items-center md:justify-between md:p-12">
                 <div className="flex items-start gap-5">
                   <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-violet-wash text-violet">

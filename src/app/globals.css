@@ -99,6 +99,46 @@
     background: var(--color-violet);
     color: #fff;
   }
+
+  /*
+   * Horizontal overflow, removed at the source.
+   *
+   * A grid or flex item defaults to `min-width: auto`, which means one
+   * intrinsically wide child — a code block, a text input, an unbroken URL, an
+   * oversized image — can size its track wider than the page and make the whole
+   * document drag sideways on a phone. These caps take away the usual sources
+   * rather than clipping the symptom afterwards.
+   */
+  img, video, canvas, svg, iframe {
+    max-width: 100%;
+  }
+  img, video, canvas {
+    height: auto;
+  }
+  /* Form controls carry an intrinsic width of roughly 20 characters. */
+  input, select, textarea {
+    max-width: 100%;
+    min-width: 0;
+  }
+  /* A long URL or identifier wraps instead of widening its column. */
+  body {
+    overflow-wrap: break-word;
+  }
+  /*
+   * The last line of defence, and only that — every rule above exists so this
+   * one never has to fire. `clip` rather than `hidden`: hidden would turn the
+   * body into a scroll container and break every `position: sticky` sidebar on
+   * the site, clip does not. `contain` stops a sideways swipe from rubber-
+   * banding the page or triggering a browser back gesture mid-scroll.
+   */
+  html {
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: contain;
+  }
+  body {
+    max-width: 100%;
+  }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.035em;
@@ -229,6 +269,10 @@
   border-radius: 6px;
   color: var(--color-violet-deep);
 }
+/* The article column must be free to shrink; its wide children scroll alone. */
+.prose-nlogn { min-width: 0; }
+.prose-nlogn pre,
+.prose-nlogn table { min-width: 0; max-width: 100%; }
 .prose-nlogn pre {
   background: #0b0b0f;
   color: #e7e7ef;
@@ -241,7 +285,14 @@
 .prose-nlogn pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
 .prose-nlogn img { border-radius: var(--radius-md); }
 .prose-nlogn hr { border-color: var(--color-line); margin-block: 2.5em; }
-.prose-nlogn table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+/* A table that cannot fit scrolls within itself rather than the whole page. */
+.prose-nlogn table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
 .prose-nlogn th, .prose-nlogn td { border: 1px solid var(--color-line); padding: 0.7rem 0.9rem; text-align: left; }
 .prose-nlogn th { background: var(--color-canvas); color: var(--color-ink); font-weight: 600; }
 

@@ -43,10 +43,17 @@ export type ClientVideo = {
   aspect: "portrait" | "landscape";
 };
 
+/**
+ * Order matters — the first tab is the one the section opens on.
+ *
+ * The `software` tab renders from `config/software.ts` rather than from
+ * `clientProjects`, because a product carries a full write-up rather than an
+ * outbound link to a live site.
+ */
 export const CLIENT_TABS: { id: ClientCategory; label: string }[] = [
-  { id: "websites", label: "Websites" },
   { id: "media", label: "Content & Media Production" },
   { id: "software", label: "Software" },
+  { id: "websites", label: "Websites" },
 ];
 
 export const clientProjects: ClientProject[] = [
@@ -94,21 +101,7 @@ export const clientProjects: ClientProject[] = [
     thumbnail: "/clients/dream-high.png",
     projectUrl: "https://dream-high-education-academy.onrender.com/",
   },
-  /*
-   * Software builds go here, for example:
-   *
-   * {
-   *   id: "acme-crm",
-   *   clientName: "Acme",
-   *   projectName: "Operations CRM",
-   *   category: "software",
-   *   sector: "Logistics",
-   *   description: "…",
-   *   thumbnail: "/clients/acme-crm.png",
-   *   projectUrl: "https://…",            // omit when there is nothing public
-   *   technologies: ["Next.js", "Node.js", "PostgreSQL"],
-   * },
-   */
+  // Software products live in `config/software.ts`, not here.
 ];
 
 /**
