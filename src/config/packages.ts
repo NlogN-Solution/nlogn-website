@@ -113,7 +113,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A content engine that generates leads every week.",
         summary:
           "Our main package. Enough volume to compound, a real paid-media programme behind it, and reporting that ties spend to leads.",
-        from: "$650/mo",
+        from: "$500/mo",
         bestFor: "Businesses ready for consistent lead generation",
         highlights: [
           "10 Reels a month, scripted, shot-directed and edited",
@@ -181,7 +181,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Your external growth team.",
         summary:
           "For established businesses that want NLOGN to own acquisition: full-funnel strategy, multi-channel media, and a lead pipeline wired into your CRM.",
-        from: "$1200/mo",
+        from: "$1000/mo",
         bestFor: "Established businesses scaling acquisition",
         highlights: [
           "15 Reels, 8 carousels, 8 statics, 20–30 stories",
@@ -390,7 +390,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Own the category in search.",
         summary:
           "For companies building long-term organic dominance — topical authority, digital PR, and visibility inside AI search results.",
-        from: "$3,200/mo",
+        from: "$1500/mo",
         bestFor: "Companies playing a multi-year organic game",
         highlights: [
           "12–16 articles, 4 landing pages, 2 pillar pages a month",
@@ -455,7 +455,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A credible site, live in two weeks.",
         summary:
           "Five to seven pages with custom UI, proper SEO foundations and analytics wired up from day one.",
-        from: "$1,800",
+        from: "$650",
         bestFor: "New businesses and first proper websites",
         highlights: [
           "5–7 pages with custom UI",
@@ -493,7 +493,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A website that works as a sales channel.",
         summary:
           "Ten to fifteen pages with a CMS your team controls, a blog, booking, and the integrations that turn visits into enquiries.",
-        from: "$2500",
+        from: "$1000",
         bestFor: "Businesses that need the site to generate leads",
         highlights: [
           "10–15 pages, custom UI/UX and premium animations",
@@ -530,7 +530,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "A custom digital platform.",
         summary:
           "UX research, a real design system, authentication, dashboards and payments — a website that behaves like a product.",
-        from: "$6,000",
+        from: "$3000",
         bestFor: "Companies needing a platform, not a brochure",
         highlights: [
           "UX research and a custom design system",
@@ -578,7 +578,7 @@ export const packageFamilies: PackageFamily[] = [
     pillar: "Digital Products",
     model: "Project",
     icon: "server",
-    from: "$3,000",
+    from: "$1,000",
     intro:
       "We build software around how your business actually works — not around a template. Discovery first, architecture second, code third.",
     tiers: [
@@ -587,7 +587,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "The smallest system that proves the model.",
         summary:
           "Requirements, architecture, core functionality and a working product in front of real users.",
-        from: "$6,000",
+        from: "$1500",
         bestFor: "Startups and first internal systems",
         highlights: [
           "Requirements analysis and database architecture",
@@ -626,7 +626,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Replace the spreadsheets and the manual handoffs.",
         summary:
           "A full internal platform: staff and customer portals, role-based permissions, integrations, reporting and payments.",
-        from: "$9,000",
+        from: "$2500",
         bestFor: "Established businesses outgrowing manual process",
         highlights: [
           "Custom web application with admin and staff dashboards",
@@ -767,7 +767,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Your lead-to-sale path runs itself.",
         summary:
           "Seven to ten connected workflows covering leads, appointments, support and sales — with reporting on what each one saved.",
-        from: "$2000",
+        from: "$1500",
         bestFor: "Teams drowning in inbound admin",
         highlights: [
           "7–10 automated workflows",
@@ -887,7 +887,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "It qualifies and books while you sleep.",
         summary:
           "Everything in Starter, plus qualification, recommendations, appointment booking and CRM sync.",
-        from: "$1500",
+        from: "$1000",
         bestFor: "Businesses where speed to lead decides the sale",
         highlights: [
           "Lead qualification",
@@ -1082,7 +1082,7 @@ export const packageFamilies: PackageFamily[] = [
         badge: "Most chosen",
         tagline: "Search, display and remarketing working together.",
         summary: "Multiple campaigns with landing-page optimisation and weekly testing.",
-        from: "$6,000/mo",
+        from: "$1000/mo",
         bestFor: "Businesses ready to scale spend",
         highlights: [
           "Search, display and remarketing",
@@ -1156,7 +1156,7 @@ export const packageFamilies: PackageFamily[] = [
         name: "Brand Starter",
         tagline: "Tidy up what you have.",
         summary: "Logo refinement, a proper colour and type system, and the templates your team uses daily.",
-        from: "$900",
+        from: "$650",
         bestFor: "Businesses with a logo but no system",
         highlights: [
           "Logo refinement",
@@ -1186,7 +1186,7 @@ export const packageFamilies: PackageFamily[] = [
         tagline: "Position first, then design.",
         summary:
           "Strategy, identity and a graphic system that holds up across a website, an app, a deck and a shopfront.",
-        from: "$2000",
+        from: "$1000",
         bestFor: "Rebrands and new market positioning",
         highlights: [
           "Brand strategy",

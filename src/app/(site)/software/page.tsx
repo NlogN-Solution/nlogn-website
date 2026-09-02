@@ -12,7 +12,7 @@ import { absoluteUrl } from "@/lib/utils";
 export const metadata: Metadata = buildMetadata({
   title: "Software — the platforms we build, run and ship",
   description:
-    "ED360 and Ignition running in production, plus the products currently in development: consultancy CRM, admissions, hospitality operations, legal practice management and business reporting.",
+    "ED360, Chatboq and Ignition running in production — consultancy operations, AI customer communication and admissions — plus Docket, legal practice management currently in development.",
   path: "/software",
 });
 

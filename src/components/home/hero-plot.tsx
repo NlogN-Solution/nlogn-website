@@ -60,7 +60,7 @@ const PAIRS: Pair[] = [
     t: 0.74,
     label: "Qualified leads a month",
     before: "40",
-    after: "290",
+    after: "100",
     multiple: "7.2x",
   },
 ];

@@ -38,8 +38,25 @@
   --radius-lg: 26px;
   --radius-xl: 34px;
 
-  --shadow-soft: 0 1px 2px rgb(11 11 15 / 0.04), 0 8px 24px -12px rgb(11 11 15 / 0.10);
-  --shadow-lift: 0 2px 4px rgb(11 11 15 / 0.04), 0 24px 48px -20px rgb(11 11 15 / 0.18);
+  /*
+   * Soft-UI depth. Every raised surface carries a matched pair: a white
+   * highlight up-left and a diffuse shadow down-right, so the element reads as
+   * pressed out of the same material as the page rather than floated above it.
+   * `--shadow-inset` is the pressed state, for inputs and :active controls.
+   * Palette is untouched — this is all neutral light and ink at low alpha.
+   */
+  --shadow-soft-sm:
+    -3px -3px 8px rgb(255 255 255 / 0.85),
+    3px 4px 12px -4px rgb(11 11 15 / 0.12);
+  --shadow-soft:
+    -6px -6px 16px rgb(255 255 255 / 0.9),
+    7px 8px 22px -6px rgb(11 11 15 / 0.13);
+  --shadow-lift:
+    -9px -9px 24px rgb(255 255 255 / 0.95),
+    16px 20px 44px -12px rgb(11 11 15 / 0.2);
+  --shadow-inset:
+    inset 2px 2px 6px rgb(11 11 15 / 0.1),
+    inset -2px -2px 6px rgb(255 255 255 / 0.85);
   --shadow-glass: 0 30px 80px -30px rgb(69 38 201 / 0.35);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -198,6 +215,18 @@
     border: 1px solid rgb(255 255 255 / 0.85);
   }
   .hairline { border-color: var(--color-line); }
+
+  /*
+   * Soft-UI surfaces. `.surface-neu` is a raised panel, `.surface-neu-inset` a
+   * recessed one (form fields, wells). Both keep the existing border and colour
+   * tokens and only add the matched highlight/shadow pair.
+   */
+  .surface-neu {
+    box-shadow: var(--shadow-soft);
+  }
+  .surface-neu-inset {
+    box-shadow: var(--shadow-inset);
+  }
 
   /* Above-the-fold entrances run in CSS, so nothing depends on JS to be seen. */
   .anim-in {

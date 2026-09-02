@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowRight, ArrowUpRight, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
 import { Button } from "@/components/ui/button";
 import { CapabilityVisual } from "@/components/home/capability-visuals";
-import { capabilities, workBySlug, type Capability, type CapabilityProject } from "@/config/capabilities";
+import { capabilities, type Capability } from "@/config/capabilities";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -54,84 +53,6 @@ function Highlights({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-/* ── Proof: real engagements, per discipline ────────────────────────────── */
-
-function ProjectVideo({ src, label }: { src: string; label: string }) {
-  const ref = useRef<HTMLVideoElement>(null);
-
-  return (
-    <video
-      ref={ref}
-      src={src.startsWith("/") ? src : `/videos/${src}`}
-      muted
-      loop
-      playsInline
-      preload="metadata"
-      aria-label={label}
-      onMouseEnter={() => void ref.current?.play().catch(() => {})}
-      onFocus={() => void ref.current?.play().catch(() => {})}
-      onMouseLeave={() => ref.current?.pause()}
-      onBlur={() => ref.current?.pause()}
-      className="aspect-video w-full rounded-xl border border-white/10 object-cover"
-    />
-  );
-}
-
-function ProjectCard({ project }: { project: CapabilityProject }) {
-  const work = workBySlug.get(project.work);
-  if (!work) return null;
-
-  return (
-    <Link
-      href={`/case-studies/${work.slug}`}
-      className="group flex h-full flex-col rounded-[18px] border border-white/[0.09] bg-white/[0.025] p-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-violet/35 hover:bg-white/[0.05]"
-    >
-      {project.video && (
-        <div className="mb-4">
-          <ProjectVideo src={project.video} label={`${work.client} — work sample`} />
-        </div>
-      )}
-
-      <div className="flex items-start justify-between gap-3">
-        <span className="label text-violet-soft">{work.client}</span>
-        <ArrowUpRight
-          aria-hidden
-          className="size-4 shrink-0 text-white/25 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-violet-soft"
-        />
-      </div>
-
-      <p className="mt-4 font-display text-[1.6rem] font-extrabold leading-none tracking-[-0.045em] text-white">
-        {project.metric.value}
-      </p>
-      <p className="mt-1.5 text-xs text-white/40">{project.metric.label}</p>
-
-      <p className="mt-4 flex-1 text-[0.875rem] leading-relaxed text-white/55">{project.role}</p>
-
-      <p className="label mt-5 border-t border-white/[0.07] pt-4 text-white/30">
-        {work.category} · {work.year}
-      </p>
-    </Link>
-  );
-}
-
-function ProjectRow({ capability }: { capability: Capability }) {
-  return (
-    <div className="mt-10 border-t border-white/10 pt-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <PanelLabel>Proof — {capability.label.toLowerCase()} in the work</PanelLabel>
-        <p className="text-xs text-white/30">Every figure comes from the client&apos;s own reporting.</p>
-      </div>
-      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {capability.projects.map((project) => (
-          <li key={`${capability.id}-${project.work}`}>
-            <ProjectCard project={project} />
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -293,8 +214,6 @@ function CapabilityPanel({ capability }: { capability: Capability }) {
               <ServiceList services={capability.services} />
             </div>
           </div>
-
-          <ProjectRow capability={capability} />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -387,8 +306,6 @@ function CapabilityAccordion() {
                       <ServiceList services={capability.services} columns={2} />
                     </div>
                   </div>
-
-                  <ProjectRow capability={capability} />
                 </div>
               </div>
             </div>

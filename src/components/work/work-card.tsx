@@ -1,8 +1,5 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { Reveal } from "@/components/ui/reveal";
-import { Button } from "@/components/ui/button";
 import { GrowthCurve } from "@/components/ui/growth-curve";
 import { works } from "@/config/site";
 
@@ -11,7 +8,7 @@ export function WorkCard({ work }: { work: (typeof works)[number] }) {
   return (
     <Link
       href={`/case-studies/${work.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift"
+      className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift"
     >
       <div
         className="relative aspect-[16/10] overflow-hidden"
@@ -65,34 +62,5 @@ export function WorkCard({ work }: { work: (typeof works)[number] }) {
       </div>
       <span className="sr-only">Read the {work.client} case study</span>
     </Link>
-  );
-}
-
-export function WorksSection() {
-  return (
-    <section className="container-x py-16 md:py-28">
-      <SectionHeading
-        eyebrow="Selected work"
-        title={
-          <>
-            Case studies with the <span className="text-gradient-violet">numbers attached</span>
-          </>
-        }
-        lead="Every project below lists what changed and by how much. Where a number is missing, it is because the client asked us not to publish it — not because it did not move."
-        action={
-          <Button href="/case-studies" variant="secondary" arrow>
-            All case studies
-          </Button>
-        }
-      />
-
-      <ul className="mt-14 grid gap-5 md:grid-cols-2">
-        {works.slice(0, 4).map((work, i) => (
-          <Reveal as="li" key={work.slug} delay={(i % 2) * 0.1}>
-            <WorkCard work={work} />
-          </Reveal>
-        ))}
-      </ul>
-    </section>
   );
 }

@@ -228,6 +228,83 @@ export const softwareProducts: SoftwareProduct[] = [
       "Traditional CRM platforms focus on customers and sales. ED360 combines CRM, HR operations, payroll, analytics, automation, AI and integrations into one system — less a CRM, more a business operating system for consultancy companies.",
   },
 
+  /* ── Chatboq ──────────────────────────────────────────────────────────── */
+  {
+    slug: "chatboq",
+    name: "Chatboq",
+    tagline: "AI customer communication in one workspace",
+    sector: "Customer communication",
+    status: "live",
+    summary:
+      "An AI-powered customer communication platform that combines live chat, AI conversations, CRM, ticketing and omnichannel messaging in one workspace, so a team engages visitors, automates support and keeps every conversation in one place.",
+    intro: [
+      "Chatboq is an all-in-one AI customer communication platform that combines live chat, AI-powered conversations, CRM, ticketing and omnichannel messaging in a single workspace.",
+      "It helps businesses engage website visitors, automate customer support, manage conversations across channels, and turn one-off interactions into ongoing customer relationships.",
+      "We helped build and scale Chatboq. The platform lets businesses engage visitors through live chat and AI, automate support, manage tickets and customer data, and connect multiple communication channels through one unified workspace.",
+    ],
+    thumbnail: "/software/chatboq.png",
+    monogram: "Cq",
+    accent: "#0ea5e9",
+    stack: ["FastAPI", "Python", "Next.js", "TypeScript", "Redis", "PostgreSQL", "WebSockets"],
+    audience: ["Support teams", "Sales teams", "Customer success", "Founders"],
+    highlights: [
+      { label: "Product type", value: "AI customer communication platform" },
+      { label: "Industry", value: "SaaS / customer support" },
+      { label: "Primary users", value: "Support and sales teams" },
+      { label: "Core focus", value: "Live chat, AI, ticketing & CRM" },
+    ],
+    problem: {
+      body: "Customer conversations get spread across a website chat widget, an email inbox, a couple of social channels and a spreadsheet of customer details. An agent answering a question cannot see what the customer asked last week, repetitive questions eat the team's day, and anything that needs follow-up is tracked from memory.",
+      pains: [
+        "Conversations split across chat, email and social",
+        "No shared history when a customer comes back",
+        "Repetitive questions handled manually every time",
+        "Follow-ups tracked outside any system of record",
+        "Customer details disconnected from the conversation",
+        "No view of response times or conversation volume",
+      ],
+    },
+    vision: {
+      headline: "Every customer conversation in one place.",
+      body: [
+        "Chatboq is built around a single conversation record that follows the customer across every channel, so whoever picks it up has the full history in front of them.",
+        "AI sits on top of that record. It answers what it can on its own, drafts replies for what it cannot, and hands the agent a conversation that is already halfway done.",
+      ],
+    },
+    modules: [
+      {
+        title: "Live chat",
+        body: "A website widget that lets the team talk to visitors in real time, with routing, canned replies and visitor context attached to every conversation.",
+      },
+      {
+        title: "AI conversations",
+        body: "An AI assistant that handles common questions on its own, using the business's own content, and escalates to a human the moment a conversation needs one.",
+      },
+      {
+        title: "Shared inbox and ticketing",
+        body: "Conversations that need follow-up become tickets with an owner, a status and a history, so nothing that was promised gets lost after the chat window closes.",
+      },
+      {
+        title: "Customer profiles and CRM",
+        body: "Every contact carries their details, past conversations and notes, so an agent opens a chat already knowing who they are talking to.",
+      },
+      {
+        title: "Omnichannel messaging",
+        body: "Website chat, email and messaging channels land in the same workspace, so the team works from one queue rather than switching between apps.",
+      },
+      {
+        title: "Team workspace",
+        body: "Assignment, internal notes, collaboration on a conversation and visibility of who is handling what, so a growing team stays coordinated.",
+      },
+      {
+        title: "Insights",
+        body: "Volume, response and resolution times, and where conversations come from, so the team can see whether service is keeping up with growth.",
+      },
+    ],
+    closing:
+      "We helped build and scale Chatboq into an AI customer communication platform that centralises live chat, AI conversations, ticketing and customer data in one workspace — so a growing team keeps every customer conversation in one place instead of five.",
+  },
+
   /* ── Ignition ─────────────────────────────────────────────────────────── */
   {
     slug: "ignition",
@@ -312,88 +389,6 @@ export const softwareProducts: SoftwareProduct[] = [
 
   /* ── In development ───────────────────────────────────────────────────── */
   {
-    slug: "tapri",
-    name: "Tapri",
-    tagline: "Front-of-house and back-of-house on one system",
-    sector: "Hospitality",
-    status: "development",
-    summary:
-      "A hospitality operations platform for multi-branch cafés and restaurants — orders, kitchen tickets, stock and recipe costing tied together so a menu price is answerable from data.",
-    intro: [
-      "Tapri is an operations platform for cafés, restaurants and multi-branch food businesses. It is currently in development and not yet available to customers.",
-      "Most hospitality software solves the till and stops there. The problems that actually decide whether a branch makes money sit behind the counter: what stock moved, what a dish really costs to plate, which items sell at which hour, and why one branch runs 6% higher wastage than the others.",
-      "Tapri connects the order to the recipe, the recipe to the stock, and the stock to the purchase order, so those questions have answers instead of estimates.",
-    ],
-    monogram: "Tp",
-    accent: "#e07a3f",
-    stack: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "Prisma", "React Native"],
-    audience: ["Café and restaurant owners", "Branch managers", "Kitchen leads", "Floor staff"],
-    highlights: [
-      { label: "Product type", value: "Hospitality operations & POS platform" },
-      { label: "Industry", value: "Food & beverage" },
-      { label: "Primary users", value: "Owners, branch managers, kitchen and floor staff" },
-      { label: "Status", value: "In development — closed pilot planned" },
-    ],
-    problem: {
-      body: "A growing food business ends up running a till that does not talk to a stock sheet that does not talk to a supplier ledger. Menu prices get set from instinct, wastage is discovered at month end, and the difference between a branch that works and one that does not is invisible until the accounts arrive.",
-      pains: [
-        "Menu pricing set without knowing plate cost",
-        "Stock counted manually, and rarely",
-        "Wastage discovered weeks after it happened",
-        "No branch-to-branch comparison",
-        "Kitchen tickets written by hand at peak",
-        "Supplier prices tracked in a notebook",
-      ],
-    },
-    vision: {
-      headline: "Every order should update the stock room.",
-      body: [
-        "Tapri is being built around one relationship: an item sold is a recipe consumed, and a recipe consumed is stock leaving the shelf. Once that link holds, plate cost, wastage and reorder points stop being separate exercises and become consequences of the day's trading.",
-        "The design goal is that a manager closing up should not have to do arithmetic. The numbers a branch needs — covers, average spend, top and bottom sellers, stock to reorder — should already be waiting.",
-      ],
-    },
-    modules: [
-      {
-        title: "Branch-aware ordering",
-        body: "Menus, prices and availability are set per branch, so a seasonal item or a local price sits where it belongs without maintaining separate systems.",
-      },
-      {
-        title: "Kitchen display and tickets",
-        body: "Orders route to the right station as they are taken, with preparation state visible to the floor, replacing handwritten tickets during service.",
-      },
-      {
-        title: "Recipe and plate costing",
-        body: "Every menu item is defined as a recipe of ingredients at their current purchase price, giving a live plate cost and margin that moves when a supplier price does.",
-      },
-      {
-        title: "Stock and wastage",
-        body: "Sales deplete stock automatically through the recipe link. Counts, transfers between branches and recorded wastage reconcile against expected consumption, and the variance is the number worth looking at.",
-      },
-      {
-        title: "Purchasing and suppliers",
-        body: "Reorder points derived from actual consumption, purchase orders raised against supplier price lists, and a running history of what each ingredient has cost over time.",
-      },
-      {
-        title: "Shift and staff operations",
-        body: "Rosters, clock-in and shift-level sales attribution, so labour cost sits next to the revenue it produced rather than in a separate payroll conversation.",
-      },
-      {
-        title: "Branch analytics",
-        body: "Covers, average spend, hourly sales curves, item performance and wastage compared across branches, so a manager can see whether a problem is theirs or the group's.",
-      },
-    ],
-    roadmap: [
-      { stage: "Ordering and kitchen display", detail: "Core service flow, branch menus, station routing", done: true },
-      { stage: "Recipes and plate costing", detail: "Ingredient costing tied to live supplier prices", done: true },
-      { stage: "Stock and purchasing", detail: "Consumption-driven depletion, counts and reorder points", done: false },
-      { stage: "Closed pilot", detail: "A small group of multi-branch operators running live service", done: false },
-      { stage: "General release", detail: "Open onboarding, billing and hardware options", done: false },
-    ],
-    closing:
-      "Tapri is in active development. We are talking to multi-branch operators who want to shape the pilot — if that is you, we would rather hear about your month-end problem now than after the product is finished.",
-  },
-
-  {
     slug: "docket",
     name: "Docket",
     tagline: "Matters, documents and deadlines for small law firms",
@@ -406,6 +401,7 @@ export const softwareProducts: SoftwareProduct[] = [
       "Firms below a certain size rarely have practice management software, because the products aimed at them are billing systems with a case list bolted on. The daily risk in a small firm is not mis-billing — it is a limitation period nobody diarised, or a filing that went out against the previous draft.",
       "Docket is built around the matter file, with the document version history and the deadline calendar as first-class parts of it rather than attachments to it.",
     ],
+    thumbnail: "/software/Docket.png",
     monogram: "Dk",
     accent: "#2f7d68",
     stack: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "S3", "OpenAI"],
@@ -477,88 +473,6 @@ export const softwareProducts: SoftwareProduct[] = [
     ],
     closing:
       "Docket is in active development, shaped with firms who deal with these problems daily. If your practice would make a good design partner, we would like to talk before the deadline engine is finalised.",
-  },
-
-  {
-    slug: "pulseboard",
-    name: "Pulseboard",
-    tagline: "One weekly scorecard instead of six dashboards",
-    sector: "Analytics",
-    status: "development",
-    summary:
-      "A reporting layer that pulls analytics, ad platforms, search and CRM into a single business scorecard — and writes the plain-language summary of what moved and why.",
-    intro: [
-      "Pulseboard is a marketing and revenue reporting platform for small and mid-sized businesses. It is currently in development and not yet available to customers.",
-      "The businesses we work with do not lack data. They have GA4, Meta and Google Ads, Search Console, a CRM and a spreadsheet, and no time to reconcile six numbers that all claim to be conversions.",
-      "Pulseboard is being built to collapse that into one weekly scorecard: what happened, how it compares to the period before, and which of it is worth acting on.",
-    ],
-    monogram: "Pb",
-    accent: "#c2410c",
-    stack: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "ClickHouse", "OpenAI"],
-    audience: ["Business owners", "Marketing managers", "Agencies", "Sales leads"],
-    highlights: [
-      { label: "Product type", value: "Marketing & revenue reporting platform" },
-      { label: "Industry", value: "SMEs and agencies" },
-      { label: "Primary users", value: "Owners, marketing managers, account teams" },
-      { label: "Status", value: "In development — early access list open" },
-    ],
-    problem: {
-      body: "Reporting for a small business is usually someone's Monday morning: exporting numbers from five platforms into a sheet, formatting it, and having no time left to think about what it means. The report gets produced, gets skimmed, and changes nothing.",
-      pains: [
-        "The same metric defined differently on every platform",
-        "Manual exports and copy-paste reporting",
-        "Ad spend disconnected from actual revenue",
-        "No period-on-period context on any figure",
-        "Reports that describe but never recommend",
-        "Nobody notices a drop until the month closes",
-      ],
-    },
-    vision: {
-      headline: "A report should end with a decision, not a chart.",
-      body: [
-        "Pulseboard connects the sources a business already uses, resolves them to one set of definitions, and produces a scorecard on a fixed cadence — the same figures, the same way, every week.",
-        "On top of that sits the part that actually saves time: a written summary of what moved, what it cost, and what is worth doing about it, with the underlying numbers one click away for anyone who wants to check the work.",
-      ],
-    },
-    modules: [
-      {
-        title: "Source connections",
-        body: "Read-only connections to GA4, Google and Meta Ads, Search Console, and CRM or ecommerce platforms, refreshed on a schedule rather than pulled by hand.",
-      },
-      {
-        title: "One metric definition",
-        body: "Conversions, sessions, leads and revenue resolved to a single definition across sources, so two dashboards stop disagreeing about the same week.",
-      },
-      {
-        title: "The weekly scorecard",
-        body: "A fixed set of figures with period-on-period movement and a target where one exists — the same shape every week, so a change stands out rather than being buried in a new layout.",
-      },
-      {
-        title: "Spend-to-revenue attribution",
-        body: "Ad spend tied through to recorded revenue and pipeline, giving a channel-level cost per acquisition that survives contact with the accounts.",
-      },
-      {
-        title: "Written summaries",
-        body: "A plain-language explanation of what moved and why, generated from the period's data, with the figures behind every statement linked so it can be checked rather than trusted.",
-      },
-      {
-        title: "Alerts",
-        body: "Thresholds set on the figures that matter, so a drop in enquiries or a spike in cost per lead surfaces the week it happens instead of at month end.",
-      },
-      {
-        title: "Client reporting for agencies",
-        body: "Branded scorecards per client on a shared schedule, so an agency stops rebuilding the same deck for every account.",
-      },
-    ],
-    roadmap: [
-      { stage: "Connectors", detail: "GA4, Search Console, Google Ads and Meta Ads ingestion", done: true },
-      { stage: "Metric layer", detail: "Unified definitions and period comparison", done: true },
-      { stage: "Written summaries", detail: "Generated narrative with linked underlying figures", done: false },
-      { stage: "Early access", detail: "A first group of businesses and agencies on real accounts", done: false },
-      { stage: "General release", detail: "Open signup, billing and additional connectors", done: false },
-    ],
-    closing:
-      "Pulseboard is in active development. The early access list is open — if reporting is currently someone's Monday morning, we would like to hear how yours works.",
   },
 ];
 

@@ -4,9 +4,6 @@ import { ClientsSection } from "@/components/home/clients-section";
 import { GrowthPath } from "@/components/home/growth-path";
 import { PackagesPreview } from "@/components/home/packages-preview";
 import { VideoShowcase } from "@/components/home/video-showcase";
-import { WorksSection } from "@/components/home/works-section";
-import { ProcessSection } from "@/components/home/process-section";
-import { TrustSection } from "@/components/home/trust-section";
 import { Testimonials } from "@/components/home/testimonials";
 import { BlogPreview } from "@/components/home/blog-preview";
 import { FaqSection } from "@/components/home/faq-section";
@@ -61,9 +58,6 @@ export default function HomePage() {
       <GrowthPath />
       <PackagesPreview />
       <VideoShowcase />
-      <WorksSection />
-      <ProcessSection />
-      <TrustSection />
       <Testimonials />
       <BlogPreview />
       <FaqSection />

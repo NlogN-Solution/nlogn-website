@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
         destination: "/works",
         permanent: true,
       },
+      // Retired software write-ups — fold their URLs back into the index.
+      { source: "/software/tapri", destination: "/software", permanent: true },
+      { source: "/software/pulseboard", destination: "/software", permanent: true },
       { source: "/about-us", destination: "/about", permanent: true },
       { source: "/contact-us", destination: "/contact", permanent: true },
     ];

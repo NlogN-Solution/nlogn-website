@@ -42,7 +42,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
       <label htmlFor={compact ? "nl-compact" : "nl-email"} className="sr-only">
         Email address
       </label>
-      <div className="flex min-w-0 items-center gap-2 rounded-full border border-line bg-surface p-1.5 pl-5 transition-colors focus-within:border-violet/50">
+      <div className="flex min-w-0 items-center gap-2 rounded-full border border-line bg-canvas p-1.5 pl-5 shadow-inset transition-colors focus-within:border-violet/50">
         {/* size={1} drops the input's intrinsic ~20ch width. `flex-1` still
             fills the row, but the form no longer reports a 286px min-content
             that a grid track would honour on a phone. */}

@@ -10,7 +10,7 @@ export const siteConfig = {
   email: "nlognweb@gmail.com",
   salesEmail: "nlognweb@gmail.com",
   phone: "+977-9747745188",
-  phoneDisplay: "+9747745188",
+  phoneDisplay: "+977-9747745188",
   address: {
     street: "Koteswor, Kathmandu",
     city: "Kathmandu",
@@ -50,7 +50,6 @@ export const nav: NavItem[] = [
   { label: "Work", href: "/works" },
   { label: "Pricing", href: "/services" },
   { label: "About", href: "/about" },
-  { label: "Process", href: "/process" },
   {
     label: "Resources",
     href: "/resources",
@@ -494,22 +493,22 @@ export const clients = [
 
 /** The three figures shown in the hero card. */
 export const heroStats = [
-  { value: "120%", label: "Avg. Growth\nin 6 Months", icon: "trend" },
+  { value: "80%", label: "Avg. Growth\nin 6 Months", icon: "trend" },
   { value: "10+", label: "Happy\nClients", icon: "users" },
-  { value: "20+", label: "Projects\nDelivered", icon: "rocket" },
+  { value: "5+", label: "Projects\nDelivered", icon: "rocket" },
 ] as const;
 
 export const stats = [
   {
-    value: "20+",
+    value: "5+",
     label: "Projects delivered",
-    detail: "Across 8 industries",
+    detail: "Across 3 industries",
     icon: "box",
     /** Shape of the mini sparkline beside the figure, as percentages. */
     spark: [30, 44, 52, 70, 100],
   },
   {
-    value: "240%",
+    value: "70%",
     label: "Median traffic lift",
     detail: "First 12 months of SEO",
     icon: "trend",
@@ -661,17 +660,31 @@ export const team = [
 export const testimonials = [
   {
     quote:
-      "We stopped renting our customers from delivery apps. That single change funded two new branches, and nlogn built the thing that made it possible.",
+      "We stopped renting our customers from delivery apps. That single change funded two new branches, and nlogn built the ordering system that made it possible.",
     name: "Anjana Shrestha",
     role: "Founder, Himalayan Café",
     initials: "AS",
   },
   {
     quote:
-      "The same traffic, three times the students. Nothing else about our marketing changed — only what happened after someone landed on the page.",
+      "Our cost per enrolled student dropped by half in a quarter. Same budget, sharper funnel, and ad creative nlogn refreshed every week instead of every campaign.",
     name: "Rabin Karki",
     role: "Co-founder, EduBridge",
     initials: "RK",
+  },
+  {
+    quote:
+      "We went from page four to the top of the results for the terms that actually bring us buyers. The articles read like a person wrote them, because one did.",
+    name: "Pratima Gurung",
+    role: "Marketing Lead, Sunrise Homes",
+    initials: "PG",
+  },
+  {
+    quote:
+      "The launch film they shot and cut for us has run everywhere from cinema screens to Instagram. One shoot, a dozen usable edits, and it still looks like us.",
+    name: "Dipesh Rai",
+    role: "Brand Manager, Yak Trails",
+    initials: "DR",
   },
   {
     quote:
@@ -686,13 +699,6 @@ export const testimonials = [
     name: "Bikash Adhikari",
     role: "CTO, Urban Space",
     initials: "BA",
-  },
-  {
-    quote:
-      "Forty makers, one storefront, and none of us needed a developer to add a product. That was the whole point.",
-    name: "Ishwori Tamang",
-    role: "Director, Craft Studio",
-    initials: "IT",
   },
 ];
 

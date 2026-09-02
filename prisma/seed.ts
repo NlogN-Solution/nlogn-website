@@ -51,7 +51,7 @@ const prisma = new PrismaClient({ adapter: adapter() });
 const DEFAULT_SETTINGS: { key: string; value: unknown; group: string }[] = [
   { key: "siteName", value: "nlogn", group: "general" },
   { key: "contactEmail", value: "nlognweb@gmail.com", group: "general" },
-  { key: "contactPhone", value: "+9747745188", group: "general" },
+  { key: "contactPhone", value: "+9779747745188", group: "general" },
   { key: "whatsappNumber", value: "9779747745188", group: "contact" },
   { key: "address", value: "Koteswor, Kathmandu", group: "general" },
   { key: "sendAcknowledgement", value: true, group: "contact" },

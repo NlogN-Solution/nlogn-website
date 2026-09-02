@@ -6,16 +6,16 @@ type Variant = "primary" | "secondary" | "ghost" | "violet";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "group relative inline-flex items-center justify-center gap-2.5 rounded-[0.9rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:pointer-events-none disabled:opacity-50";
+  "group relative inline-flex items-center justify-center gap-2.5 rounded-[0.9rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:translate-y-0 disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-ink text-white shadow-soft hover:shadow-lift hover:-translate-y-0.5 hover:bg-[#1a1a22]",
+    "bg-ink text-white shadow-soft hover:shadow-lift hover:-translate-y-0.5 hover:bg-[#1a1a22] active:shadow-inset",
   violet:
-    "bg-violet text-white shadow-[0_10px_30px_-10px_rgba(108,71,255,0.7)] hover:-translate-y-0.5 hover:bg-violet-deep",
+    "bg-violet text-white shadow-[-4px_-4px_12px_rgba(255,255,255,0.5),6px_10px_26px_-8px_rgba(108,71,255,0.65)] hover:-translate-y-0.5 hover:bg-violet-deep active:shadow-inset",
   secondary:
-    "bg-surface text-ink border border-line hover:border-ink/25 hover:-translate-y-0.5 hover:shadow-soft",
-  ghost: "text-ink hover:bg-ink/5",
+    "bg-surface text-ink border border-line shadow-soft-sm hover:border-ink/20 hover:-translate-y-0.5 hover:shadow-soft active:shadow-inset",
+  ghost: "text-ink hover:bg-ink/5 active:shadow-inset",
 };
 
 const sizes: Record<Size, string> = {

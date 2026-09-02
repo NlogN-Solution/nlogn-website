@@ -101,7 +101,7 @@ function ProjectCard({ project }: { project: ClientProject }) {
   );
 
   const shell =
-    "group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]";
+    "group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]";
 
   if (!project.projectUrl) {
     return <article className={shell}>{body}</article>;
@@ -186,7 +186,7 @@ function VideoStage({ video, className }: { video: ClientVideo; className?: stri
  */
 function FeatureFilmCard({ video }: { video: ClientVideo }) {
   return (
-    <figure className="group grid overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-violet/30 hover:shadow-lift lg:grid-cols-[1.6fr_1fr]">
+    <figure className="group grid overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-violet/30 hover:shadow-lift lg:grid-cols-[1.6fr_1fr]">
       <VideoStage video={video} className="aspect-video" />
 
       <figcaption className="flex flex-col justify-center p-7 md:p-10">
@@ -207,7 +207,7 @@ function FeatureFilmCard({ video }: { video: ClientVideo }) {
 /** A vertical reel. Sits in a row with the others, all the same shape. */
 function ReelCard({ video }: { video: ClientVideo }) {
   return (
-    <figure className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift">
+    <figure className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift">
       <VideoStage video={video} className="aspect-[9/16]" />
 
       <figcaption className="flex flex-1 flex-col p-6 md:p-7">

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const budgets = ["Under $2k", "$2k – 5k", "$8k – $20k", "$30k+", "Not sure yet"];
 
 const field =
-  "w-full rounded-2xl border border-line bg-surface px-5 py-3.5 text-[0.9375rem] text-ink outline-none transition-colors placeholder:text-muted focus:border-violet/60";
+  "w-full rounded-2xl border border-line bg-canvas px-5 py-3.5 text-[0.9375rem] text-ink shadow-inset outline-none transition-colors placeholder:text-muted focus:border-violet/60";
 
 export function ContactForm() {
   const params = useSearchParams();
@@ -53,7 +53,7 @@ export function ContactForm() {
 
   if (state === "done") {
     return (
-      <div className="rounded-[26px] border border-line bg-surface p-10 text-center">
+      <div className="rounded-[26px] border border-line bg-surface p-10 text-center shadow-soft">
         <span className="mx-auto grid size-14 place-items-center rounded-full bg-violet-wash text-violet">
           <Check className="size-6" strokeWidth={2.5} aria-hidden />
         </span>
@@ -69,7 +69,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-[26px] border border-line bg-surface p-8 md:p-10">
+    <form onSubmit={onSubmit} className="rounded-[26px] border border-line bg-surface p-8 shadow-soft md:p-10">
       {(pkg || prefill) && (
         <p className="mb-7 rounded-2xl border border-violet/20 bg-violet-wash px-5 py-4 text-[0.9375rem] text-ink-soft">
           {pkg ? (

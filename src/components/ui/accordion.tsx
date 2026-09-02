@@ -13,7 +13,7 @@ export function Accordion({ items }: { items: { q: string; a: string }[] }) {
             <h3 className="font-display text-[1.0625rem] font-semibold leading-snug tracking-tight text-ink transition-colors group-hover:text-violet-deep md:text-lg">
               {item.q}
             </h3>
-            <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full border border-line text-ink transition-all duration-300 group-open:rotate-45 group-open:border-violet group-open:bg-violet group-open:text-white">
+            <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full border border-line bg-surface text-ink shadow-soft-sm transition-all duration-300 group-hover:shadow-soft group-open:rotate-45 group-open:border-violet group-open:bg-violet group-open:text-white group-open:shadow-inset">
               <Plus className="size-4" aria-hidden />
             </span>
           </summary>

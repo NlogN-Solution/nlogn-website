@@ -85,7 +85,7 @@ export function SoftwareCard({ product }: { product: SoftwareProduct }) {
   return (
     <Link
       href={`/software/${product.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift"
+      className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift"
     >
       {/* app chrome, so the shot reads as a running product rather than an image */}
       <div className="flex min-w-0 items-center gap-2 border-b border-line bg-canvas px-4 py-3.5 sm:px-5">

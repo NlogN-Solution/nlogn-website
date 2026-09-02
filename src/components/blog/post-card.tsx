@@ -92,7 +92,7 @@ export function PostCard({ post, featured = false }: { post: Post; featured?: bo
   );
 
   const shell =
-    "group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift";
+    "group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift";
 
   /* The lead card runs the artwork down one side on a wide screen, and stacks
      it above the copy on a narrow one. */

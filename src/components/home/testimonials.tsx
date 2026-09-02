@@ -4,7 +4,7 @@ import { testimonials } from "@/config/site";
 
 function Card({ t }: { t: (typeof testimonials)[number] }) {
   return (
-    <figure className="flex w-[340px] shrink-0 flex-col justify-between rounded-[24px] border border-line bg-surface p-8 md:w-[420px]">
+    <figure className="flex w-[340px] shrink-0 flex-col justify-between rounded-[24px] border border-line bg-surface p-8 shadow-soft md:w-[420px]">
       <Quote className="size-6 text-violet-soft" aria-hidden />
       <blockquote className="mt-5 font-display text-[1.0625rem] font-medium leading-relaxed tracking-[-0.015em] text-ink">
         “{t.quote}”
@@ -29,12 +29,13 @@ export function Testimonials() {
       <div className="container-x">
         <SectionHeading
           align="center"
-          eyebrow="In their words"
+          eyebrow="Client reviews"
           title={
             <>
-              The part we cannot <span className="text-gradient-violet">write ourselves</span>
+              What our clients <span className="text-gradient-violet">actually say</span>
             </>
           }
+          lead="Websites and software, yes — and the content, campaigns and films that run alongside them."
         />
       </div>
 
