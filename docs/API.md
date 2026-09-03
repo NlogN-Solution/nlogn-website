@@ -165,3 +165,148 @@ sends the emails rather than refusing the submission.
 
 A filled honeypot (`company_website`) gets a normal success response and is
 dropped — telling a bot which field caught it just teaches it to avoid the field.
+
+## SEO & website performance
+
+Every endpoint below is capability-gated through `guard` like the rest of the
+admin API, and every one that names a website resolves it through
+`websiteRoute`, which loads the record and 404s before the handler runs. No
+handler reads a website id off the request itself.
+
+| Capability | Super admin | Content manager | Marketing manager | Viewer |
+|---|:-:|:-:|:-:|:-:|
+| `seo:read` | ● | ● | ● | ● |
+| `seo:write` | ● | | ● | |
+| `seo:connect` | ● | | | |
+
+`seo:connect` is deliberately narrower than `seo:write`: triggering a sync is
+routine, but granting this application access to a Google account is not.
+
+### Websites
+
+| Method | Path | Capability |
+|---|---|---|
+| `GET` | `/api/admin/websites` | `seo:read` |
+| `POST` | `/api/admin/websites` | `seo:write` — `{ name, domain }` |
+| `GET` | `/api/admin/websites/:id` | `seo:read` — website plus its connection statuses |
+| `PATCH` | `/api/admin/websites/:id` | `seo:write` |
+| `DELETE` | `/api/admin/websites/:id` | `seo:write` — cascades to all SEO data |
+
+A domain is normalised to a bare hostname on write and checked against the SSRF
+guard: one that resolves to a private, loopback or link-local address is a
+`BAD_REQUEST`, not a stored record.
+
+### Reports
+
+All of these accept the shared range parameters and `refresh=1` to bypass the
+cache.
+
+`range` — `7d` · `28d` · `3m` · `6m` · `12m` · `custom` (with `start` and `end`
+as `YYYY-MM-DD`). Ranges are measured in days so a period and the one before it
+are always the same length, and they end yesterday rather than today. Custom
+ranges are clamped to 16 months, which is all Search Console retains.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/api/admin/websites/:id/seo/overview` | Cards, NLOGN health score, per-source connection state |
+| `GET` | `/api/admin/websites/:id/analytics/overview` | GA4 totals, series, channels, devices, geography, top pages |
+| `GET` | `/api/admin/websites/:id/search-console/overview` | Totals with comparison, daily series, country/device splits |
+| `GET` | `/api/admin/websites/:id/search-console/queries` | Keyword table — `q`, `band`, `minClicks`, `minImpressions`, `sort`, `direction`, `page`, `perPage` |
+| `GET` | `/api/admin/websites/:id/search-console/pages` | Landing pages — `q`, `page`, `perPage` |
+| `GET` | `/api/admin/websites/:id/seo/opportunities` | Derived opportunities, each with its `basis` |
+| `GET` | `/api/admin/websites/:id/seo/technical` | Crawl findings grouped by issue, with client-facing copy |
+| `GET` | `/api/admin/websites/:id/backlinks` | Ahrefs, or `{ available: false, reason }` |
+| `GET` | `/api/admin/websites/:id/performance` | PageSpeed lab and field metrics, kept separate |
+
+`band` filters by position: `all`, `top3`, `top10`, `top20`, `21-50`, `51-100`.
+
+Every provider-backed report answers in one of two shapes, so a disconnected
+integration is a state rather than an error:
+
+```jsonc
+{ "connected": false, "reason": "Connect Google Search Console to see search rankings, clicks and impressions." }
+{ "connected": true, "data": { /* … */ }, "fetchedAt": "2026-09-03T04:00:00Z", "stale": false }
+```
+
+`stale: true` means the provider could not be reached and the last successful
+payload is being served instead. The UI renders "last updated …" rather than an
+empty panel.
+
+### Integrations
+
+| Method | Path | Capability |
+|---|---|---|
+| `GET` | `/api/admin/seo/oauth/google/start?websiteId=` | `seo:connect` — returns the consent URL |
+| `GET` | `/api/admin/seo/oauth/google/callback` | session + `seo:connect` — redirects back with a status |
+| `GET` | `/api/admin/websites/:id/integrations` | `seo:read` — connection state and server configuration |
+| `GET` | `/api/admin/websites/:id/integrations/google/properties` | `seo:write` — selectable GSC and GA4 properties |
+| `POST` | `/api/admin/websites/:id/integrations/:provider/sync` | `seo:write` — 3 per 10 min per user per website |
+| `DELETE` | `/api/admin/websites/:id/integrations/:provider` | `seo:connect` — revokes at Google, then deletes |
+
+`:provider` is `google-search-console`, `google-analytics`, `pagespeed`,
+`ahrefs`, `crawler`, or `all`.
+
+**Credentials never reach the browser.** Connection rows are serialised through
+`toPublicConnection`, which returns status, account label, scopes and sync
+timestamps and drops every token column. Tokens are AES-256-GCM ciphertext in
+the database (`server/crypto.ts`); with `SEO_TOKEN_ENCRYPTION_KEY` unset the app
+refuses to store a credential rather than writing one in plaintext.
+
+The OAuth `state` parameter is a signed payload carrying the website id, so the
+callback proves both that the request originated here and which website it was
+for. The callback also re-checks the session and the capability — a code
+delivered to that URL by anyone else is refused.
+
+### Scheduled sync
+
+| Method | Path | Auth |
+|---|---|---|
+| `GET`/`POST` | `/api/cron/seo-sync` | `Authorization: Bearer $CRON_SECRET`, or `?key=` |
+
+Compared in constant time. With `CRON_SECRET` unset the endpoint returns 503 for
+everything — an open route that makes dozens of outbound API calls is an
+amplification vector. `?crawl=1` adds the technical audit, which is otherwise
+left off the nightly run because it is the slow step and the one that puts
+requests on somebody else's server.
+
+```jsonc
+// vercel.json
+{ "crons": [{ "path": "/api/cron/seo-sync", "schedule": "0 4 * * *" }] }
+```
+
+### What the providers do and do not give us
+
+Documented here because several of these surface as UI copy, and the dashboard
+must not imply a metric it cannot measure.
+
+- **Search Console** finalises data 2–3 days late and retains 16 months. It
+  publishes **no position-change metric** — the `positionChange` column is
+  computed here by comparing two windows and is labelled "Calculated" in the UI.
+  Query rows are sampled and anonymised, so per-query clicks sum to less than
+  the site total.
+- **GA4** needs the numeric property ID, not the `G-` measurement ID. The site
+  loads Analytics only after cookie consent, so its figures are a subset of real
+  visitors and will not match Search Console clicks. Geography and demographics
+  are thresholded and legitimately return nothing on a low-traffic property.
+- **PageSpeed** returns lab (Lighthouse) and field (CrUX) data. INP and TTFB are
+  field-only, so a site without enough Chrome traffic has none — reported as
+  absent, never substituted with TBT.
+- **Ahrefs Webmaster Tools has no API.** API v3 requires a paid plan; the client
+  probes `/subscription-info/limits-and-usage` plus each report endpoint on
+  connect and renders only what the plan actually answered for.
+
+### The crawler
+
+`server/services/crawler.service.ts`, gated by `server/net-guard.ts`.
+
+- http/https on ports 80/443 only.
+- Hostnames are resolved and every returned address checked against the
+  private, loopback, link-local, CGNAT, multicast and reserved ranges, v4 and
+  v6, with IPv4-mapped v6 addresses unwrapped. Checking the hostname alone
+  would not stop a public name resolving to `127.0.0.1`.
+- Redirects are followed manually, one hop at a time, re-validating each — so a
+  public URL that 302s to the metadata service is refused at the second hop.
+- Response bodies are capped at 3 MB and requests at 15s.
+- robots.txt is obeyed, including `Crawl-delay`; the crawl never leaves the
+  website's own registered domain, and that domain comes from the database.
+- Budgets: 60 pages, 4 minutes, and a floor of 400ms between requests.

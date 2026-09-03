@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -46,6 +47,12 @@ const NAV: NavGroup[] = [
     heading: "Overview",
     items: [
       { label: "Dashboard", href: "/admin", icon: LayoutDashboard, capability: "content:read" },
+    ],
+  },
+  {
+    heading: "Performance",
+    items: [
+      { label: "SEO & traffic", href: "/admin/seo", icon: TrendingUp, capability: "seo:read" },
     ],
   },
   {

@@ -13,7 +13,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "db:doctor": "node scripts/db-doctor.mjs"
+    "db:doctor": "node scripts/db-doctor.mjs",
+    "seo:check": "tsx scripts/seo-checks/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

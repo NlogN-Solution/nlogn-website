@@ -11,6 +11,7 @@ import { CtaBand } from "@/components/site/cta-band";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildMetadata, faqSchema } from "@/lib/seo";
 import { faqs, siteConfig } from "@/config/site";
+import { cloudinaryPoster } from "@/config/clients";
 import { capabilities } from "@/config/capabilities";
 import { absoluteUrl } from "@/lib/utils";
 
@@ -44,7 +45,9 @@ export default function HomePage() {
     name: "How nlogn works — inside a real engagement",
     description:
       "An eight-minute walkthrough of an nlogn engagement, from the opening audit to the post-launch growth dashboard.",
-    thumbnailUrl: [absoluteUrl("/opengraph-image")],
+    thumbnailUrl: [
+      cloudinaryPoster(siteConfig.videoUrl) ?? absoluteUrl("/opengraph-image"),
+    ],
     uploadDate: "2026-01-15T09:00:00+05:45",
     duration: "PT8M12S",
     publisher: { "@id": absoluteUrl("/#organization") },
@@ -54,10 +57,10 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <VideoShowcase />
       <ClientsSection />
       <GrowthPath />
       <PackagesPreview />
-      <VideoShowcase />
       <Testimonials />
       <BlogPreview />
       <FaqSection />

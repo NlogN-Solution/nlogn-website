@@ -23,6 +23,9 @@ export const CAPABILITIES = [
   "users:read",
   "users:write",
   "activity:read",
+  "seo:read",
+  "seo:write",
+  "seo:connect",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -40,6 +43,7 @@ const ROLE_CAPABILITIES: Record<AdminRole, readonly Capability[]> = {
     "messages:read",
     "settings:read",
     "activity:read",
+    "seo:read",
   ],
   MARKETING_MANAGER: [
     "content:read",
@@ -52,8 +56,14 @@ const ROLE_CAPABILITIES: Record<AdminRole, readonly Capability[]> = {
     "settings:read",
     "settings:write",
     "activity:read",
+    // Marketing owns the SEO dashboard day to day, including triggering a sync
+    // and running a crawl. Connecting a Google account is `seo:connect` and
+    // stays with the super admin, because that grants access to an account
+    // outside this application.
+    "seo:read",
+    "seo:write",
   ],
-  VIEWER: ["content:read", "media:read", "messages:read", "activity:read"],
+  VIEWER: ["content:read", "media:read", "messages:read", "activity:read", "seo:read"],
 };
 
 export function can(role: AdminRole, capability: Capability) {

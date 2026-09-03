@@ -2,6 +2,10 @@ import { Check, X } from "lucide-react";
 import { prisma } from "@/server/db";
 import { cloudinaryConfigured } from "@/server/integrations/cloudinary";
 import { smtpConfigured, verifySmtp } from "@/server/integrations/email";
+import { googleOAuthConfigured } from "@/server/integrations/google-oauth";
+import { pageSpeedConfigured } from "@/server/integrations/pagespeed";
+import { ahrefsConfigured } from "@/server/integrations/ahrefs";
+import { encryptionConfigured } from "@/server/crypto";
 import { PageHeader } from "@/components/admin/shell";
 import { Panel, PanelHeader } from "@/components/admin/ui";
 
@@ -42,6 +46,44 @@ export default async function SystemPage() {
       ok: Boolean(process.env.NEXT_PUBLIC_GA_ID),
       detail: process.env.NEXT_PUBLIC_GA_ID ? "Measurement ID configured" : "Falls back to siteConfig.gaId",
       note: "Loads only after cookie consent",
+    },
+    {
+      name: "Google OAuth (SEO)",
+      ok: googleOAuthConfigured(),
+      detail: googleOAuthConfigured()
+        ? "Client ID and secret present"
+        : "GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET are not set",
+      note: "Connects Search Console and Analytics reporting",
+    },
+    {
+      name: "Credential encryption",
+      ok: encryptionConfigured(),
+      detail: encryptionConfigured()
+        ? "Key present — provider tokens are encrypted at rest"
+        : "SEO_TOKEN_ENCRYPTION_KEY is not set; connecting is refused rather than storing tokens in plaintext",
+      note: "AES-256-GCM for stored OAuth tokens",
+    },
+    {
+      name: "PageSpeed Insights",
+      ok: pageSpeedConfigured(),
+      detail: pageSpeedConfigured() ? "API key present" : "PAGESPEED_API_KEY is not set",
+      note: "Core Web Vitals and page speed measurement",
+    },
+    {
+      name: "Ahrefs",
+      ok: ahrefsConfigured(),
+      detail: ahrefsConfigured()
+        ? "API token present"
+        : "No API token — Ahrefs Webmaster Tools has no API, so backlink data stays hidden",
+      note: "Backlinks and referring domains",
+    },
+    {
+      name: "Scheduled SEO sync",
+      ok: Boolean(process.env.CRON_SECRET),
+      detail: process.env.CRON_SECRET
+        ? "CRON_SECRET present — /api/cron/seo-sync accepts scheduled runs"
+        : "CRON_SECRET is not set, so the scheduled sync endpoint refuses every request",
+      note: "Background refresh of every connected provider",
     },
     {
       name: "AI assistant",

@@ -357,3 +357,239 @@ enum MessageSource {
   NEWSLETTER
   CHAT_WIDGET
 }
+
+/**
+ * ── SEO & website performance ───────────────────────────────────────────────
+ * A `Website` is a domain we report on — nlogn.com itself, or a client's site.
+ * Everything below hangs off it, so adding a second site never means a second
+ * code path.
+ * Storage is deliberately two-tier. Daily totals (`SearchConsoleDaily`,
+ * `AnalyticsDaily`) are kept forever because both upstream APIs forget:
+ * Search Console holds 16 months, GA4's user-scoped data can expire at 2. The
+ * wide, high-cardinality reports (per-query, per-page) are not stored row by
+ * row — they live in `SeoReportCache` as whole payloads, which keeps a year of
+ * keyword data from becoming half a million rows nobody queries individually,
+ * and doubles as the "show the last good data" store when an API is down.
+ */
+
+model Website {
+  id            String   @id @default(cuid())
+  name          String
+  /// Canonical hostname, lowercase, no scheme or trailing slash: "nlogn.com".
+  domain        String   @unique
+  /// Numeric GA4 property id (the Data API needs this, not the G- tag id).
+  ga4PropertyId String?
+  /// Search Console property: "sc-domain:nlogn.com" or "https://nlogn.com/".
+  gscSiteUrl    String?
+  /// Reserved for Ahrefs. Free Webmaster Tools has no API, so this stays null
+  /// until a paid API v3 token exists — see `server/integrations/ahrefs.ts`.
+  ahrefsDomain  String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  analyticsDaily     AnalyticsDaily[]
+  connections        SeoConnection[]
+  crawlRuns          CrawlRun[]
+  issues             SeoIssue[]
+  pageSpeedSnapshots PageSpeedSnapshot[]
+  reportCache        SeoReportCache[]
+  searchConsoleDaily SearchConsoleDaily[]
+
+  @@index([domain])
+}
+
+/// One row per provider per website. Tokens are AES-256-GCM ciphertext written
+/// by `server/crypto.ts`; nothing here is ever serialised to the browser.
+model SeoConnection {
+  id                    String           @id @default(cuid())
+  websiteId             String
+  provider              SeoProvider
+  status                ConnectionStatus @default(DISCONNECTED)
+  /// Which Google account or Ahrefs plan this is, for the settings page.
+  accountLabel          String?
+  /// Granted OAuth scopes, so the UI can tell "connected" from "connected but
+  /// missing the Analytics scope" without a failing API call to find out.
+  scopes                String[]         @default([])
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  lastSyncedAt          DateTime?
+  lastSyncError         String?
+  /// What the plan actually permits, discovered by probing rather than assumed.
+  capabilities          Json?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  website               Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, provider])
+  @@index([provider, status])
+}
+
+/// Search Console daily totals. `date` is the UTC day Google reports against.
+model SearchConsoleDaily {
+  id          String   @id @default(cuid())
+  websiteId   String
+  date        DateTime @db.Date
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  /// Stored as Google returns it (0–1), formatted as a percentage on read.
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  syncedAt    DateTime @default(now())
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, date])
+  @@index([websiteId, date])
+}
+
+/// GA4 daily totals. Null means "the API did not return this metric", which is
+/// not the same as zero and must not be rendered as one.
+model AnalyticsDaily {
+  id                String   @id @default(cuid())
+  websiteId         String
+  date              DateTime @db.Date
+  users             Int      @default(0)
+  newUsers          Int      @default(0)
+  sessions          Int      @default(0)
+  engagedSessions   Int      @default(0)
+  /// 0–1, as GA4 reports it.
+  engagementRate    Float    @default(0)
+  /// Seconds per active user.
+  avgEngagementTime Float    @default(0)
+  screenPageViews   Int      @default(0)
+  organicUsers      Int      @default(0)
+  directUsers       Int      @default(0)
+  referralUsers     Int      @default(0)
+  conversions       Float?
+  syncedAt          DateTime @default(now())
+  website           Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, date])
+  @@index([websiteId, date])
+}
+
+/// Whole API payloads, keyed by report + parameters. Serves three jobs at once:
+/// it keeps us inside upstream quotas, makes the dashboard fast, and is what
+/// "showing the last successful data" reads from when a provider is failing —
+/// which is why rows are kept past `expiresAt` rather than deleted on expiry.
+model SeoReportCache {
+  id        String      @id @default(cuid())
+  websiteId String
+  provider  SeoProvider
+  /// e.g. "gsc:queries:2026-08-01:2026-08-28".
+  key       String
+  payload   Json
+  fetchedAt DateTime    @default(now())
+  expiresAt DateTime
+  website   Website     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, key])
+  @@index([websiteId, provider])
+  @@index([expiresAt])
+}
+
+/// A finding from our own crawler or from an API that reports issues. Rows are
+/// kept and re-stamped rather than deleted and re-inserted, so "first seen" is
+/// real history and a fixed issue can be shown as resolved instead of vanishing.
+model SeoIssue {
+  id          String        @id @default(cuid())
+  websiteId   String
+  /// Stable identifier from the catalogue in `config/seo-issues.ts`, which is
+  /// where the client-facing wording lives.
+  code        String
+  severity    IssueSeverity
+  url         String
+  /// The offending value, when quoting it helps — a duplicate title, say.
+  detail      String?
+  firstSeenAt DateTime      @default(now())
+  lastSeenAt  DateTime      @default(now())
+  resolvedAt  DateTime?
+  website     Website       @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, code, url])
+  @@index([websiteId, severity, resolvedAt])
+  @@index([websiteId, code])
+}
+
+model CrawlRun {
+  id           String      @id @default(cuid())
+  websiteId    String
+  status       CrawlStatus @default(RUNNING)
+  pagesCrawled Int         @default(0)
+  issuesFound  Int         @default(0)
+  startedAt    DateTime    @default(now())
+  finishedAt   DateTime?
+  error        String?
+  website      Website     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, startedAt])
+}
+
+/// One PageSpeed Insights run. Lab and field metrics are stored side by side
+/// but never merged: `lcpField` can exist while `lcpLab` disagrees, and INP is
+/// field-only, so a site without enough Chrome traffic genuinely has none.
+model PageSpeedSnapshot {
+  id                 String            @id @default(cuid())
+  websiteId          String
+  url                String
+  strategy           PageSpeedStrategy
+  performanceScore   Int?
+  seoScore           Int?
+  accessibilityScore Int?
+  bestPracticesScore Int?
+  /// Lab (Lighthouse), milliseconds — except CLS, which is unitless.
+  lcpLab             Float?
+  fcpLab             Float?
+  clsLab             Float?
+  tbtLab             Float?
+  ttfbLab            Float?
+  /// Field (CrUX). Null when the URL has too little real-world traffic.
+  lcpField           Float?
+  inpField           Float?
+  clsField           Float?
+  fcpField           Float?
+  ttfbField          Float?
+  hasFieldData       Boolean           @default(false)
+  fetchedAt          DateTime          @default(now())
+  website            Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, strategy, fetchedAt])
+}
+
+enum SeoProvider {
+  GOOGLE_SEARCH_CONSOLE
+  GOOGLE_ANALYTICS
+  PAGESPEED
+  AHREFS
+}
+
+enum ConnectionStatus {
+  DISCONNECTED
+  CONNECTED
+  /// Credentials exist but the provider rejected them — usually a revoked
+  /// refresh token. Distinct from DISCONNECTED so the UI can say which.
+  NEEDS_REAUTH
+  ERROR
+  /// The provider works, but this account or plan does not include it. Ahrefs
+  /// Webmaster Tools lands here: real access, no API behind it.
+  UNAVAILABLE
+}
+
+enum IssueSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum CrawlStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum PageSpeedStrategy {
+  MOBILE
+  DESKTOP
+}

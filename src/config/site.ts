@@ -35,8 +35,15 @@ export const siteConfig = {
    * site is tagged the moment it is built. NEXT_PUBLIC_GA_ID overrides it.
    */
   gaId: "G-2H6500B256",
-  // Optional: point this at a hosted MP4 to replace the built-in process reel.
-  videoUrl: process.env.NEXT_PUBLIC_SHOWREEL_URL ?? "",
+  /**
+   * The studio film shown on the home page. NEXT_PUBLIC_SHOWREEL_URL overrides
+   * it; `||` rather than `??` because the variable ships empty in .env.example,
+   * and an empty string should fall through to the current cut on Cloudinary
+   * rather than blank the player.
+   */
+  videoUrl:
+    process.env.NEXT_PUBLIC_SHOWREEL_URL ||
+    "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788350487/carzspa.mp4",
 } as const;
 
 export type NavItem = {
@@ -527,6 +534,38 @@ export const stats = [
     detail: "Long-term partnerships",
     icon: "users",
     spark: [44, 58, 68, 84, 100],
+  },
+] as const;
+
+/**
+ * Chapters of the studio film. `at` is the second the chapter opens, so the
+ * home showcase can deep-link the player; a chapter past the end of the current
+ * cut is simply ignored by the modal rather than seeking into nothing.
+ */
+export const showreelChapters = [
+  {
+    at: 0,
+    time: "00:00",
+    title: "The audit",
+    detail: "What the numbers said before we touched anything",
+  },
+  {
+    at: 108,
+    time: "01:48",
+    title: "The argument",
+    detail: "Picking the one metric worth building for",
+  },
+  {
+    at: 246,
+    time: "04:06",
+    title: "The build",
+    detail: "Staging from day one, demos every Friday",
+  },
+  {
+    at: 402,
+    time: "06:42",
+    title: "Monday after launch",
+    detail: "The dashboard the client actually reads",
   },
 ] as const;
 
