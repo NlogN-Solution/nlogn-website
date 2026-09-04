@@ -165,6 +165,49 @@ function breakerIsOpen() {
 }
 
 /**
+ * Squeezes a multi-line error message onto one line.
+ *
+ * Prisma messages open with a newline and are indented over several lines, so
+ * a log reads `Cause:` followed by blank space — which is what made the real
+ * failure look absent in the first place. Build logs are line-oriented; one
+ * line keeps the cause attached to the label that introduces it.
+ */
+function flatten(message: string): string {
+  return message.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * The message a Prisma error actually carries.
+ *
+ * A driver-adapter failure surfaces as P2039 with the real cause tucked into
+ * `meta.driverAdapterError`, which prints as a bare `[Error]` — so a build log
+ * says only "External connector error" and the TLS handshake, DNS or auth
+ * failure underneath it is invisible. This unwraps the chain so the log names
+ * the thing that has to be fixed.
+ */
+function describe(error: unknown): string {
+  if (!(error instanceof Error)) return flatten(String(error));
+
+  const parts = [flatten(error.message)];
+
+  const meta = (error as { meta?: Record<string, unknown> }).meta;
+  const adapterError = meta?.driverAdapterError;
+  if (adapterError instanceof Error) {
+    parts.push(`driverAdapterError: ${flatten(adapterError.message)}`);
+    const code = (adapterError as { code?: unknown }).code;
+    if (code) parts.push(`code: ${String(code)}`);
+  } else if (adapterError) {
+    parts.push(`driverAdapterError: ${flatten(JSON.stringify(adapterError))}`);
+  }
+
+  for (let cause = error.cause; cause instanceof Error; cause = cause.cause) {
+    parts.push(`caused by: ${flatten(cause.message)}`);
+  }
+
+  return parts.filter(Boolean).join(" | ");
+}
+
+/**
  * Runs a database read, returning `fallback` if it fails or if the breaker is
  * open. Every public-facing read goes through this: a CMS outage must degrade
  * the site to its committed content, never take it down.
@@ -186,7 +229,7 @@ export async function dbRead<T>(fn: () => Promise<T>, fallback: T, label: string
         `[db] ${BREAKER_THRESHOLD} consecutive failures — serving fallbacks for ${BREAKER_COOLDOWN_MS / 1000}s`,
       );
     }
-    console.error(`[db] ${label} failed:`, error instanceof Error ? error.message : error);
+    console.error(`[db] ${label} failed:`, describe(error));
 
     /*
      * A fallback at request time is the whole point of this wrapper: the page
@@ -203,7 +246,7 @@ export async function dbRead<T>(fn: () => Promise<T>, fallback: T, label: string
       throw new Error(
         `[db] ${label} failed during the build, which would prerender fallback content into a ` +
           `deployment. Fix the connection, or set DATABASE_FALLBACK_AT_BUILD=1 to build without ` +
-          `a database. Cause: ${error instanceof Error ? error.message : String(error)}`,
+          `a database. Cause: ${describe(error)}`,
         { cause: error },
       );
     }
