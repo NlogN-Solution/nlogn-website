@@ -82,9 +82,31 @@ function createClient() {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createClient();
+let client: PrismaClient | undefined;
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+function getClient(): PrismaClient {
+  if (client) return client;
+  client = globalForPrisma.prisma ?? createClient();
+  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = client;
+  return client;
+}
+
+/**
+ * The client, constructed on first use rather than on import.
+ *
+ * `createClient()` throws when DATABASE_URL is missing, and every public page
+ * reaches this module through `dbRead`. Building the client at module scope
+ * made that throw fire at *import* time, which no `dbRead` fallback can catch —
+ * one unset variable would take the whole marketing site down instead of
+ * degrading it to committed content. Deferring to first property access keeps
+ * the failure inside the try/catch that was written for it.
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, property) {
+    const value = Reflect.get(getClient(), property) as unknown;
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 /** True when the CMS can run at all. Public pages use this to stay up without a database. */
 export const databaseConfigured = Boolean(process.env.DATABASE_URL);

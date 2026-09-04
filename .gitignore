@@ -42,3 +42,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# video — Cloudinary serves every reel (see config/clients.ts); Vercel uploads
+# all of /public as static assets, so committing source footage here bloats the
+# deployment until it fails. Keep the files on the CDN, keep the URL in config.
+/public/**/*.mp4
+/public/**/*.MP4
+/public/**/*.mov
+/public/**/*.MOV
