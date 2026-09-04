@@ -6,6 +6,7 @@ import { can } from "@/server/permissions";
 import { resolveTagIds } from "@/server/services/taxonomy.service";
 import { createCaseStudy, listCaseStudies } from "@/server/services/case-study.service";
 import { createCaseStudySchema } from "@/server/schemas/content";
+import { revalidateCaseStudy } from "@/server/revalidate";
 import type { AdminRole } from "@/generated/prisma";
 
 export const runtime = "nodejs";
@@ -34,6 +35,8 @@ export const POST = guard("content:write", async (request, { user, ip }) => {
     : body.data.tagIds;
 
   const created = await createCaseStudy({ ...body.data, tagIds });
+
+  revalidateCaseStudy(created.slug);
 
   await logActivity(user, {
     action: "case-study.created",

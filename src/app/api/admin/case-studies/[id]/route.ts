@@ -10,6 +10,7 @@ import {
   updateCaseStudy,
 } from "@/server/services/case-study.service";
 import { updateCaseStudySchema } from "@/server/schemas/content";
+import { revalidateCaseStudy } from "@/server/revalidate";
 import type { AdminRole } from "@/generated/prisma";
 
 export const runtime = "nodejs";
@@ -37,8 +38,13 @@ export const PATCH = guard<{ id: string }>("content:write", async (request, { pa
     ? await resolveTagIds(body.data.tagNames)
     : body.data.tagIds;
 
+  // Read first: a rename leaves the previous URL cached under the old slug.
+  const previous = await getCaseStudy(params.id);
+
   const updated = await updateCaseStudy(params.id, { ...body.data, tagIds });
   if (!updated) return errors.notFound("That case study");
+
+  revalidateCaseStudy(previous?.slug, updated.slug);
 
   await logActivity(user, {
     action: body.data.status ? `case-study.${body.data.status.toLowerCase()}` : "case-study.updated",
@@ -56,6 +62,8 @@ export const DELETE = guard<{ id: string }>("content:delete", async (_request, {
   if (!existing) return errors.notFound("That case study");
 
   await deleteCaseStudy(params.id);
+
+  revalidateCaseStudy(existing.slug);
 
   await logActivity(user, {
     action: "case-study.deleted",

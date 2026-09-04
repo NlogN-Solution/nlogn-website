@@ -167,6 +167,15 @@ export async function getArticle(kind: ArticleKind, id: string) {
   return delegate(kind).findUnique({ where: { id }, include: detailInclude });
 }
 
+/** The current slug only — used to invalidate a renamed article's previous URL. */
+export async function getArticleSlug(kind: ArticleKind, id: string): Promise<string | undefined> {
+  const row = (await delegate(kind).findUnique({
+    where: { id },
+    select: { slug: true },
+  })) as { slug: string } | null;
+  return row?.slug;
+}
+
 export async function getArticleBySlug(kind: ArticleKind, slug: string) {
   return delegate(kind).findUnique({ where: { slug }, include: detailInclude });
 }

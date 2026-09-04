@@ -8,10 +8,12 @@ import {
   createArticle,
   deleteArticle,
   getArticle,
+  getArticleSlug,
   listArticles,
   updateArticle,
   type ArticleKind,
 } from "@/server/services/article.service";
+import { revalidateArticle } from "@/server/revalidate";
 import { createArticleSchema, updateArticleSchema } from "@/server/schemas/content";
 import type { AdminRole } from "@/generated/prisma";
 
@@ -53,6 +55,8 @@ export function articleCollection(kind: ArticleKind) {
 
     const created = await createArticle(kind, { ...body.data, tagIds });
 
+    revalidateArticle(kind, String(created.slug));
+
     await logActivity(user, {
       action: `${kind}.created`,
       resource: kind,
@@ -86,8 +90,14 @@ export function articleItem(kind: ArticleKind) {
       ? await resolveTagIds(body.data.tagNames)
       : body.data.tagIds;
 
+    // Read first: after the write the old slug is gone, and its URL is still
+    // cached under the previous name.
+    const previousSlug = await getArticleSlug(kind, params.id);
+
     const updated = await updateArticle(kind, params.id, { ...body.data, tagIds });
     if (!updated) return errors.notFound(label(kind));
+
+    revalidateArticle(kind, previousSlug, String(updated.slug));
 
     await logActivity(user, {
       action: body.data.status ? `${kind}.${body.data.status.toLowerCase()}` : `${kind}.updated`,
@@ -105,6 +115,8 @@ export function articleItem(kind: ArticleKind) {
     if (!existing) return errors.notFound(label(kind));
 
     await deleteArticle(kind, params.id);
+
+    revalidateArticle(kind, String(existing.slug));
 
     await logActivity(user, {
       action: `${kind}.deleted`,
