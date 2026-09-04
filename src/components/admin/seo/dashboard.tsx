@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-<<<<<<< Updated upstream
 import { useRouter } from "next/navigation";
-=======
->>>>>>> Stashed changes
 import Link from "next/link";
 import { ExternalLink, Settings2 } from "lucide-react";
 import { PageHeader } from "@/components/admin/shell";
@@ -52,10 +49,7 @@ export function SeoDashboard({
   websites: { id: string; name: string; domain: string }[];
   canWrite: boolean;
 }) {
-<<<<<<< Updated upstream
   const router = useRouter();
-=======
->>>>>>> Stashed changes
   const [range, setRange] = useState<RangeValue>({ preset: DEFAULT_RANGE });
   const [version, setVersion] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -87,13 +81,7 @@ export function SeoDashboard({
             {websites.length > 1 && (
               <Select
                 value={website.id}
-<<<<<<< Updated upstream
                 onChange={(event) => router.push(`/admin/seo/${event.target.value}`)}
-=======
-                onChange={(event) => {
-                  window.location.href = `/admin/seo/${event.target.value}`;
-                }}
->>>>>>> Stashed changes
                 aria-label="Choose a website"
                 className="h-9 w-auto min-w-[10rem]"
               >
