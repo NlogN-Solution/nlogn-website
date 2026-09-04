@@ -271,7 +271,7 @@ const EMPTY: Record<ClientCategory, { title: string; body: string }> = {
 /* ── the section ────────────────────────────────────────────────────────── */
 
 export function ClientsSection() {
-  const [tab, setTab] = useState<ClientCategory>("media");
+  const [tab, setTab] = useState<ClientCategory>("software");
 
   const isMedia = tab === "media";
   const videos = isMedia ? publishedVideos() : [];

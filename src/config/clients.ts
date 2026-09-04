@@ -51,9 +51,9 @@ export type ClientVideo = {
  * outbound link to a live site.
  */
 export const CLIENT_TABS: { id: ClientCategory; label: string }[] = [
-  { id: "media", label: "Content & Media Production" },
   { id: "software", label: "Software" },
   { id: "websites", label: "Websites" },
+  { id: "media", label: "Content & Media Production" },
 ];
 
 export const clientProjects: ClientProject[] = [
