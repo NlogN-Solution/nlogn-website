@@ -143,6 +143,12 @@ export const databaseConfigured = Boolean(process.env.DATABASE_URL);
  * breaker opens and reads return their fallback immediately; it closes again on
  * the first success after the cool-off.
  */
+/**
+ * True while `next build` is prerendering, false in a running server. Next sets
+ * NEXT_PHASE for the build process and its render workers.
+ */
+const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+
 const BREAKER_THRESHOLD = 3;
 const BREAKER_COOLDOWN_MS = 30_000;
 
@@ -181,6 +187,27 @@ export async function dbRead<T>(fn: () => Promise<T>, fallback: T, label: string
       );
     }
     console.error(`[db] ${label} failed:`, error instanceof Error ? error.message : error);
+
+    /*
+     * A fallback at request time is the whole point of this wrapper: the page
+     * degrades and the next request tries again. A fallback during `next build`
+     * is a different thing entirely — it is baked into a prerendered page and
+     * served until the revalidate window elapses, or forever for a fully static
+     * route. That produced a green deployment serving content the CMS does not
+     * have, with nothing but a swallowed message in the build log to say so.
+     *
+     * So during a build the failure is loud, and DATABASE_FALLBACK_AT_BUILD=1
+     * is the deliberate opt-out for building without a reachable database.
+     */
+    if (isBuild && process.env.DATABASE_FALLBACK_AT_BUILD !== "1") {
+      throw new Error(
+        `[db] ${label} failed during the build, which would prerender fallback content into a ` +
+          `deployment. Fix the connection, or set DATABASE_FALLBACK_AT_BUILD=1 to build without ` +
+          `a database. Cause: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+
     return fallback;
   }
 }

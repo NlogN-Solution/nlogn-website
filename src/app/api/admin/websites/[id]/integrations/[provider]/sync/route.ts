@@ -8,8 +8,12 @@ import { syncProviderSchema } from "@/server/schemas/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-/** A crawl plus two Lighthouse runs comfortably exceeds the default budget. */
-export const maxDuration = 300;
+/**
+ * A crawl plus two Lighthouse runs comfortably exceeds the default budget, but
+ * 60s is the ceiling every Vercel plan allows without Fluid Compute — and a
+ * value above the plan limit fails the deployment after a green build.
+ */
+export const maxDuration = 60;
 
 /**
  * "Sync now".

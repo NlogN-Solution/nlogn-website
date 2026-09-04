@@ -6,7 +6,14 @@ import { syncAllWebsites } from "@/server/services/seo-sync.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 800;
+/**
+ * Kept at or below 60s because that is the ceiling every Vercel plan allows
+ * without Fluid Compute. `next build` does not validate this value — a budget
+ * over the plan limit builds green and is then rejected while the outputs are
+ * deployed, which reads as a build failure with nothing wrong in the log.
+ * Raise it only alongside Fluid Compute (Pro allows 800s with it).
+ */
+export const maxDuration = 60;
 
 /**
  * Scheduled synchronisation.

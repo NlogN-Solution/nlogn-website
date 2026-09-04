@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
+    // CMS media lives on Cloudinary, so every uploaded cover and gallery image
+    // is a remote URL. Next refuses to optimise a host that is not listed here
+    // and answers /_next/image with a 400 — which never shows up locally while
+    // the local database has no CMS rows, and breaks every card in production.
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2678400,
     // Next 16 only serves qualities listed here — anything else is coerced to

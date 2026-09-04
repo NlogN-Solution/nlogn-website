@@ -5,6 +5,14 @@ import { getMergedAllPosts, getMergedWorks } from "@/server/public-content";
 import { absoluteUrl } from "@/lib/utils";
 
 /**
+ * Rebuilt hourly. Without this the sitemap is prerendered once at build time and
+ * never again, so nothing published in the CMS after a deploy is ever listed —
+ * and if the database happened to be unreachable during that one build, the
+ * fallback content is baked in permanently.
+ */
+export const revalidate = 3600;
+
+/**
  * Both sources, one sitemap. If the database is unreachable the merge layer
  * falls back to the committed content, so the sitemap degrades rather than 500s.
  */
