@@ -33,6 +33,23 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 /** Fail fast rather than letting a page hang for half a minute on a dead host. */
 const CONNECT_TIMEOUT_MS = Number(process.env.DATABASE_CONNECT_TIMEOUT_MS ?? 10_000);
 
+/**
+ * Connections this process may open on the `tcp` transport.
+ *
+ * node-postgres defaults to 10, which is wrong at both ends of this codebase.
+ * `next build` forks three workers that each construct their own client, so the
+ * default asks for 30 — past the 15 a Supabase session-mode pooler allows, and
+ * the build fills the log with EMAXCONNSESSION and prerenders fallbacks. On
+ * serverless every instance is its own process, so a large pool is wasted there
+ * too: one connection per instance is the shape that scales.
+ *
+ * Three is enough for a page render's handful of parallel reads while leaving
+ * headroom for a second worker. Raise it with DATABASE_POOL_MAX behind a pooler
+ * that permits more (`connection_limit` in the URL is a Prisma-engine parameter
+ * and is ignored — the pool is built here, so the ceiling has to be set here).
+ */
+const POOL_MAX = Number(process.env.DATABASE_POOL_MAX ?? 3);
+
 type Transport = "ws" | "http" | "tcp";
 
 function chooseTransport(connectionString: string): Transport {
@@ -60,7 +77,11 @@ function createAdapter(connectionString: string) {
    * down, which is precisely what every fallback in this codebase exists to
    * prevent.
    */
-  const pool = new Pool({ connectionString, connectionTimeoutMillis: CONNECT_TIMEOUT_MS });
+  const pool = new Pool({
+    connectionString,
+    connectionTimeoutMillis: CONNECT_TIMEOUT_MS,
+    max: POOL_MAX,
+  });
   pool.on("error", (error) => {
     console.error("[db] idle client error (connection dropped, not fatal):", error.message);
   });
