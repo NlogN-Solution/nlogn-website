@@ -37,16 +37,26 @@ export async function uniqueSlug(desired: string, excludeId?: string) {
   return `${base}-${Date.now()}`;
 }
 
+/** Whether the payload being built is for a `create` or an `update`. */
+type WriteMode = "create" | "update";
+
 /**
  * Prisma refuses a write that mixes scalar foreign keys (`categoryId`) with
  * relation operations (`tags: { connect }`) — the two belong to different
  * generated input types. Everything therefore goes through relations.
  *
  * `undefined` leaves the link untouched; `null` clears it.
+ *
+ * `disconnect` exists only on the update input. A create has no existing link
+ * to sever, so a cleared field there is simply absent — sending `disconnect`
+ * to `create` fails validation with "Unknown argument `disconnect`" and loses
+ * the whole post. The editor sends every optional media field on save,
+ * including the empty ones, so this is the ordinary path, not an edge case.
  */
-function relation(id: string | null | undefined) {
+function relation(id: string | null | undefined, mode: WriteMode) {
   if (id === undefined) return undefined;
-  return id ? { connect: { id } } : { disconnect: true };
+  if (id) return { connect: { id } };
+  return mode === "create" ? undefined : { disconnect: true };
 }
 
 function blankToNull(value: string | null | undefined) {
@@ -55,7 +65,7 @@ function blankToNull(value: string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
-function buildData(input: CreateCaseStudyInput | UpdateCaseStudyInput) {
+function buildData(input: CreateCaseStudyInput | UpdateCaseStudyInput, mode: WriteMode) {
   return {
     projectName: input.projectName,
     clientName: input.clientName,
@@ -80,13 +90,13 @@ function buildData(input: CreateCaseStudyInput | UpdateCaseStudyInput) {
     testimonialQuote: blankToNull(input.testimonialQuote),
     testimonialName: blankToNull(input.testimonialName),
     testimonialRole: blankToNull(input.testimonialRole),
-    heroMedia: relation(input.heroMediaId),
-    thumbnail: relation(input.thumbnailId),
-    category: relation(input.categoryId),
+    heroMedia: relation(input.heroMediaId, mode),
+    thumbnail: relation(input.thumbnailId, mode),
+    category: relation(input.categoryId, mode),
     seoTitle: blankToNull(input.seoTitle),
     seoDescription: blankToNull(input.seoDescription),
     canonicalUrl: blankToNull(input.canonicalUrl),
-    ogImage: relation(input.ogImageId),
+    ogImage: relation(input.ogImageId, mode),
     noIndex: input.noIndex,
   };
 }
@@ -137,7 +147,7 @@ export async function createCaseStudy(input: CreateCaseStudyInput) {
   const slug = await uniqueSlug(input.slug || `${input.clientName}-${input.projectName}`);
   return prisma.caseStudy.create({
     data: {
-      ...buildData(input),
+      ...buildData(input, "create"),
       projectName: input.projectName,
       clientName: input.clientName,
       slug,
@@ -158,7 +168,7 @@ export async function updateCaseStudy(id: string, input: UpdateCaseStudyInput) {
   });
   if (!existing) return null;
 
-  const data = buildData(input) as Prisma.CaseStudyUpdateInput & Record<string, unknown>;
+  const data = buildData(input, "update") as Prisma.CaseStudyUpdateInput & Record<string, unknown>;
 
   if (input.slug && input.slug !== existing.slug) {
     const next = await uniqueSlug(input.slug, id);

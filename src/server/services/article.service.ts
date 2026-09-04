@@ -60,16 +60,26 @@ export async function uniqueSlug(kind: ArticleKind, desired: string, excludeId?:
 }
 
 /** Empty strings from a form mean "cleared", not "unchanged". */
+/** Whether the payload being built is for a `create` or an `update`. */
+type WriteMode = "create" | "update";
+
 /**
  * Prisma refuses a write that mixes scalar foreign keys (`categoryId`) with
  * relation operations (`tags: { connect }`) — the two belong to different
  * generated input types. Everything therefore goes through relations.
  *
  * `undefined` leaves the link untouched; `null` clears it.
+ *
+ * `disconnect` exists only on the update input. A create has no existing link
+ * to sever, so a cleared field there is simply absent — sending `disconnect`
+ * to `create` fails validation with "Unknown argument `disconnect`" and loses
+ * the whole post. The editor sends every optional media field on save,
+ * including the empty ones, so this is the ordinary path, not an edge case.
  */
-function relation(id: string | null | undefined) {
+function relation(id: string | null | undefined, mode: WriteMode) {
   if (id === undefined) return undefined;
-  return id ? { connect: { id } } : { disconnect: true };
+  if (id) return { connect: { id } };
+  return mode === "create" ? undefined : { disconnect: true };
 }
 
 function blankToNull(value: string | null | undefined) {
@@ -78,7 +88,7 @@ function blankToNull(value: string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
-function buildData(input: CreateArticleInput | UpdateArticleInput) {
+function buildData(input: CreateArticleInput | UpdateArticleInput, mode: WriteMode) {
   const html = input.content ? renderEditorDoc(input.content) : undefined;
   const plain = input.content ? editorPlainText(input.content) : undefined;
 
@@ -92,18 +102,18 @@ function buildData(input: CreateArticleInput | UpdateArticleInput) {
     readingMinutes: input.content ? readingMinutes(input.content) : undefined,
     status: input.status,
     featured: input.featured,
-    author: relation(input.authorId),
+    author: relation(input.authorId, mode),
     authorName: blankToNull(input.authorName),
     authorRole: blankToNull(input.authorRole),
-    category: relation(input.categoryId),
-    coverMedia: relation(input.coverMediaId),
+    category: relation(input.categoryId, mode),
+    coverMedia: relation(input.coverMediaId, mode),
     scheduledFor: input.scheduledFor ?? undefined,
     seoTitle: blankToNull(input.seoTitle),
     seoDescription: blankToNull(input.seoDescription),
     canonicalUrl: blankToNull(input.canonicalUrl),
     ogTitle: blankToNull(input.ogTitle),
     ogDescription: blankToNull(input.ogDescription),
-    ogImage: relation(input.ogImageId),
+    ogImage: relation(input.ogImageId, mode),
     noIndex: input.noIndex,
   };
 }
@@ -167,7 +177,7 @@ export async function createArticle(kind: ArticleKind, input: CreateArticleInput
 
   return delegate(kind).create({
     data: {
-      ...buildData(input),
+      ...buildData(input, "create"),
       slug,
       publishedAt: publishing ? new Date() : null,
       ...(input.tagIds?.length ? { tags: { connect: input.tagIds.map((id) => ({ id })) } } : {}),
@@ -184,7 +194,7 @@ export async function updateArticle(kind: ArticleKind, id: string, input: Update
 
   if (!existing) return null;
 
-  const data = buildData(input) as Record<string, unknown>;
+  const data = buildData(input, "update") as Record<string, unknown>;
 
   // A slug is only regenerated when the editor actually changed it. Renaming a
   // post must not silently move a URL that is already indexed.
