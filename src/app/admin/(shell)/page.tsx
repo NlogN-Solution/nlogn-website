@@ -3,7 +3,7 @@ import { ArrowUpRight, BookOpen, Briefcase, HardDrive, Inbox, Lightbulb } from "
 import { dashboardStats, recentActivity } from "@/server/services/stats.service";
 import { PageHeader } from "@/components/admin/shell";
 import { Panel, PanelHeader, StatusBadge } from "@/components/admin/ui";
-import { formatBytes } from "@/components/admin/media-picker";
+import { formatBytes } from "@/lib/utils";
 
 /**
  * Operational overview.

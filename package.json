@@ -3,18 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env NODE_OPTIONS=--no-network-family-autoselection next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "cross-env NODE_OPTIONS=--no-network-family-autoselection next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
+    "db:migrate": "cross-env NODE_OPTIONS=--no-network-family-autoselection prisma migrate dev",
+    "db:deploy": "cross-env NODE_OPTIONS=--no-network-family-autoselection prisma migrate deploy",
+    "db:seed": "cross-env NODE_OPTIONS=--no-network-family-autoselection tsx prisma/seed.ts",
+    "db:studio": "cross-env NODE_OPTIONS=--no-network-family-autoselection prisma studio",
     "postinstall": "prisma generate",
     "db:doctor": "node scripts/db-doctor.mjs",
-    "seo:check": "tsx scripts/seo-checks/run.ts"
+    "seo:check": "cross-env NODE_OPTIONS=--no-network-family-autoselection tsx scripts/seo-checks/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -61,6 +61,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "prisma": "^7.10.0",

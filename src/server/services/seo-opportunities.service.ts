@@ -96,6 +96,10 @@ export function findOpportunities(
   pages: LandingPageRow[] = [],
 ): { opportunities: Opportunity[]; benchmarkAvailable: boolean } {
   const benchmarks = ctrBenchmarks(keywords);
+<<<<<<< Updated upstream
+=======
+  const pageByPath = new Map(pages.map((page) => [page.page, page]));
+>>>>>>> Stashed changes
   const found: Opportunity[] = [];
 
   const benchmarkFor = (position: number) => {

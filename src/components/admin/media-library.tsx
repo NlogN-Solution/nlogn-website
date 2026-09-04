@@ -5,11 +5,11 @@ import { Copy, Trash2 } from "lucide-react";
 import { api, qs, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
 import {
-  formatBytes,
   MediaThumb,
   UploadButton,
   type MediaItem,
 } from "@/components/admin/media-picker";
+import { formatBytes } from "@/lib/utils";
 import { PageHeader } from "@/components/admin/shell";
 import {
   Button,

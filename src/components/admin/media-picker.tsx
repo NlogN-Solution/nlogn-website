@@ -37,13 +37,6 @@ type Listing = {
   pagination: { page: number; totalPages: number; total: number; hasNext: boolean };
 };
 
-export function formatBytes(bytes: number) {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
-
 export function MediaThumb({ item, className }: { item: MediaItem; className?: string }) {
   if (item.type === "IMAGE") {
     return (

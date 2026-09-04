@@ -10,6 +10,7 @@ import { api, qs, ApiError } from "@/components/admin/api";
  * request, so Search Console being slow leaves the traffic chart interactive.
  * That is also what lets a disconnected provider render its own explanation
  * while everything around it works.
+<<<<<<< Updated upstream
  *
  * `loading` is derived from whether the settled result matches the request we
  * currently want, rather than being flipped on by the effect. Setting state
@@ -20,6 +21,8 @@ import { api, qs, ApiError } from "@/components/admin/api";
  * The last successful payload is kept while a new one is in flight, so changing
  * the range redraws the charts once with new data instead of blanking them to a
  * skeleton and back.
+=======
+>>>>>>> Stashed changes
  */
 
 export type Loadable<T> = {
@@ -29,12 +32,16 @@ export type Loadable<T> = {
   reload: (options?: { refresh?: boolean }) => void;
 };
 
+<<<<<<< Updated upstream
 type Settled<T> = { key: string; nonce: number; data: T | null; error: string | null };
 
+=======
+>>>>>>> Stashed changes
 export function useEndpoint<T>(
   path: string | null,
   params: Record<string, string | number | undefined> = {},
 ): Loadable<T> {
+<<<<<<< Updated upstream
   // Serialised, so an object literal in the caller does not re-fire the effect
   // on every render.
   const key = `${path}${qs(params)}`;
@@ -94,6 +101,50 @@ export function useEndpoint<T>(
     error: current?.error ?? null,
     reload,
   };
+=======
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(Boolean(path));
+  const [error, setError] = useState<string | null>(null);
+
+  // Serialised, so an object literal in the caller does not re-fire the effect
+  // on every render.
+  const key = `${path}${qs(params)}`;
+  const latest = useRef(0);
+
+  const load = useCallback(
+    async (options: { refresh?: boolean } = {}) => {
+      if (!path) return;
+
+      const ticket = ++latest.current;
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await api.get<T>(
+          `${path}${qs({ ...params, ...(options.refresh ? { refresh: "1" } : {}) })}`,
+        );
+        // A slower earlier request must not overwrite a newer response — the
+        // usual cause of a chart snapping back to the previous date range.
+        if (ticket === latest.current) setData(result);
+      } catch (caught) {
+        if (ticket !== latest.current) return;
+        setError(
+          caught instanceof ApiError ? caught.message : "Something went wrong loading this.",
+        );
+      } finally {
+        if (ticket === latest.current) setLoading(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [key],
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { data, loading, error, reload: load };
+>>>>>>> Stashed changes
 }
 
 /* ── shared response shapes ──────────────────────────────────────────────── */

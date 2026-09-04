@@ -134,17 +134,6 @@ export const clientVideos: ClientVideo[] = [
     aspect: "portrait",
   },
   {
-    id: "carzspa",
-    clientName: "Carzspa",
-    projectName: "Studio reel",
-    sector: "Creative",
-    description:
-      "A studio reel cut for carzspa--edited to sell the service and quality of the work.",
-    videoUrl:
-      "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788350487/carzspa.mp4",
-    aspect: "portrait",
-  },
-  {
     id: "aayaduya-builders",
     clientName: "Aayaduya Builders",
     projectName: "Project showcase",
@@ -164,6 +153,17 @@ export const clientVideos: ClientVideo[] = [
       "A short brand film for an overseas engagement, introducing the business and the people behind it inside a minute.",
     videoUrl:
       "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788089967/foregin-client.mov",
+    aspect: "portrait",
+  },
+  {
+    id: "carzspa",
+    clientName: "Carzspa",
+    projectName: "Studio reel",
+    sector: "Creative",
+    description:
+      "A studio reel cut for carzspa--edited to sell the service and quality of the work.",
+    videoUrl:
+      "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788350487/carzspa.mp4",
     aspect: "portrait",
   },
   {
