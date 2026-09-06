@@ -30,8 +30,29 @@ import { PrismaClient } from "@/generated/prisma";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-/** Fail fast rather than letting a page hang for half a minute on a dead host. */
-const CONNECT_TIMEOUT_MS = Number(process.env.DATABASE_CONNECT_TIMEOUT_MS ?? 10_000);
+/**
+ * True while `next build` is prerendering, false in a running server. Next sets
+ * NEXT_PHASE for the build process and its render workers.
+ */
+const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+
+/**
+ * How long a query may wait for a connection.
+ *
+ * node-postgres counts the wait for a free pool slot in this too, not just the
+ * TCP and TLS handshake — so on a pooler a couple of hundred milliseconds away,
+ * a page render's parallel reads queue behind however many connections
+ * `POOL_MAX` allows, and the last one in the queue pays for all of them.
+ *
+ * Ten seconds is right for a request: somebody is waiting on it, and a page
+ * that degrades to committed content beats one that hangs. It is the wrong
+ * number for a build, where nobody is waiting and the cost of giving up is a
+ * failed deployment — so the build gets three times as long before it decides
+ * the database is unreachable.
+ */
+const CONNECT_TIMEOUT_MS = Number(
+  process.env.DATABASE_CONNECT_TIMEOUT_MS ?? (isBuild ? 30_000 : 10_000),
+);
 
 /**
  * Connections this process may open on the `tcp` transport.
@@ -49,6 +70,40 @@ const CONNECT_TIMEOUT_MS = Number(process.env.DATABASE_CONNECT_TIMEOUT_MS ?? 10_
  * and is ignored — the pool is built here, so the ceiling has to be set here).
  */
 const POOL_MAX = Number(process.env.DATABASE_POOL_MAX ?? 3);
+
+/**
+ * Supabase's pooler answers on two ports, and only one of them works here.
+ *
+ * 6543 is transaction mode: connections are multiplexed, so a few hundred
+ * clients share a handful of Postgres backends. 5432 is session mode, which
+ * pins one backend per client and caps the whole project at 15 — and `next
+ * build` forks render workers that each construct their own pool, while every
+ * serverless instance in production does the same. The result is a build that
+ * dies partway through page generation with `(EMAXCONNSESSION) max clients
+ * reached in session mode`.
+ *
+ * The two URLs are identical apart from the port, so this is an easy variable
+ * to paste wrong and a miserable one to diagnose from the error alone — which
+ * is why the message below spells out the fix rather than the symptom.
+ */
+const SESSION_POOLER_FIX =
+  "DATABASE_URL is Supabase's session-mode pooler (port 5432). It allows only 15 client " +
+  "connections in total, and both `next build` and serverless rendering open more than that. " +
+  "Change the port to 6543 and keep the query string: " +
+  "?pgbouncer=true&sslmode=no-verify — that is the transaction pooler, which multiplexes. " +
+  "Leave the 5432 URL in DIRECT_URL: `prisma migrate` needs session mode and is the only " +
+  "thing that does.";
+
+/** True for a Supabase pooler URL on the session-mode port. */
+function isSessionModePooler(connectionString: string): boolean {
+  try {
+    const url = new URL(connectionString);
+    return url.hostname.includes("pooler.supabase.com") && url.port === "5432";
+  } catch {
+    // Not a URL this can parse is not a URL this can judge.
+    return false;
+  }
+}
 
 type Transport = "ws" | "http" | "tcp";
 
@@ -97,6 +152,18 @@ function createClient() {
     );
   }
 
+  if (isSessionModePooler(connectionString)) {
+    /*
+     * Fatal during a build and a warning at runtime, for the same reason
+     * `dbRead` rethrows during a build: a build that continues here produces a
+     * deployment, and this configuration cannot finish one. A server already
+     * running is better off trying — some requests will get through, and the
+     * log now says what to change.
+     */
+    if (isBuild) throw new Error(`[db] ${SESSION_POOLER_FIX}`);
+    console.error(`[db] ${SESSION_POOLER_FIX}`);
+  }
+
   return new PrismaClient({
     adapter: createAdapter(connectionString),
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
@@ -143,12 +210,6 @@ export const databaseConfigured = Boolean(process.env.DATABASE_URL);
  * breaker opens and reads return their fallback immediately; it closes again on
  * the first success after the cool-off.
  */
-/**
- * True while `next build` is prerendering, false in a running server. Next sets
- * NEXT_PHASE for the build process and its render workers.
- */
-const isBuild = process.env.NEXT_PHASE === "phase-production-build";
-
 const BREAKER_THRESHOLD = 3;
 const BREAKER_COOLDOWN_MS = 30_000;
 
@@ -202,6 +263,13 @@ function describe(error: unknown): string {
 
   for (let cause = error.cause; cause instanceof Error; cause = cause.cause) {
     parts.push(`caused by: ${flatten(cause.message)}`);
+  }
+
+  // The pooler can reach its ceiling on a URL the check above did not recognise
+  // — a self-hosted Supavisor, say. The symptom names the fix either way.
+  const joined = parts.join(" ");
+  if (joined.includes("EMAXCONNSESSION") || joined.includes("max clients reached in session mode")) {
+    parts.push(`fix: ${SESSION_POOLER_FIX}`);
   }
 
   return parts.filter(Boolean).join(" | ");
