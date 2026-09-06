@@ -310,8 +310,9 @@ export function IntegrationsManager({
               <div className="min-w-0">
                 <p className="text-[0.875rem] font-semibold text-ink">Sync everything</p>
                 <p className="mt-1 text-[0.8125rem] text-muted">
-                  Refreshes every connected provider and runs a fresh audit. Limited to three runs
-                  every ten minutes.
+                  Refreshes every connected provider and measures one PageSpeed strategy. The audit
+                  has its own button above, because the two together take longer than a request is
+                  allowed to run. Limited to three runs every ten minutes.
                 </p>
               </div>
               <Button

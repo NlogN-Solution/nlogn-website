@@ -23,7 +23,12 @@ export const maxDuration = 60;
  * a minute, and the crawler by somebody else's server capacity. Three runs in
  * ten minutes is plenty for a person checking whether a fix took effect.
  *
- * `all` runs every provider including the crawl; a named provider runs one.
+ * `all` runs the fast providers plus one Lighthouse strategy. It deliberately
+ * leaves out the crawl: a crawl and two Lighthouse runs together are roughly a
+ * minute, and this route only has 60s. Exceeding that kills the request before
+ * any provider records that it succeeded, so a sync that actually worked still
+ * leaves its card reading "Disconnected". The crawl has its own button, and the
+ * nightly cron runs everything with the full budget to itself.
  */
 export const POST = guard<{ id: string; provider: string }>(
   "seo:write",
@@ -37,7 +42,7 @@ export const POST = guard<{ id: string; provider: string }>(
     const raw = params.provider.toUpperCase().replace(/-/g, "_");
 
     if (raw === "ALL") {
-      const results = await syncWebsite(website);
+      const results = await syncWebsite(website, { includeCrawl: false });
 
       await logActivity(user, {
         action: "seo.synced",

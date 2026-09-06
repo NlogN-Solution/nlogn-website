@@ -57,16 +57,59 @@ const reading = (value: number | null, metric: Parameters<typeof rateVital>[0]):
   rating: rateVital(metric, value),
 });
 
-/** Runs both strategies and stores the results. Called by the sync job only. */
-export async function measurePageSpeed(website: Website) {
-  if (!pageSpeedConfigured()) return { measured: 0 };
+export type MeasureStrategy = "mobile" | "desktop";
+
+/**
+ * The strategy whose last measurement is oldest, or one that has never run.
+ *
+ * A Lighthouse run takes 20-30 seconds, so a request that measures both cannot
+ * fit in the 60s budget alongside anything else. Measuring the more overdue of
+ * the two instead means consecutive syncs alternate, and each strategy is still
+ * refreshed on every second run.
+ */
+async function stalestStrategy(websiteId: string): Promise<MeasureStrategy> {
+  const [mobile, desktop] = await Promise.all([
+    prisma.pageSpeedSnapshot.findFirst({
+      where: { websiteId, strategy: "MOBILE" },
+      orderBy: { fetchedAt: "desc" },
+      select: { fetchedAt: true },
+    }),
+    prisma.pageSpeedSnapshot.findFirst({
+      where: { websiteId, strategy: "DESKTOP" },
+      orderBy: { fetchedAt: "desc" },
+      select: { fetchedAt: true },
+    }),
+  ]);
+
+  // Never-measured wins outright; mobile breaks a tie because it is the
+  // strategy Google ranks on.
+  if (!mobile) return "mobile";
+  if (!desktop) return "desktop";
+  return mobile.fetchedAt <= desktop.fetchedAt ? "mobile" : "desktop";
+}
+
+/**
+ * Measures and stores. Called by the sync job only.
+ *
+ * With no `strategies` given this measures the single most overdue one, which
+ * is what keeps an interactive sync inside its time budget. The scheduled run
+ * passes both explicitly, because it has the whole window to itself.
+ */
+export async function measurePageSpeed(
+  website: Website,
+  { strategies }: { strategies?: readonly MeasureStrategy[] } = {},
+) {
+  if (!pageSpeedConfigured()) return { measured: 0, ran: [] as MeasureStrategy[] };
+
+  const targets = strategies ?? [await stalestStrategy(website.id)];
 
   const url = `https://${website.domain}`;
+  const ran: MeasureStrategy[] = [];
   let measured = 0;
 
   // Sequential: two Lighthouse runs in parallel is a good way to trip the
   // per-minute quota for no gain, since neither is on a critical path.
-  for (const strategy of ["mobile", "desktop"] as const) {
+  for (const strategy of targets) {
     try {
       const result = await runPageSpeed(url, strategy);
 
@@ -94,12 +137,13 @@ export async function measurePageSpeed(website: Website) {
       });
 
       measured += 1;
+      ran.push(strategy);
     } catch (error) {
       console.error(`[pagespeed] ${strategy} run failed:`, error);
     }
   }
 
-  return { measured };
+  return { measured, ran };
 }
 
 export async function performanceReport(website: Website): Promise<PerformanceReport> {

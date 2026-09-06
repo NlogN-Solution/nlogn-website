@@ -69,7 +69,13 @@ export const GET = handler(async (request: Request) => {
   // its own schedule via ?crawl=1 rather than every night by accident.
   const includeCrawl = url.searchParams.get("crawl") === "1";
 
-  const report = await syncAllWebsites({ includeCrawl });
+  // One Lighthouse strategy per run by default, alternating between mobile and
+  // desktop, so a nightly sync of a couple of sites stays inside 60s. `?psi=both`
+  // measures both in one run — only safe for a single site, or with Fluid
+  // Compute raising the ceiling.
+  const pageSpeed = url.searchParams.get("psi") === "both" ? "both" : "one";
+
+  const report = await syncAllWebsites({ includeCrawl, pageSpeed });
 
   return NextResponse.json({ success: true, data: { synced: report.length, report } });
 });

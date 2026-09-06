@@ -2,7 +2,7 @@ import { prisma } from "@/server/db";
 import { buildRange, SEARCH_CONSOLE_LAG_DAYS, ANALYTICS_LAG_DAYS } from "@/lib/date-range";
 import { analyticsOverview } from "@/server/services/analytics.service";
 import { searchConsoleOverview, searchConsoleQueries, searchConsolePages } from "@/server/services/search-console.service";
-import { measurePageSpeed } from "@/server/services/pagespeed.service";
+import { measurePageSpeed, type MeasureStrategy } from "@/server/services/pagespeed.service";
 import { ahrefsCapabilities, backlinkReport } from "@/server/services/ahrefs.service";
 import { crawlWebsite } from "@/server/services/crawler.service";
 import { invalidate } from "@/server/services/seo-cache.service";
@@ -95,20 +95,28 @@ export async function syncAnalytics(website: Website): Promise<SyncResult> {
   }
 }
 
-export async function syncPageSpeed(website: Website): Promise<SyncResult> {
+/**
+ * `strategies` defaults to the single most overdue one — see `measurePageSpeed`.
+ * A Lighthouse run is 20-30s, so measuring both is only safe where the whole
+ * time budget is available, which on this route it is not.
+ */
+export async function syncPageSpeed(
+  website: Website,
+  { strategies }: { strategies?: readonly MeasureStrategy[] } = {},
+): Promise<SyncResult> {
   try {
-    const { measured } = await measurePageSpeed(website);
+    const { measured, ran } = await measurePageSpeed(website, { strategies });
 
     if (measured === 0) {
       return {
         provider: "PAGESPEED",
         ok: false,
-        detail: "PageSpeed Insights is not configured, or both runs failed.",
+        detail: "PageSpeed Insights is not configured, or the run failed.",
       };
     }
 
     await markSynced(website.id, "PAGESPEED").catch(() => undefined);
-    return { provider: "PAGESPEED", ok: true, detail: `${measured} measurement${measured === 1 ? "" : "s"} taken.` };
+    return { provider: "PAGESPEED", ok: true, detail: `Measured ${ran.join(" and ")}.` };
   } catch (error) {
     const detail = error instanceof Error ? error.message : "PageSpeed sync failed.";
     return { provider: "PAGESPEED", ok: false, detail };
@@ -165,10 +173,23 @@ export async function syncCrawl(website: Website): Promise<SyncResult> {
  * Sequential rather than parallel: the crawl and the Lighthouse runs are the
  * slow parts and both make outbound requests to the same site, so running them
  * alongside each other would have this tool hammering a client's server.
+ *
+ * That sequencing is also why the two slow steps are optional. Search Console
+ * and Analytics are a handful of API calls; a crawl and two Lighthouse runs are
+ * a minute between them, and a request that exceeds `maxDuration` is killed
+ * before any provider can record that it succeeded — which is what leaves a
+ * provider showing as never connected despite having synced fine.
+ *
+ *   pageSpeed: "one"   the most overdue strategy (default; ~25s)
+ *              "both"  mobile and desktop (~50s — scheduled runs only)
+ *              "skip"  leave it to its own sync
  */
 export async function syncWebsite(
   website: Website,
-  { includeCrawl = true }: { includeCrawl?: boolean } = {},
+  {
+    includeCrawl = true,
+    pageSpeed = "one",
+  }: { includeCrawl?: boolean; pageSpeed?: "one" | "both" | "skip" } = {},
 ): Promise<SyncResult[]> {
   await invalidate(website.id);
 
@@ -176,8 +197,15 @@ export async function syncWebsite(
     await syncSearchConsole(website),
     await syncAnalytics(website),
     await syncAhrefs(website),
-    await syncPageSpeed(website),
   ];
+
+  if (pageSpeed !== "skip") {
+    results.push(
+      await syncPageSpeed(website, {
+        strategies: pageSpeed === "both" ? (["mobile", "desktop"] as const) : undefined,
+      }),
+    );
+  }
 
   if (includeCrawl) results.push(await syncCrawl(website));
 
@@ -185,12 +213,18 @@ export async function syncWebsite(
 }
 
 /** The scheduled entry point. Active websites only. */
-export async function syncAllWebsites({ includeCrawl = true } = {}) {
+export async function syncAllWebsites({
+  includeCrawl = true,
+  pageSpeed = "one",
+}: { includeCrawl?: boolean; pageSpeed?: "one" | "both" | "skip" } = {}) {
   const websites = await prisma.website.findMany({ where: { isActive: true } });
   const report: { website: string; results: SyncResult[] }[] = [];
 
   for (const website of websites) {
-    report.push({ website: website.domain, results: await syncWebsite(website, { includeCrawl }) });
+    report.push({
+      website: website.domain,
+      results: await syncWebsite(website, { includeCrawl, pageSpeed }),
+    });
   }
 
   return report;
