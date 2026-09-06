@@ -2,6 +2,8 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/blog/post-card";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
 import { getAllPosts } from "@/lib/blog";
 
 export function BlogPreview() {
@@ -26,13 +28,15 @@ export function BlogPreview() {
           }
         />
 
-        <ul className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post, i) => (
-            <Reveal as="li" key={post.slug} delay={i * 0.08} className="h-full">
-              <PostCard post={post} />
-            </Reveal>
-          ))}
-        </ul>
+        <EngagementProvider keys={posts.map((p) => engagementKey(kindFromPost(p.kind), p.slug))}>
+          <ul className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post, i) => (
+              <Reveal as="li" key={post.slug} delay={i * 0.08} className="h-full">
+                <PostCard post={post} />
+              </Reveal>
+            ))}
+          </ul>
+        </EngagementProvider>
       </div>
     </section>
   );

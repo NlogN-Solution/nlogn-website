@@ -8,6 +8,8 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { getMergedWorks } from "@/server/public-content";
 import { absoluteUrl } from "@/lib/utils";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey } from "@/lib/engagement";
 
 export const metadata: Metadata = buildMetadata({
   title: "Case studies — the work and the numbers behind it",
@@ -43,15 +45,17 @@ export default async function CaseStudiesPage() {
         </Button>
       </PageHero>
 
-      <div className="container-x py-16 md:py-24">
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2">
-          {works.map((work, i) => (
-            <Reveal as="li" key={work.slug} delay={(i % 2) * 0.08}>
-              <WorkCard work={work} />
-            </Reveal>
-          ))}
-        </ul>
-      </div>
+      <EngagementProvider keys={works.map((w) => engagementKey("CASE_STUDY", w.slug))}>
+        <div className="container-x py-16 md:py-24">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2">
+            {works.map((work, i) => (
+              <Reveal as="li" key={work.slug} delay={(i % 2) * 0.08}>
+                <WorkCard work={work} />
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </EngagementProvider>
 
       <CtaBand title="Your case study is the next one." />
 

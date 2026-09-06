@@ -593,3 +593,88 @@ enum PageSpeedStrategy {
   MOBILE
   DESKTOP
 }
+
+/* ── Engagement ──────────────────────────────────────────────────────────────
+ *
+ * Views, likes and comments for every piece of published content.
+ *
+ * Keyed by `kind` + `slug` rather than by a foreign key, because half the
+ * content on this site has no database row at all: the committed MDX posts in
+ * `src/content/blog` and the hardcoded case studies in `config/site.ts` are
+ * files, and they need to count exactly like a CMS record does. A relation
+ * would have silently excluded them.
+ */
+
+enum ContentKind {
+  BLOG
+  INSIGHT
+  CASE_STUDY
+}
+
+enum CommentStatus {
+  PUBLISHED
+  HIDDEN
+  SPAM
+}
+
+/// Denormalised counters, so a listing of nine cards is one row-per-card read
+/// rather than three aggregate queries each. The ledgers below are the truth;
+/// this is the fast copy, updated in the same transaction as the ledger write.
+model ContentStat {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  views     Int         @default(0)
+  likes     Int         @default(0)
+  /// Published comments only — the number the public page shows.
+  comments  Int         @default(0)
+  updatedAt DateTime    @updatedAt
+
+  @@unique([kind, slug])
+}
+
+/// One row per visitor per item, which is what makes a view count mean
+/// something: a refresh does not move it, and the unique constraint is the
+/// deduplication rather than a timer somebody can wait out.
+model ContentView {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  visitorId String
+  createdAt DateTime    @default(now())
+
+  @@unique([kind, slug, visitorId])
+  @@index([kind, slug])
+}
+
+/// A like is a toggle, so the row's existence is the state. Deleting it is an
+/// unlike; there is no `active` flag to get out of step with the counter.
+model ContentLike {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  visitorId String
+  createdAt DateTime    @default(now())
+
+  @@unique([kind, slug, visitorId])
+  @@index([kind, slug])
+}
+
+model ContentComment {
+  id        String        @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  name      String
+  /// Collected so a real person is behind the comment and can be replied to.
+  /// Never sent to the browser — the public thread returns name and body only.
+  email     String
+  body      String
+  status    CommentStatus @default(PUBLISHED)
+  ip        String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([kind, slug, status, createdAt])
+  @@index([status, createdAt])
+}

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { Post } from "@/lib/blog";
+import { CardEngagement } from "@/components/engagement/engagement-bar";
+import { kindFromPost } from "@/lib/engagement";
 import { formatDate, slugify, cn } from "@/lib/utils";
 
 /**
@@ -72,6 +74,12 @@ export function PostCard({ post, featured = false }: { post: Post; featured?: bo
           </time>
         </div>
         <ArrowUpRight className="size-5 text-muted transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-violet" />
+      </div>
+
+      {/* Its own row rather than crowded in beside the byline: the like button
+          is the one thing on this card that is not the link to the article. */}
+      <div className="mt-4 flex">
+        <CardEngagement kind={kindFromPost(post.kind)} slug={post.slug} />
       </div>
 
       {featured && post.tags.length > 0 && (

@@ -9,6 +9,8 @@ import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { getLead } from "@/lib/blog";
 import { getMergedPosts } from "@/server/public-content";
 import { absoluteUrl } from "@/lib/utils";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
 
 export const metadata: Metadata = buildMetadata({
   title: "Insights — the thinking behind the work",
@@ -46,6 +48,7 @@ export default async function InsightsPage() {
         </Button>
       </PageHero>
 
+      <EngagementProvider keys={posts.map((p) => engagementKey(kindFromPost(p.kind), p.slug))}>
       <div className="container-x py-16 md:py-24">
         {lead && (
           <Reveal>
@@ -80,6 +83,7 @@ export default async function InsightsPage() {
           </div>
         </Reveal>
       </div>
+      </EngagementProvider>
 
       <JsonLd
         schema={[

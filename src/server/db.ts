@@ -57,19 +57,47 @@ const CONNECT_TIMEOUT_MS = Number(
 /**
  * Connections this process may open on the `tcp` transport.
  *
- * node-postgres defaults to 10, which is wrong at both ends of this codebase.
- * `next build` forks three workers that each construct their own client, so the
- * default asks for 30 — past the 15 a Supabase session-mode pooler allows, and
- * the build fills the log with EMAXCONNSESSION and prerenders fallbacks. On
- * serverless every instance is its own process, so a large pool is wasted there
- * too: one connection per instance is the shape that scales.
+ * There is no single right number, because the two Supabase poolers have
+ * opposite constraints and the URL is what says which one is in front of us.
  *
- * Three is enough for a page render's handful of parallel reads while leaving
- * headroom for a second worker. Raise it with DATABASE_POOL_MAX behind a pooler
- * that permits more (`connection_limit` in the URL is a Prisma-engine parameter
- * and is ignored — the pool is built here, so the ceiling has to be set here).
+ * Session mode (5432) pins one Postgres backend per client and caps the project
+ * at 15. `next build` forks three render workers that each build their own
+ * pool, so anything above three risks EMAXCONNSESSION — and node-postgres's own
+ * default of 10 would ask for 30.
+ *
+ * Transaction mode (6543) multiplexes: those client connections share a few
+ * backends, so the cap does not apply and three is actively too few. A tag page
+ * fires its reads in parallel, several pages render at once per worker, and the
+ * queue behind three connections is counted against `connectionTimeoutMillis` —
+ * measured here, the default of three failed roughly every other build with
+ * "timeout exceeded when trying to connect" while ten passed every time.
+ *
+ * DATABASE_POOL_MAX overrides both. (`connection_limit` in the URL is a
+ * Prisma-engine parameter and is ignored — the pool is built here, so the
+ * ceiling has to be set here.)
  */
-const POOL_MAX = Number(process.env.DATABASE_POOL_MAX ?? 3);
+function poolMax(connectionString: string): number {
+  const override = Number(process.env.DATABASE_POOL_MAX);
+  if (Number.isFinite(override) && override > 0) return override;
+  return isTransactionPooler(connectionString) ? 10 : 3;
+}
+
+/**
+ * True for a pooler that multiplexes, so a bigger client pool costs nothing.
+ *
+ * `pgbouncer=true` is the explicit signal — Prisma requires it there anyway to
+ * stop caching prepared statements — with the port as the fallback for a URL
+ * that omits it.
+ */
+function isTransactionPooler(connectionString: string): boolean {
+  try {
+    const url = new URL(connectionString);
+    if (url.searchParams.get("pgbouncer") === "true") return true;
+    return url.hostname.includes("pooler.supabase.com") && url.port === "6543";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Supabase's pooler answers on two ports, and only one of them works here.
@@ -135,7 +163,7 @@ function createAdapter(connectionString: string) {
   const pool = new Pool({
     connectionString,
     connectionTimeoutMillis: CONNECT_TIMEOUT_MS,
-    max: POOL_MAX,
+    max: poolMax(connectionString),
   });
   pool.on("error", (error) => {
     console.error("[db] idle client error (connection dropped, not fatal):", error.message);

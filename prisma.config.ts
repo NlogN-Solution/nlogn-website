@@ -21,7 +21,17 @@ loadEnv();
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
   datasource: {
-    url: process.env.DATABASE_URL ?? "",
+    /*
+     * DIRECT_URL first, and DATABASE_URL only as a fallback.
+     *
+     * DATABASE_URL is Supabase's transaction pooler (port 6543), which is right
+     * for the application and wrong for this: the migration engine takes a
+     * session-level advisory lock and creates a shadow database, and neither
+     * survives a connection that is handed to somebody else between statements
+     * — `prisma migrate` simply hangs. DIRECT_URL is the session-mode URL on
+     * 5432, which is what migrations need and the only thing that needs it.
+     */
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "",
   },
   migrations: {
     path: path.join("prisma", "migrations"),

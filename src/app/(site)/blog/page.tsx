@@ -9,6 +9,8 @@ import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { getLead } from "@/lib/blog";
 import { getMergedCategories, getMergedPosts } from "@/server/public-content";
 import { absoluteUrl } from "@/lib/utils";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
 
 export const metadata: Metadata = buildMetadata({
   title: "The Growth Brief — essays on web performance, SEO and growth",
@@ -64,6 +66,7 @@ export default async function BlogPage() {
         </div>
       </PageHero>
 
+      <EngagementProvider keys={posts.map((p) => engagementKey(kindFromPost(p.kind), p.slug))}>
       <div className="container-x py-16 md:py-24">
         {featured && (
           <Reveal>
@@ -96,6 +99,7 @@ export default async function BlogPage() {
           </div>
         </Reveal>
       </div>
+      </EngagementProvider>
 
       <JsonLd
         schema={[

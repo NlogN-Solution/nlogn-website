@@ -8,6 +8,10 @@ import { Breadcrumbs } from "@/components/site/page-hero";
 import { GrowthCurve } from "@/components/ui/growth-curve";
 import { CtaBand } from "@/components/site/cta-band";
 import { JsonLd } from "@/components/seo/json-ld";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { ArticleEngagement } from "@/components/engagement/engagement-bar";
+import { Comments } from "@/components/engagement/comments";
+import { engagementKey } from "@/lib/engagement";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { works } from "@/config/site";
 import { getMergedWork, getMergedWorks, resolveRedirect } from "@/server/public-content";
@@ -58,8 +62,11 @@ export default async function WorkPage({ params }: Params) {
     { name: work.client, path: `/case-studies/${work.slug}` },
   ];
 
+  // This case study, plus the "next case study" card in the sidebar.
+  const keys = [engagementKey("CASE_STUDY", work.slug), engagementKey("CASE_STUDY", next.slug)];
+
   return (
-    <>
+    <EngagementProvider keys={keys}>
       <article>
         <header className="relative overflow-hidden border-b border-line pb-16 pt-32 md:pb-20 md:pt-44">
           <div
@@ -85,6 +92,8 @@ export default async function WorkPage({ params }: Params) {
             <p className="mt-7 max-w-2xl text-[1.0625rem] leading-relaxed text-muted md:text-lg">
               {work.summary}
             </p>
+
+            <ArticleEngagement kind="CASE_STUDY" slug={work.slug} className="mt-8" />
           </div>
         </header>
 
@@ -277,6 +286,14 @@ export default async function WorkPage({ params }: Params) {
         </section>
       )}
 
+      <section className="border-t border-line py-16 md:py-24">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <Comments kind="CASE_STUDY" slug={work.slug} />
+          </div>
+        </div>
+      </section>
+
       <CtaBand />
 
       <JsonLd
@@ -296,6 +313,6 @@ export default async function WorkPage({ params }: Params) {
         ]}
         id="work-schema"
       />
-    </>
+    </EngagementProvider>
   );
 }

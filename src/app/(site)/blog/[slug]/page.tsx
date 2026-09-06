@@ -11,6 +11,10 @@ import { Reveal } from "@/components/ui/reveal";
 import { NewsletterForm } from "@/components/site/newsletter-form";
 import { CtaBand } from "@/components/site/cta-band";
 import { JsonLd } from "@/components/seo/json-ld";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { ArticleEngagement } from "@/components/engagement/engagement-bar";
+import { Comments } from "@/components/engagement/comments";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { getAllPosts, getRelatedPosts } from "@/lib/blog";
 import { getMergedPost, getMergedPosts, resolveRedirect } from "@/server/public-content";
@@ -69,8 +73,15 @@ export default async function PostPage({ params }: Params) {
     { name: post.title, path: `/blog/${post.slug}` },
   ];
 
+  const kind = kindFromPost(post.kind);
+  // This article, plus every card in "Read next" — one request covers the page.
+  const keys = [
+    engagementKey(kind, post.slug),
+    ...related.map((p) => engagementKey(kindFromPost(p.kind), p.slug)),
+  ];
+
   return (
-    <>
+    <EngagementProvider keys={keys}>
       <article>
         <header className="relative overflow-hidden border-b border-line pb-14 pt-32 md:pb-16 md:pt-44">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_80%_0%,#ffffff_0%,transparent_60%)]" />
@@ -112,6 +123,10 @@ export default async function PostPage({ params }: Params) {
                 )}
               </span>
             </div>
+
+            {/* Also where the view is recorded — the beacon lives in the
+                component that shows the number. */}
+            <ArticleEngagement kind={kind} slug={post.slug} className="mt-6" />
           </div>
         </header>
 
@@ -212,6 +227,14 @@ export default async function PostPage({ params }: Params) {
         </section>
       )}
 
+      <section className="border-t border-line py-16 md:py-24">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <Comments kind={kind} slug={post.slug} />
+          </div>
+        </div>
+      </section>
+
       <CtaBand title="Want this done to your site?" />
 
       <JsonLd
@@ -244,6 +267,6 @@ export default async function PostPage({ params }: Params) {
         ]}
         id="post-schema"
       />
-    </>
+    </EngagementProvider>
   );
 }

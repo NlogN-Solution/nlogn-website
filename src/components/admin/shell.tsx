@@ -11,6 +11,7 @@ import {
   FolderOpen,
   Gauge,
   Inbox,
+  MessageSquare,
   LayoutDashboard,
   Lightbulb,
   LogOut,
@@ -76,7 +77,15 @@ const NAV: NavGroup[] = [
   },
   {
     heading: "Inbox",
-    items: [{ label: "Messages", href: "/admin/messages", icon: Inbox, capability: "messages:read" }],
+    items: [
+      { label: "Messages", href: "/admin/messages", icon: Inbox, capability: "messages:read" },
+      {
+        label: "Comments",
+        href: "/admin/comments",
+        icon: MessageSquare,
+        capability: "messages:read",
+      },
+    ],
   },
   {
     heading: "System",

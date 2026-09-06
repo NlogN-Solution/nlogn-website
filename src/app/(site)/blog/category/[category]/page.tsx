@@ -10,6 +10,8 @@ import { getCategories } from "@/lib/blog";
 import { getMergedAllPosts, getMergedCategories } from "@/server/public-content";
 import { slugify } from "@/lib/utils";
 import { absoluteUrl } from "@/lib/utils";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
 
 type Params = { params: Promise<{ category: string }> };
 
@@ -78,15 +80,17 @@ export default async function CategoryPage({ params }: Params) {
         </div>
       </PageHero>
 
-      <div className="container-x py-16 md:py-24">
-        <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post, i) => (
-            <Reveal as="li" key={post.slug} delay={(i % 3) * 0.07} className="h-full">
-              <PostCard post={post} />
-            </Reveal>
-          ))}
-        </ul>
-      </div>
+      <EngagementProvider keys={posts.map((p) => engagementKey(kindFromPost(p.kind), p.slug))}>
+        <div className="container-x py-16 md:py-24">
+          <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post, i) => (
+              <Reveal as="li" key={post.slug} delay={(i % 3) * 0.07} className="h-full">
+                <PostCard post={post} />
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </EngagementProvider>
 
       <JsonLd
         schema={[

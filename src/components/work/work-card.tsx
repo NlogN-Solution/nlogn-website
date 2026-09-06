@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { GrowthCurve } from "@/components/ui/growth-curve";
+import { CardEngagement } from "@/components/engagement/engagement-bar";
 import { works } from "@/config/site";
 
+/**
+ * A case study, as a card.
+ *
+ * The card is an `<article>` with a stretched link over it rather than one big
+ * `<a>`, because the like button lives inside it and a button nested in an
+ * anchor is neither valid HTML nor clickable. The link covers the card through
+ * its `::before`; the button sits above it on `z-10`.
+ */
 export function WorkCard({ work }: { work: (typeof works)[number] }) {
   const [headline, ...rest] = work.metrics;
   return (
-    <Link
-      href={`/case-studies/${work.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift"
-    >
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/25 hover:shadow-lift">
       <div
         className="relative aspect-[16/10] overflow-hidden"
         style={{
@@ -47,7 +53,9 @@ export function WorkCard({ work }: { work: (typeof works)[number] }) {
           <ArrowUpRight className="size-5 shrink-0 text-muted transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-violet" />
         </div>
         <h3 className="mt-3 font-display text-xl font-bold leading-snug tracking-tight text-ink">
-          {work.title}
+          <Link href={`/case-studies/${work.slug}`} className="before:absolute before:inset-0">
+            {work.title}
+          </Link>
         </h3>
         <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-muted">{work.summary}</p>
 
@@ -59,8 +67,11 @@ export function WorkCard({ work }: { work: (typeof works)[number] }) {
             </div>
           ))}
         </dl>
+
+        <div className="mt-5 flex border-t border-line-soft pt-4">
+          <CardEngagement kind="CASE_STUDY" slug={work.slug} />
+        </div>
       </div>
-      <span className="sr-only">Read the {work.client} case study</span>
-    </Link>
+    </article>
   );
 }

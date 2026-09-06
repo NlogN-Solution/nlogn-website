@@ -281,3 +281,57 @@ export function newsletterWelcome(email: string) {
     text: `You are on the list for The Growth Brief — one practical essay a month.\n\nIf this was not you (${email}), ignore this email.`,
   };
 }
+
+/**
+ * A new comment landed on an article.
+ *
+ * Comments publish immediately, so this is what makes that safe: the person who
+ * owns the site hears about every one as it arrives, with a link straight to
+ * the moderation screen. Reply-to is the commenter, so answering is one press.
+ */
+export function commentNotification(payload: {
+  name: string;
+  email: string;
+  body: string;
+  kindLabel: string;
+  slug: string;
+  url: string;
+}) {
+  const heading = "New comment";
+
+  const html = shell({
+    heading,
+    preheader: `${payload.name} — ${payload.body.slice(0, 90)}`,
+    body: `
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#3f3f4a;">
+      ${escapeHtml(payload.name)} commented on the ${escapeHtml(payload.kindLabel)}
+      <strong>${escapeHtml(payload.slug)}</strong>. It is live on the page now.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      ${rows([
+        ["Name", payload.name],
+        ["Email", payload.email],
+      ])}
+    </table>
+    <p style="margin:22px 0 8px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:${MUTED};font-weight:600;">Comment</p>
+    <div style="padding:16px;background:#faf9fe;border:1px solid ${LINE};border-radius:12px;font-size:14px;line-height:1.7;color:${INK};white-space:pre-wrap;">${escapeHtml(payload.body)}</div>
+    <p style="margin:24px 0 0;">
+      <a href="${siteConfig.url}/admin/comments" style="display:inline-block;background:${INK};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:12px;">Moderate comments</a>
+      <a href="${escapeHtml(payload.url)}" style="display:inline-block;margin-left:10px;color:${BRAND};text-decoration:none;font-size:14px;font-weight:600;padding:12px 4px;">View the page</a>
+    </p>`,
+  });
+
+  const text = [
+    heading,
+    "",
+    `Name: ${payload.name}`,
+    `Email: ${payload.email}`,
+    `On: ${payload.kindLabel} "${payload.slug}"`,
+    `Page: ${payload.url}`,
+    "",
+    "Comment:",
+    payload.body,
+  ].join("\n");
+
+  return { subject: `New comment from ${payload.name}`, html, text, replyTo: payload.email };
+}
