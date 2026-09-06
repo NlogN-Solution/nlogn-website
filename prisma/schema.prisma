@@ -84,6 +84,7 @@ model Blog {
   /// stored HTML; `contentHtml` is the sanitised render kept for fast reads.
   content        Json?
   contentHtml    String?
+  contentFormat  ContentFormat @default(HTML)
   status         ContentStatus @default(DRAFT)
   featured       Boolean       @default(false)
   authorId       String?
@@ -123,6 +124,7 @@ model Insight {
   excerpt        String?
   content        Json?
   contentHtml    String?
+  contentFormat  ContentFormat @default(HTML)
   status         ContentStatus @default(DRAFT)
   featured       Boolean       @default(false)
   authorId       String?
@@ -170,6 +172,10 @@ model CaseStudy {
   solution         String?
   implementation   String?
   outcome          String?
+  /// The long-form narrative, authored in the same editor as blogs and
+  /// insights. Sanitised HTML — the structured fields above stay structured.
+  contentHtml      String?
+  readingMinutes   Int?
   technologies     String[]      @default([])
   servicesUsed     String[]      @default([])
   clientObjective  String?
@@ -330,6 +336,20 @@ enum ContentStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+/// How a row's body was authored.
+///
+/// TIPTAP rows predate the CKEditor migration: their source of truth is the
+/// `content` JSON column, rendered to `contentHtml` by the allow-list renderer
+/// in `server/content-render.ts`. HTML rows are authored in CKEditor and their
+/// source of truth *is* `contentHtml`, sanitised on the way in.
+///
+/// Either way the public pages read `contentHtml` and nothing else, so this
+/// field is about where the HTML came from, never about how it is displayed.
+enum ContentFormat {
+  TIPTAP
+  HTML
 }
 
 enum MediaType {

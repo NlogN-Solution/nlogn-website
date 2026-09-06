@@ -10,6 +10,8 @@
  * of the two.
  */
 
+import { headingSlug } from "@/server/heading-slug";
+
 export type EditorNode = {
   type?: string;
   text?: string;
@@ -63,21 +65,6 @@ function applyMarks(html: string, marks: EditorNode["marks"]) {
     if (tag) out = `<${tag}>${out}</${tag}>`;
   }
   return out;
-}
-
-/**
- * The id a heading gets, so the table of contents has something to link to.
- *
- * `public-content.ts` reads these back out of the rendered HTML rather than
- * recomputing them, which is what keeps the two in step — including the `-2`
- * suffix two identically-worded headings end up with.
- */
-function headingSlug(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 /** Plain text of a node's subtree, for heading ids. */

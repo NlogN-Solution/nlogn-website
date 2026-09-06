@@ -239,309 +239,358 @@
   }
 }
 
-/* Prose for MDX blog posts */
-.prose-nlogn {
+/* ===========================================================================
+   ARTICLE CONTENT
+   The single typography system for long-form content on this site.
+
+   It is applied in two places:
+
+     1. `<div class="article-content">` on the public blog, insight and case
+        study pages.
+     2. CKEditor's editing root, which `components/admin/ckeditor.tsx` adds the
+        same class to once the editor is ready.
+
+   That is deliberate, and it is the whole reason the editor and the published
+   page agree: they are not two stylesheets kept in sync by hand, they are one
+   stylesheet applied twice. A heading whose size changes here changes in both.
+
+   Every selector is doubled - `.article-content.article-content` - to raise its
+   specificity above CKEditor's own `.ck-content` rules. The editor's CSS
+   arrives from the CDN at runtime and therefore lands *after* this file in the
+   cascade, so equal specificity would lose. Doubling a class is the least
+   invasive way to win that without `!important` on sixty declarations.
+
+   Content reaching this container has been through the allow-list in
+   `server/content-sanitize.ts` (CKEditor HTML) or `server/content-render.ts`
+   (legacy TipTap documents). The element set below is exactly what those two
+   can emit - nothing here styles markup that could not appear.
+   =========================================================================== */
+
+.article-content.article-content {
+  /* ~700px. Long enough not to feel cramped, short enough that the eye finds
+     the start of the next line without effort. */
+  max-width: 46rem;
   font-size: 1.0625rem;
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--color-ink-soft);
+  /* Wide children (tables, code) scroll inside themselves; the column shrinks. */
+  min-width: 0;
 }
-.prose-nlogn > * + * { margin-top: 1.35em; }
-.prose-nlogn h2 {
-  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 1.95rem);
+
+/* -- flow ----------------------------------------------------------------- */
+
+.article-content.article-content > :first-child { margin-top: 0; }
+.article-content.article-content > :last-child { margin-bottom: 0; }
+
+.article-content.article-content p { margin: 0 0 1.25em; }
+
+/* -- headings ----------------------------------------------------------------
+   H1 belongs to the page template. The sanitiser demotes any h1 in the body to
+   h2, so this hierarchy starts where the article's own structure starts. */
+
+.article-content.article-content h2,
+.article-content.article-content h3,
+.article-content.article-content h4 {
+  font-family: var(--font-display);
   color: var(--color-ink);
   font-weight: 700;
-  margin-top: 2.6em;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  /* Clears the sticky site header when a contents link jumps here. */
   scroll-margin-top: 7rem;
 }
-.prose-nlogn h3 {
+
+.article-content.article-content h2 {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  line-height: 1.2;
+  margin: 2.75em 0 0.75em;
+  /* A rule rather than a bigger type size: the separation is structural, so a
+     new section reads as one without the heading having to shout. */
+  padding-top: 1.1em;
+  border-top: 1px solid var(--color-line);
+}
+
+/* The first heading needs no divider - the article header sits above it. */
+.article-content.article-content > h2:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.article-content.article-content h3 {
+  font-size: clamp(1.3rem, 1.15rem + 0.5vw, 1.5rem);
+  line-height: 1.3;
+  margin: 2.25em 0 0.6em;
+}
+
+.article-content.article-content h4 {
   font-size: 1.25rem;
-  color: var(--color-ink);
-  font-weight: 700;
-  margin-top: 2em;
-  scroll-margin-top: 7rem;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  margin: 1.9em 0 0.5em;
 }
-.prose-nlogn a {
+
+/* -- inline --------------------------------------------------------------- */
+
+.article-content.article-content strong { color: var(--color-ink); font-weight: 600; }
+.article-content.article-content em { font-style: italic; }
+.article-content.article-content u { text-decoration: underline; text-underline-offset: 2px; }
+.article-content.article-content s { text-decoration: line-through; }
+
+.article-content.article-content a {
   color: var(--color-violet-deep);
   text-decoration: underline;
-  text-underline-offset: 3px;
   text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
 }
-.prose-nlogn a:hover { color: var(--color-violet); }
-/* rehype-autolink-headings wraps heading text in an anchor — keep it a heading. */
-.prose-nlogn :is(h2, h3) a {
+.article-content.article-content a:hover { color: var(--color-violet); }
+.article-content.article-content a:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* rehype-autolink-headings wraps MDX heading text in an anchor - keep it a
+   heading, not a link. */
+.article-content.article-content :is(h2, h3, h4) a {
   color: inherit;
   text-decoration: none;
 }
-.prose-nlogn :is(h2, h3) a:hover {
-  color: var(--color-violet-deep);
+.article-content.article-content :is(h2, h3, h4) a:hover { color: var(--color-violet-deep); }
+
+/* -- lists ---------------------------------------------------------------- */
+
+.article-content.article-content ul,
+.article-content.article-content ol {
+  margin: 0 0 1.25em;
+  padding-left: 1.5em;
 }
-.prose-nlogn strong { color: var(--color-ink); font-weight: 600; }
-.prose-nlogn ul, .prose-nlogn ol { padding-left: 1.15rem; }
-.prose-nlogn ul { list-style: disc; }
-.prose-nlogn ol { list-style: decimal; }
-.prose-nlogn li::marker { color: var(--color-violet-soft); }
-.prose-nlogn li + li { margin-top: 0.5em; }
-.prose-nlogn blockquote {
-  border-left: 2px solid var(--color-violet);
-  padding-left: 1.25rem;
+.article-content.article-content ul { list-style: disc; }
+.article-content.article-content ol { list-style: decimal; }
+.article-content.article-content li { margin-bottom: 0.5em; }
+.article-content.article-content li::marker { color: var(--color-violet-soft); }
+
+/* Nested lists change marker so the level is visible, and tuck in rather than
+   restarting the block rhythm. */
+.article-content.article-content ul ul { list-style: circle; }
+.article-content.article-content ul ul ul { list-style: square; }
+.article-content.article-content ol ol { list-style: lower-alpha; }
+.article-content.article-content :is(ul, ol) :is(ul, ol) { margin: 0.5em 0 0; }
+
+/* Google Docs wraps each list item's text in a paragraph. Without this every
+   bullet would carry a full paragraph's bottom margin. */
+.article-content.article-content li > p { margin: 0 0 0.5em; }
+.article-content.article-content li > p:last-child { margin-bottom: 0; }
+
+/* -- blockquote ----------------------------------------------------------- */
+
+.article-content.article-content blockquote {
+  margin: 2em 0;
+  padding: 1.4em 1.6em;
+  border: 0;
+  border-left: 3px solid var(--color-violet);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-violet-wash);
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.125em;
   line-height: 1.55;
+  letter-spacing: -0.015em;
   color: var(--color-ink);
-  letter-spacing: -0.02em;
+  font-style: normal;
 }
-.prose-nlogn code {
-  font-family: var(--font-mono);
-  font-size: 0.86em;
-  background: var(--color-canvas-2);
-  padding: 0.15em 0.4em;
-  border-radius: 6px;
-  color: var(--color-violet-deep);
-}
-/* The article column must be free to shrink; its wide children scroll alone. */
-.prose-nlogn { min-width: 0; }
-.prose-nlogn pre,
-.prose-nlogn table { min-width: 0; max-width: 100%; }
-.prose-nlogn pre {
-  background: #0b0b0f;
-  color: #e7e7ef;
-  padding: 1.25rem 1.4rem;
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.prose-nlogn pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-.prose-nlogn img { border-radius: var(--radius-md); }
-.prose-nlogn hr { border-color: var(--color-line); margin-block: 2.5em; }
-/* A table that cannot fit scrolls within itself rather than the whole page. */
-.prose-nlogn table {
+.article-content.article-content blockquote > :last-child { margin-bottom: 0; }
+.article-content.article-content blockquote p { margin-bottom: 0.7em; }
+
+/* -- images --------------------------------------------------------------- */
+
+.article-content.article-content figure {
+  margin: 2.25em 0;
+  /* CKEditor sets `display: table` on image figures, which shrink-wraps them
+     and breaks the percentage widths its own resize handles write. */
   display: block;
-  width: 100%;
-  overflow-x: auto;
-  border-collapse: collapse;
-  font-size: 0.95rem;
+  max-width: 100%;
 }
-.prose-nlogn th, .prose-nlogn td { border: 1px solid var(--color-line); padding: 0.7rem 0.9rem; text-align: left; }
-.prose-nlogn th { background: var(--color-canvas); color: var(--color-ink); font-weight: 600; }
 
-/* sugar-high tokens */
-.prose-nlogn pre .sh__token--keyword { color: #c4b5fd; }
-.prose-nlogn pre .sh__token--string { color: #a5e6b8; }
-.prose-nlogn pre .sh__token--comment { color: #6b6b7a; }
-.prose-nlogn pre .sh__token--identifier { color: #e7e7ef; }
-.prose-nlogn pre .sh__token--property { color: #93c5fd; }
-.prose-nlogn pre .sh__token--entity { color: #fcd34d; }
-
-/* ── Blocks the CMS renderer emits (server/content-render.ts) ──────────────
- *
- * The MDX posts and the CMS posts land in the same `.prose-nlogn` column, so
- * every node `renderEditorDoc` can produce needs a rule here — a figure, a
- * callout, a scrollable table wrapper and a video have no styling otherwise and
- * drop out of the article's rhythm.
- */
-.prose-nlogn > :first-child { margin-top: 0; }
-.prose-nlogn h4 {
-  font-size: 1.0625rem;
-  color: var(--color-ink);
-  font-weight: 700;
-  margin-top: 1.75em;
-  letter-spacing: -0.01em;
-  scroll-margin-top: 7rem;
-}
-/* A heading and the line under it belong together. */
-.prose-nlogn :is(h2, h3, h4) + * { margin-top: 0.85em; }
-
-/* `> * + *` only reaches direct children, so nested prose needs its own rhythm. */
-.prose-nlogn :is(li, blockquote, figcaption, .callout) > * + * { margin-top: 0.7em; }
-.prose-nlogn :is(ul, ol) :is(ul, ol) { margin-top: 0.5em; }
-
-/* Images: block-level, full measure, never overflowing the column. */
-.prose-nlogn > img,
-.prose-nlogn > p > img,
-.prose-nlogn figure img {
+.article-content.article-content img {
   display: block;
   width: 100%;
   height: auto;
+  max-width: 100%;
+  margin-inline: auto;
   border: 1px solid var(--color-line);
-  background: var(--color-canvas);
   border-radius: var(--radius-md);
+  background: var(--color-canvas);
 }
-.prose-nlogn figure { margin-block: 2.25em; }
-.prose-nlogn figcaption {
-  margin-top: 0.9rem;
+
+.article-content.article-content figcaption {
+  margin-top: 0.85rem;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--color-muted);
   text-align: center;
+  /* CKEditor gives captions their own background and padding in the editor. */
+  background: none;
+  padding: 0;
 }
-.prose-nlogn video {
+
+/* A resized image carries its width on the figure; centre it in the column. */
+.article-content.article-content figure.image_resized { margin-inline: auto; }
+.article-content.article-content figure.image_resized img { width: 100%; }
+.article-content.article-content figure.image-style-align-left { margin-inline: 0 auto; }
+.article-content.article-content figure.image-style-align-right { margin-inline: auto 0; }
+
+/* -- tables --------------------------------------------------------------- */
+
+/* CKEditor wraps tables in `figure.table`; the TipTap renderer emits
+   `div.table-scroll`. Both are the horizontal scroll container, so a wide table
+   scrolls inside itself and never widens the page. */
+.article-content.article-content figure.table,
+.article-content.article-content .table-scroll,
+.article-content.article-content .article-table-wrapper {
+  display: block;
+  margin: 2em 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-content.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  /* Forces the wrapper to scroll rather than the columns crushing on a phone. */
+  min-width: 34rem;
+}
+
+.article-content.article-content :is(th, td) {
+  border: 1px solid var(--color-line);
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+}
+.article-content.article-content th {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.article-content.article-content :is(th, td) > p { margin: 0; }
+
+/* The wrapper already draws the outer frame. */
+.article-content.article-content :is(figure.table, .table-scroll) :is(th, td):first-child { border-left: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) :is(th, td):last-child { border-right: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) tr:first-child :is(th, td) { border-top: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) tr:last-child :is(th, td) { border-bottom: 0; }
+
+/* -- code ----------------------------------------------------------------- */
+
+.article-content.article-content code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-canvas-2);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  color: var(--color-violet-deep);
+  /* A long identifier wraps rather than widening the column. */
+  overflow-wrap: break-word;
+}
+
+.article-content.article-content pre {
+  margin: 2em 0;
+  padding: 1.25rem 1.4rem;
+  background: #0b0b0f;
+  color: #e7e7ef;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre;
+  tab-size: 2;
+}
+.article-content.article-content pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  white-space: inherit;
+}
+
+/* sugar-high tokens, for the committed MDX posts. */
+.article-content.article-content pre .sh__token--keyword { color: #c4b5fd; }
+.article-content.article-content pre .sh__token--string { color: #a5e6b8; }
+.article-content.article-content pre .sh__token--comment { color: #6b6b7a; }
+.article-content.article-content pre .sh__token--identifier { color: #e7e7ef; }
+.article-content.article-content pre .sh__token--property { color: #93c5fd; }
+.article-content.article-content pre .sh__token--entity { color: #fcd34d; }
+
+/* -- rules, media, callouts ----------------------------------------------- */
+
+.article-content.article-content hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 2.75em 0;
+}
+
+.article-content.article-content video {
   display: block;
   width: 100%;
+  margin: 2.25em 0;
   border-radius: var(--radius-md);
   background: #000;
 }
 
-/* Callouts — one accent per tone, sharing the article's radius. */
-.prose-nlogn .callout {
-  margin-block: 2em;
+/* Emitted by the TipTap renderer's callout node. */
+.article-content.article-content .callout {
+  margin: 2em 0;
+  padding: 1.2rem 1.4rem;
   border: 1px solid var(--color-line);
   border-left-width: 3px;
   border-radius: var(--radius-md);
-  padding: 1.2rem 1.4rem;
-  font-size: 1rem;
   background: var(--color-canvas);
+  font-size: 1rem;
 }
-.prose-nlogn .callout > :first-child { margin-top: 0; }
-.prose-nlogn .callout--info {
+.article-content.article-content .callout > :last-child { margin-bottom: 0; }
+.article-content.article-content .callout--info {
   border-color: color-mix(in srgb, var(--color-violet) 25%, var(--color-line));
   border-left-color: var(--color-violet);
   background: var(--color-violet-wash);
 }
-.prose-nlogn .callout--warn {
+.article-content.article-content .callout--warn {
   border-color: #f5d9a8;
   border-left-color: #d98a04;
   background: #fdf6e7;
 }
-.prose-nlogn .callout--success {
+.article-content.article-content .callout--success {
   border-color: #b8e3c9;
   border-left-color: #10804d;
   background: #edf8f2;
 }
 
-/* A wrapped table scrolls in its wrapper, so the table itself stays a table. */
-.prose-nlogn .table-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-}
-.prose-nlogn .table-scroll table {
-  display: table;
-  width: 100%;
-  margin: 0;
-  border: 0;
-}
-.prose-nlogn .table-scroll :is(th, td):first-child { border-left: 0; }
-.prose-nlogn .table-scroll :is(th, td):last-child { border-right: 0; }
-.prose-nlogn .table-scroll tr:first-child :is(th, td) { border-top: 0; }
-.prose-nlogn .table-scroll tr:last-child :is(th, td) { border-bottom: 0; }
+/* -- inside CKEditor only ----------------------------------------------------
+   Chrome, not typography. The rules above already gave the content its shape;
+   these stop the editor's own furniture from fighting it. */
 
-/* ── The editor surface ────────────────────────────────────────────────────
- *
- * `.prose-admin` is what the writer types into. It deliberately mirrors
- * `.prose-nlogn` — same hierarchy, same spacing ratios, one step down in scale
- * to fit the admin column — because an editor that does not show the shape of
- * the published page is not a preview of anything. Without these rules TipTap's
- * output inherits Tailwind's preflight: headings the size of body text and
- * lists with no markers at all.
- */
-.prose-admin {
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--color-ink-soft);
+.ck-editor__editable_inline {
+  /* A writing surface sized like a page, not like a form field. */
+  min-height: 30rem;
+  padding: 2rem 2.25rem !important;
 }
-.prose-admin > * + * { margin-top: 1.15em; }
-.prose-admin > :first-child { margin-top: 0; }
-.prose-admin h2 {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
-  margin-top: 1.9em;
+/* The canvas fills the panel; the measure applies to the text inside it. */
+.ck-editor__editable_inline.article-content { max-width: none; }
+.ck-editor__editable_inline.article-content > * { max-width: 46rem; margin-inline: auto; }
+
+/* CKEditor draws its own focus ring on the container; this one is redundant. */
+.ck.ck-editor__editable.ck-focused {
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
-.prose-admin h3 {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  line-height: 1.3;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--color-ink);
-  margin-top: 1.7em;
-}
-.prose-admin h4 {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-ink);
-  margin-top: 1.5em;
-}
-.prose-admin :is(h2, h3, h4) + * { margin-top: 0.7em; }
-.prose-admin strong { color: var(--color-ink); font-weight: 600; }
-.prose-admin em { font-style: italic; }
-.prose-admin s { text-decoration: line-through; }
-.prose-admin u { text-decoration: underline; text-underline-offset: 2px; }
-.prose-admin a {
-  color: var(--color-violet-deep);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  cursor: pointer;
-}
-.prose-admin ul, .prose-admin ol { padding-left: 1.35rem; }
-.prose-admin ul { list-style: disc; }
-.prose-admin ol { list-style: decimal; }
-.prose-admin li::marker { color: var(--color-violet-soft); }
-.prose-admin li + li { margin-top: 0.35em; }
-.prose-admin :is(ul, ol) :is(ul, ol) { margin-top: 0.35em; }
-.prose-admin :is(li, blockquote) > * + * { margin-top: 0.5em; }
-.prose-admin blockquote {
-  border-left: 2px solid var(--color-violet);
-  padding-left: 1rem;
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  line-height: 1.5;
-  letter-spacing: -0.015em;
-  color: var(--color-ink);
-}
-.prose-admin code {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  background: var(--color-canvas-2);
-  padding: 0.15em 0.4em;
-  border-radius: 6px;
-  color: var(--color-violet-deep);
-}
-.prose-admin pre {
-  background: #0b0b0f;
-  color: #e7e7ef;
-  padding: 1rem 1.1rem;
-  border-radius: var(--radius-sm);
-  overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  white-space: pre;
-}
-.prose-admin pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-.prose-admin hr {
-  border: 0;
-  border-top: 1px solid var(--color-line);
-  margin-block: 2em;
-}
-.prose-admin img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin-inline: auto;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-canvas);
-}
-/* ProseMirror marks the node under the cursor; without this an image gives no
-   sign it is selected and Delete looks like it did nothing. */
-.prose-admin .ProseMirror-selectednode {
-  outline: 2px solid var(--color-violet);
-  outline-offset: 2px;
-}
-/* TipTap's Placeholder extension writes the text into a data attribute. */
-.prose-admin p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-  color: var(--color-muted);
+
+/* Placeholder, matched to the admin palette. */
+.ck.ck-editor__editable > .ck-placeholder::before { color: var(--color-muted); }
+
+@media (max-width: 640px) {
+  .ck-editor__editable_inline { padding: 1.25rem 1rem !important; }
 }
 
 /* Scroll reveals are an enhancement: without scripting, show everything. */

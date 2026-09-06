@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/page-hero";
 import { Mdx } from "@/components/blog/mdx";
+import { ArticleContent } from "@/components/blog/article-content";
 import { TableOfContents } from "@/components/blog/toc";
 import { PostCard } from "@/components/blog/post-card";
 import { Reveal } from "@/components/ui/reveal";
@@ -149,17 +150,14 @@ export default async function PostPage({ params }: Params) {
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_230px] lg:gap-16">
             {/* min-w-0: without it the grid track sizes to the widest code
                 block's min-content and the article runs off a phone screen. */}
-            <div className="min-w-0 max-w-2xl">
-              <div className="prose-nlogn">
-                {post.source === "cms" ? (
-                  // Server-rendered by the allow-list renderer in
-                  // `server/content-render.ts`, so this is markup this codebase
-                  // produced — not stored HTML being trusted.
-                  <div dangerouslySetInnerHTML={{ __html: post.contentHtml ?? "" }} />
-                ) : (
+            <div className="min-w-0 max-w-[46rem]">
+              {post.source === "cms" ? (
+                <ArticleContent html={post.contentHtml} />
+              ) : (
+                <div className="article-content">
                   <Mdx source={post.content} />
-                )}
-              </div>
+                </div>
+              )}
 
               {post.tags.length > 0 && (
                 <ul className="mt-14 flex flex-wrap gap-2 border-t border-line pt-8">

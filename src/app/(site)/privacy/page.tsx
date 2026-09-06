@@ -64,7 +64,7 @@ export default function PrivacyPage() {
         ]}
       />
       <div className="container-x py-16 md:py-24">
-        <div className="prose-nlogn max-w-2xl">
+        <div className="article-content">
           {sections.map((s) => (
             <section key={s.h}>
               <h2>{s.h}</h2>

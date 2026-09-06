@@ -7,6 +7,7 @@ import { api, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
 import { ImageField, MediaPicker, MediaThumb, type MediaItem } from "@/components/admin/media-picker";
 import { PageHeader } from "@/components/admin/shell";
+import { CkEditor } from "@/components/admin/ckeditor";
 import {
   Banner,
   Button,
@@ -45,6 +46,7 @@ export type CaseStudyRecord = {
   solution: string | null;
   implementation: string | null;
   outcome: string | null;
+  contentHtml: string | null;
   technologies: string[];
   servicesUsed: string[];
   clientObjective: string | null;
@@ -131,6 +133,7 @@ export function CaseStudyEditor({ record }: { record?: CaseStudyRecord }) {
     Array.isArray(record?.approach) ? (record.approach as string[]) : [],
   );
   const [outcome, setOutcome] = useState(record?.outcome ?? "");
+  const [content, setContent] = useState<string>(record?.contentHtml ?? "");
   const [clientObjective, setClientObjective] = useState(record?.clientObjective ?? "");
   const [metrics, setMetrics] = useState<Metric[]>(
     Array.isArray(record?.metrics) ? (record.metrics as Metric[]) : [],
@@ -170,6 +173,7 @@ export function CaseStudyEditor({ record }: { record?: CaseStudyRecord }) {
       challenge: challenge.trim(),
       approach: approach.map((a) => a.trim()).filter(Boolean),
       outcome: outcome.trim(),
+      contentHtml: content,
       clientObjective: clientObjective.trim(),
       metrics: metrics.filter((m) => m.value.trim() && m.label.trim()),
       technologies: technologies.split(",").map((t) => t.trim()).filter(Boolean),
@@ -190,7 +194,7 @@ export function CaseStudyEditor({ record }: { record?: CaseStudyRecord }) {
     }),
     [
       projectName, clientName, slug, industry, projectType, summary, challenge, approach,
-      outcome, clientObjective, metrics, technologies, servicesUsed, timeline, year, accent,
+      outcome, content, clientObjective, metrics, technologies, servicesUsed, timeline, year, accent,
       quote, quoteName, quoteRole, hero, thumbnail, gallery, featured, seoTitle, seoDescription, noIndex,
     ],
   );
@@ -323,6 +327,22 @@ export function CaseStudyEditor({ record }: { record?: CaseStudyRecord }) {
                 <Textarea id="outcome" rows={4} value={outcome} onChange={(e) => setOutcome(e.target.value)} />
               </Field>
             </div>
+          </Panel>
+
+          {/* The structured fields above stay structured — the template reads
+              challenge, approach and metrics separately, and the numbers have
+              to stay numbers. This is the long-form section beside them, in the
+              same editor blogs and insights use. */}
+          <Panel className="overflow-hidden">
+            <PanelHeader
+              title="Full write-up"
+              description="Optional. The long-form narrative, shown under the results on the public page."
+            />
+            <CkEditor
+              value={content}
+              onChange={setContent}
+              placeholder="The longer story — what you found, what you built, what changed."
+            />
           </Panel>
 
           <Panel>

@@ -3,6 +3,7 @@ import { getAllPosts, getPost, type Post, type PostKind } from "@/lib/blog";
 import { works, type Work } from "@/config/site";
 import { cdnUrl } from "@/server/integrations/cloudinary";
 import { slugify } from "@/lib/utils";
+import { addHeadingIds } from "@/server/heading-slug";
 
 /**
  * Where the existing site and the CMS meet.
@@ -35,6 +36,8 @@ export type UnifiedWork = Work & {
   gallery?: { url: string; alt?: string | null; caption?: string | null }[];
   /** CMS-only. The hardcoded case studies have no equivalent field. */
   clientObjective?: string;
+  /** CMS-only. Sanitised HTML from the shared long-form editor. */
+  contentHtml?: string;
 };
 
 /**
@@ -71,7 +74,18 @@ type CmsArticle = {
 
 /** Adapts a CMS row into the `Post` shape the existing cards and pages take. */
 function toPost(row: CmsArticle, kind: PostKind): UnifiedPost {
-  const headings = extractHeadings(row.contentHtml ?? "");
+  /*
+   * Heading ids are stamped on the way in — by the sanitiser for CKEditor HTML,
+   * by the renderer for TipTap documents — and guaranteed again here.
+   *
+   * Rows written before either of those existed have headings with no id, and
+   * their contents list would link to anchors that are not on the page. Doing
+   * it at read time as well means that is repaired for every row the moment it
+   * renders, rather than depending on a backfill script having been run. The
+   * call is idempotent: a heading that already has an id keeps it.
+   */
+  const contentHtml = addHeadingIds(row.contentHtml ?? "");
+  const headings = extractHeadings(contentHtml);
 
   return {
     kind,
@@ -88,7 +102,7 @@ function toPost(row: CmsArticle, kind: PostKind): UnifiedPost {
     authorRole: row.authorRole ?? "",
     featured: row.featured,
     content: "",
-    contentHtml: row.contentHtml ?? "",
+    contentHtml,
     readingMinutes: row.readingMinutes ?? 1,
     headings,
     source: "cms",
@@ -210,6 +224,7 @@ type CmsCase = {
   challenge: string | null;
   approach: unknown;
   outcome: string | null;
+  contentHtml: string | null;
   metrics: unknown;
   technologies: string[];
   servicesUsed: string[];
@@ -240,6 +255,7 @@ function toWork(row: CmsCase): UnifiedWork {
     summary: row.summary ?? row.shortDescription ?? "",
     challenge: row.challenge ?? "",
     clientObjective: row.clientObjective ?? undefined,
+    contentHtml: row.contentHtml ? addHeadingIds(row.contentHtml) : undefined,
     approach,
     outcome: row.outcome ?? "",
     metrics,

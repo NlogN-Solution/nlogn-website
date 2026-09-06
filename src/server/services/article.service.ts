@@ -1,6 +1,11 @@
 import { prisma } from "@/server/db";
 import { slugify } from "@/server/schemas/common";
 import { renderEditorDoc, editorPlainText, readingMinutes } from "@/server/content-render";
+import {
+  sanitizeArticleHtml,
+  htmlToPlainText,
+  readingMinutesFromHtml,
+} from "@/server/content-sanitize";
 import type { CreateArticleInput, UpdateArticleInput } from "@/server/schemas/content";
 import type { ContentStatus, Prisma } from "@/generated/prisma";
 
@@ -88,18 +93,57 @@ function blankToNull(value: string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
+/**
+ * Turns whichever body the request carried into the columns that store it.
+ *
+ * Two shapes arrive here and only one of them is current:
+ *
+ *   `contentHtml`  CKEditor. Sanitised against the allow-list, and the result
+ *                  is the source of truth. `contentFormat` is set to HTML.
+ *   `content`      A TipTap document, from before the migration. Rendered by
+ *                  the allow-list renderer exactly as it always was.
+ *
+ * When an old article is re-saved from the new editor it arrives as HTML and
+ * becomes an HTML row. Its original `content` JSON is deliberately **not**
+ * cleared: nothing reads it once `contentFormat` says HTML, and leaving it is
+ * free insurance against a conversion that turns out to have lost something.
+ *
+ * `undefined` for every field on a partial update, so an unrelated PATCH — a
+ * tag change, a status flip — never rewrites the body.
+ */
+function buildContent(input: CreateArticleInput | UpdateArticleInput) {
+  if (typeof input.contentHtml === "string") {
+    const html = sanitizeArticleHtml(input.contentHtml);
+    return {
+      contentHtml: html,
+      contentFormat: "HTML" as const,
+      readingMinutes: readingMinutesFromHtml(html),
+      plain: htmlToPlainText(html),
+    };
+  }
+
+  if (input.content) {
+    return {
+      content: input.content as Prisma.InputJsonValue,
+      contentHtml: renderEditorDoc(input.content),
+      contentFormat: "TIPTAP" as const,
+      readingMinutes: readingMinutes(input.content),
+      plain: editorPlainText(input.content),
+    };
+  }
+
+  return { plain: undefined };
+}
+
 function buildData(input: CreateArticleInput | UpdateArticleInput, mode: WriteMode) {
-  const html = input.content ? renderEditorDoc(input.content) : undefined;
-  const plain = input.content ? editorPlainText(input.content) : undefined;
+  const { plain, ...body } = buildContent(input);
 
   return {
     title: input.title,
     excerpt:
       blankToNull(input.excerpt) ??
       (plain ? plain.slice(0, 260).trim() + (plain.length > 260 ? "…" : "") : undefined),
-    content: (input.content ?? undefined) as Prisma.InputJsonValue | undefined,
-    contentHtml: html,
-    readingMinutes: input.content ? readingMinutes(input.content) : undefined,
+    ...body,
     status: input.status,
     featured: input.featured,
     author: relation(input.authorId, mode),

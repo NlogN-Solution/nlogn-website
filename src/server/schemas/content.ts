@@ -6,10 +6,29 @@ import { cuidSchema, editorDocSchema, seoSchema, slugSchema, statusSchema } from
  * — they are structured records, not articles — and have their own below.
  */
 
+/**
+ * A CKEditor document, as HTML.
+ *
+ * Validated only for type and size here; what it is *allowed to contain* is
+ * decided by `server/content-sanitize.ts`, which runs in the service before
+ * anything is stored. Zod cannot express an HTML allow-list, and splitting the
+ * rule across two files would mean two places to get it wrong.
+ *
+ * The cap is generous — a long technical article with tables and code runs to
+ * tens of kilobytes — and exists to stop a single request filling a column.
+ */
+const contentHtmlSchema = z.string().max(500_000, "That article is too long to store.");
+
 const articleBase = z.object({
   title: z.string().trim().min(3, "Give it a title.").max(220),
   slug: slugSchema.optional(),
   excerpt: z.string().trim().max(600).optional().or(z.literal("")),
+  /** CKEditor HTML — what everything written from now on sends. */
+  contentHtml: contentHtmlSchema.nullish(),
+  /**
+   * A TipTap document. Kept so an older client, or a restored draft, still
+   * writes successfully; new content never sends it. See `ContentFormat`.
+   */
   content: editorDocSchema.nullish(),
   status: statusSchema.default("DRAFT"),
   featured: z.boolean().default(false),
@@ -50,6 +69,8 @@ const caseBase = z.object({
   solution: z.string().trim().max(6000).optional().or(z.literal("")),
   implementation: z.string().trim().max(6000).optional().or(z.literal("")),
   outcome: z.string().trim().max(6000).optional().or(z.literal("")),
+  /** The long-form narrative, written in the same editor as an article. */
+  contentHtml: contentHtmlSchema.nullish(),
   technologies: z.array(z.string().trim().min(1).max(60)).max(30).optional(),
   servicesUsed: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
 

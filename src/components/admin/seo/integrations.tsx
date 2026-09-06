@@ -73,6 +73,13 @@ type Properties = {
   reason?: string;
   searchConsole: { siteUrl: string; permissionLevel: string }[];
   analytics: { propertyId: string; displayName: string; account: string }[];
+  /**
+   * Set when the list call failed rather than genuinely came back empty. The
+   * route computes both; rendering them is what separates "this account owns
+   * nothing" from "the token expired" — which have completely different fixes.
+   */
+  searchConsoleError?: string | null;
+  analyticsError?: string | null;
 };
 
 const STATUS_TONE: Record<Connection["status"], string> = {
@@ -498,7 +505,7 @@ function PropertyPickers({
   const [gsc, setGsc] = useState(website.gscSiteUrl ?? "");
   const [ga4, setGa4] = useState(website.ga4PropertyId ?? "");
 
-  const { data, loading } = useEndpoint<Properties>(
+  const { data, loading, reload } = useEndpoint<Properties>(
     `/api/admin/websites/${websiteId}/integrations/google/properties`,
   );
 
@@ -545,7 +552,8 @@ function PropertyPickers({
           </Select>
           {data.searchConsole.length === 0 && (
             <span className="mt-1.5 block text-[0.75rem] text-muted">
-              This Google account has no verified Search Console properties.
+              {data.searchConsoleError ??
+                "This Google account has no verified Search Console properties. If you have just verified one, refresh the list."}
             </span>
           )}
         </label>
@@ -564,17 +572,32 @@ function PropertyPickers({
           </Select>
           {data.analytics.length === 0 && (
             <span className="mt-1.5 block text-[0.75rem] text-muted">
-              No Analytics properties are readable by this account.
+              {data.analyticsError ?? "No Analytics properties are readable by this account."}
             </span>
           )}
         </label>
       </div>
 
-      {changed && (
-        <Button size="sm" variant="primary" loading={saving} onClick={save} icon={<Check className="size-3.5" aria-hidden />}>
-          Save properties
+      <div className="flex flex-wrap items-center gap-2">
+        {changed && (
+          <Button size="sm" variant="primary" loading={saving} onClick={save} icon={<Check className="size-3.5" aria-hidden />}>
+            Save properties
+          </Button>
+        )}
+        {/*
+          The server caches this list for 12 hours, which is right for a list
+          that rarely changes and wrong for the moment right after somebody
+          verifies a property. `refresh` bypasses the cache for one request.
+        */}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => reload({ refresh: true })}
+          icon={<RefreshCw className="size-3.5" aria-hidden />}
+        >
+          Refresh list
         </Button>
-      )}
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, Save, Send } from "lucide-react";
 import { api, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
-import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { CkEditor } from "@/components/admin/ckeditor";
 import { ImageField, type MediaItem } from "@/components/admin/media-picker";
 import { PageHeader } from "@/components/admin/shell";
 import {
@@ -36,7 +36,12 @@ export type ArticleRecord = {
   slug: string;
   title: string;
   excerpt: string | null;
-  content: unknown;
+  contentHtml: string | null;
+  /**
+   * How this row's body was authored. A TIPTAP row is opened in CKEditor
+   * against its already-rendered HTML, and becomes an HTML row when saved.
+   */
+  contentFormat?: "TIPTAP" | "HTML";
   status: string;
   featured: boolean;
   authorName: string | null;
@@ -75,7 +80,16 @@ export function ArticleEditor({
   // effect, so there is never a frame where the two disagree.
   const [slugOverride, setSlugOverride] = useState<string | null>(record?.slug ?? null);
   const [excerpt, setExcerpt] = useState(record?.excerpt ?? "");
-  const [content, setContent] = useState<unknown>(record?.content ?? null);
+  /*
+   * Both formats open the same way.
+   *
+   * A legacy TipTap row already has `contentHtml` — the allow-list renderer
+   * produced it when the row was last saved — so CKEditor loads that and the
+   * author sees their article rather than a migration screen. Saving writes it
+   * back as HTML and the row's format flips. Nothing converts in bulk, and an
+   * article nobody edits is never touched.
+   */
+  const [content, setContent] = useState<string>(record?.contentHtml ?? "");
   const [featured, setFeatured] = useState(record?.featured ?? false);
   const [authorName, setAuthorName] = useState(record?.authorName ?? "");
   const [authorRole, setAuthorRole] = useState(record?.authorRole ?? "");
@@ -108,7 +122,7 @@ export function ArticleEditor({
       title: title.trim(),
       slug: slug.trim() || undefined,
       excerpt: excerpt.trim(),
-      content,
+      contentHtml: content,
       featured,
       authorName: authorName.trim(),
       authorRole: authorRole.trim(),
@@ -264,9 +278,13 @@ export function ArticleEditor({
           <Panel className="overflow-hidden">
             <PanelHeader
               title="Content"
-              description="This is how the published article is structured — headings become the table of contents."
+              description={
+                record?.contentFormat === "TIPTAP"
+                  ? "Written in the old editor. Saving converts it to the new format — the words and structure are unchanged."
+                  : "Laid out exactly as the published page will be. Heading 2 starts a section and appears in the contents list."
+              }
             />
-            <RichTextEditor value={content} onChange={setContent} />
+            <CkEditor value={content} onChange={setContent} />
           </Panel>
 
           <Panel>

@@ -2,6 +2,7 @@ import { prisma } from "@/server/db";
 import { slugify } from "@/server/schemas/common";
 import type { CreateCaseStudyInput, UpdateCaseStudyInput } from "@/server/schemas/content";
 import type { ContentStatus, Prisma } from "@/generated/prisma";
+import { sanitizeArticleHtml, readingMinutesFromHtml } from "@/server/content-sanitize";
 
 /**
  * Case studies are structured records rather than articles: the public template
@@ -66,7 +67,24 @@ function blankToNull(value: string | null | undefined) {
 }
 
 function buildData(input: CreateCaseStudyInput | UpdateCaseStudyInput, mode: WriteMode) {
+  /*
+   * The narrative body, through the same allow-list as an article's.
+   *
+   * A case study is still a structured record — the client, the metrics, the
+   * approach steps and the testimonial remain their own fields, because the
+   * public template reads them individually and the numbers have to stay
+   * numbers. This is the long-form section that sits alongside them, not a
+   * replacement for them.
+   *
+   * Case studies have no TipTap history, so there is no `contentFormat` here:
+   * the column could only ever hold one value.
+   */
+  const contentHtml =
+    typeof input.contentHtml === "string" ? sanitizeArticleHtml(input.contentHtml) : undefined;
+
   return {
+    contentHtml,
+    readingMinutes: contentHtml === undefined ? undefined : readingMinutesFromHtml(contentHtml),
     projectName: input.projectName,
     clientName: input.clientName,
     status: input.status,

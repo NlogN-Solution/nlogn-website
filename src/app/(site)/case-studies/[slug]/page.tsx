@@ -7,6 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { Breadcrumbs } from "@/components/site/page-hero";
 import { GrowthCurve } from "@/components/ui/growth-curve";
 import { CtaBand } from "@/components/site/cta-band";
+import { ArticleContent } from "@/components/blog/article-content";
 import { JsonLd } from "@/components/seo/json-ld";
 import { EngagementProvider } from "@/components/engagement/provider";
 import { ArticleEngagement } from "@/components/engagement/engagement-bar";
@@ -173,6 +174,14 @@ export default async function WorkPage({ params }: Params) {
                 </h2>
                 <p className="mt-5 text-[1.0625rem] leading-relaxed text-ink-soft">{work.outcome}</p>
               </Reveal>
+
+              {work.contentHtml && (
+                <Reveal delay={0.05}>
+                  <div className="mt-16 border-t border-line pt-12">
+                    <ArticleContent html={work.contentHtml} />
+                  </div>
+                </Reveal>
+              )}
 
               {work.testimonial && (
                 <Reveal delay={0.05}>
