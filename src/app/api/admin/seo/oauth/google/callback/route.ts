@@ -46,10 +46,17 @@ export async function GET(request: Request) {
 
   // Google reports a refused consent screen here; it is not an error worth
   // logging, just a redirect back with nothing changed.
+  //
+  // `access_denied` covers two very different situations — somebody pressed
+  // Cancel, or the OAuth consent screen is still in Testing and this account is
+  // not on its test-user list. They are indistinguishable in the response, so
+  // they share a status and the banner names both fixes.
   const denied = url.searchParams.get("error");
   const state = decodeState(url.searchParams.get("state"));
 
-  if (denied) return back(state?.websiteId ?? null, "cancelled");
+  if (denied) {
+    return back(state?.websiteId ?? null, denied === "access_denied" ? "denied" : "google_error");
+  }
   if (!state) return back(null, "invalid_state");
 
   const code = url.searchParams.get("code");

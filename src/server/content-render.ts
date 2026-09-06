@@ -65,35 +65,65 @@ function applyMarks(html: string, marks: EditorNode["marks"]) {
   return out;
 }
 
-function renderNodes(nodes: EditorNode[] | undefined): string {
-  if (!nodes?.length) return "";
-  return nodes.map(renderNode).join("");
+/**
+ * The id a heading gets, so the table of contents has something to link to.
+ *
+ * `public-content.ts` reads these back out of the rendered HTML rather than
+ * recomputing them, which is what keeps the two in step — including the `-2`
+ * suffix two identically-worded headings end up with.
+ */
+function headingSlug(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
-function renderNode(node: EditorNode): string {
+/** Plain text of a node's subtree, for heading ids. */
+function nodeText(node: EditorNode): string {
+  if (node.type === "text") return node.text ?? "";
+  return (node.content ?? []).map(nodeText).join("");
+}
+
+function renderNodes(nodes: EditorNode[] | undefined, seen?: Map<string, number>): string {
+  if (!nodes?.length) return "";
+  return nodes.map((node) => renderNode(node, seen)).join("");
+}
+
+function renderNode(node: EditorNode, seen?: Map<string, number>): string {
   switch (node.type) {
     case "text":
       return applyMarks(esc(node.text), node.marks);
 
     case "paragraph": {
-      const inner = renderNodes(node.content);
+      const inner = renderNodes(node.content, seen);
       return inner ? `<p>${inner}</p>` : "";
     }
 
     case "heading": {
       const level = Math.min(4, Math.max(2, Number(node.attrs?.level) || 2));
-      return `<h${level}>${renderNodes(node.content)}</h${level}>`;
+      const base = headingSlug(nodeText(node));
+      if (!base) return `<h${level}>${renderNodes(node.content, seen)}</h${level}>`;
+
+      // Two headings with the same words would otherwise share an id, and the
+      // second entry in the table of contents would scroll to the first.
+      const count = (seen?.get(base) ?? 0) + 1;
+      seen?.set(base, count);
+      const id = count > 1 ? `${base}-${count}` : base;
+
+      return `<h${level} id="${esc(id)}">${renderNodes(node.content, seen)}</h${level}>`;
     }
 
     case "bulletList":
-      return `<ul>${renderNodes(node.content)}</ul>`;
+      return `<ul>${renderNodes(node.content, seen)}</ul>`;
     case "orderedList":
-      return `<ol>${renderNodes(node.content)}</ol>`;
+      return `<ol>${renderNodes(node.content, seen)}</ol>`;
     case "listItem":
-      return `<li>${renderNodes(node.content)}</li>`;
+      return `<li>${renderNodes(node.content, seen)}</li>`;
 
     case "blockquote":
-      return `<blockquote>${renderNodes(node.content)}</blockquote>`;
+      return `<blockquote>${renderNodes(node.content, seen)}</blockquote>`;
 
     case "codeBlock":
       return `<pre><code>${esc(node.content?.map((c) => c.text ?? "").join("") ?? "")}</code></pre>`;
@@ -123,30 +153,30 @@ function renderNode(node: EditorNode): string {
       const tone = ["info", "warn", "success"].includes(String(node.attrs?.tone))
         ? String(node.attrs?.tone)
         : "info";
-      return `<aside class="callout callout--${tone}">${renderNodes(node.content)}</aside>`;
+      return `<aside class="callout callout--${tone}">${renderNodes(node.content, seen)}</aside>`;
     }
 
     case "table":
-      return `<div class="table-scroll"><table>${renderNodes(node.content)}</table></div>`;
+      return `<div class="table-scroll"><table>${renderNodes(node.content, seen)}</table></div>`;
     case "tableRow":
-      return `<tr>${renderNodes(node.content)}</tr>`;
+      return `<tr>${renderNodes(node.content, seen)}</tr>`;
     case "tableHeader":
-      return `<th>${renderNodes(node.content)}</th>`;
+      return `<th>${renderNodes(node.content, seen)}</th>`;
     case "tableCell":
-      return `<td>${renderNodes(node.content)}</td>`;
+      return `<td>${renderNodes(node.content, seen)}</td>`;
 
     case "doc":
-      return renderNodes(node.content);
+      return renderNodes(node.content, seen);
 
     default:
       // Unknown node: render its children if it has any, drop it otherwise.
-      return renderNodes(node.content);
+      return renderNodes(node.content, seen);
   }
 }
 
 export function renderEditorDoc(doc: unknown): string {
   if (!doc || typeof doc !== "object") return "";
-  return renderNodes((doc as EditorDoc).content);
+  return renderNodes((doc as EditorDoc).content, new Map());
 }
 
 /** Plain text, for excerpts, reading time and search. */

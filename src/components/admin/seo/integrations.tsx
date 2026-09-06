@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -218,8 +218,10 @@ export function IntegrationsManager({
             onDisconnect={() => setDisconnecting("google-search-console")}
             syncKey="google-search-console"
           >
-            {googleConnected && (
+            {googleConnected ? (
               <PropertyPickers websiteId={websiteId} website={data.website} onSaved={reload} />
+            ) : (
+              <GoogleBlockedHelp />
             )}
           </IntegrationCard>
 
@@ -577,13 +579,80 @@ function PropertyPickers({
   );
 }
 
+/**
+ * The one Google failure that is not a bug in this application.
+ *
+ * A Cloud project whose OAuth consent screen is still in *Testing* refuses
+ * every account that is not on its test-user list — including the account that
+ * owns the project — with `Error 403: access_denied`. Nothing here can detect
+ * that or work around it, so the card carries the fix rather than leaving
+ * somebody to search for what "has not completed the Google verification
+ * process" means.
+ */
+function GoogleBlockedHelp() {
+  return (
+    <details className="mt-4 rounded-lg border border-line bg-canvas px-4 py-3 [&_a]:text-violet-deep [&_a]:underline">
+      <summary className="cursor-pointer text-[0.8125rem] font-medium text-ink">
+        Google blocked the sign-in? (Error 403: access_denied)
+      </summary>
+      <div className="mt-3 space-y-3 text-[0.8125rem] leading-relaxed text-muted">
+        <p>
+          Google shows <em>“has not completed the Google verification process”</em> when the Cloud
+          project&apos;s OAuth consent screen is still in <strong>Testing</strong>. In that mode only
+          accounts listed as testers can sign in — the account that owns the project included.
+        </p>
+        <p>Two ways out, in the Google Cloud project holding the OAuth client:</p>
+        <ol className="ml-4 list-decimal space-y-2">
+          <li>
+            <strong>Add yourself as a tester.</strong>{" "}
+            <a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener noreferrer">
+              APIs &amp; Services → OAuth consent screen → Audience
+            </a>
+            , then <em>Test users → Add users</em> and enter the Google account that owns the Search
+            Console and Analytics properties. Takes effect immediately, and is capped at 100
+            accounts.
+          </li>
+          <li>
+            <strong>Publish the app.</strong> On the same screen, <em>Publish app</em>. Search
+            Console and Analytics are sensitive scopes, so an unverified published app shows an
+            interstitial warning (<em>Advanced → Go to …</em>) and its refresh tokens expire after
+            seven days until Google verifies it. Fine for one admin, not for a team.
+          </li>
+        </ol>
+        <p>
+          Either way, check the client&apos;s <strong>Authorised redirect URI</strong> matches this
+          server exactly, including the scheme:{" "}
+          <code className="rounded bg-canvas-2 px-1 py-0.5 font-mono text-[0.75rem] text-ink-soft">
+            /api/admin/seo/oauth/google/callback
+          </code>
+          . Then come back and press Connect.
+        </p>
+      </div>
+    </details>
+  );
+}
+
 /** Feedback from the OAuth redirect, which cannot carry a toast across a navigation. */
 function CallbackBanner({ status }: { status?: string }) {
   if (!status) return null;
 
-  const messages: Record<string, { tone: "success" | "error" | "warning"; text: string }> = {
+  const messages: Record<string, { tone: "success" | "error" | "warning"; text: ReactNode }> = {
     connected: { tone: "success", text: "Google connected. Choose which properties to report on below." },
     cancelled: { tone: "warning", text: "The Google sign-in was cancelled. Nothing has changed." },
+    denied: {
+      tone: "warning",
+      text: (
+        <>
+          <strong>Google did not allow the sign-in.</strong> Either consent was cancelled, or the
+          OAuth consent screen is still in <em>Testing</em> and this Google account is not on its
+          test-user list. See <em>Google blocked the sign-in?</em> under Search Console below.
+        </>
+      ),
+    },
+    google_error: {
+      tone: "error",
+      text: "Google returned an error before the connection could be made. Try again.",
+    },
     failed: { tone: "error", text: "Google rejected the connection. Try connecting again." },
     invalid_state: {
       tone: "error",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Quote } from "lucide-react";
@@ -10,7 +11,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { works } from "@/config/site";
 import { getMergedWork, getMergedWorks, resolveRedirect } from "@/server/public-content";
-import { absoluteUrl, slugify } from "@/lib/utils";
+import { absoluteUrl, cn, slugify } from "@/lib/utils";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -87,6 +88,21 @@ export default async function WorkPage({ params }: Params) {
           </div>
         </header>
 
+        {work.heroImage && (
+          <div className="container-x -mt-10 md:-mt-12">
+            <figure className="relative aspect-[16/9] overflow-hidden rounded-[26px] border border-line bg-canvas-2 md:aspect-[21/9]">
+              <Image
+                src={work.heroImage}
+                alt={`${work.client} — ${work.title}`}
+                fill
+                priority
+                sizes="(max-width: 1280px) 92vw, 75rem"
+                className="object-cover"
+              />
+            </figure>
+          </div>
+        )}
+
         <section className="border-b border-line bg-surface" aria-label="Results">
           <div className="container-x">
             <dl className="grid divide-y divide-line md:grid-cols-4 md:divide-x md:divide-y-0">
@@ -105,8 +121,24 @@ export default async function WorkPage({ params }: Params) {
         <div className="container-x py-16 md:py-24">
           <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
             <div className="max-w-2xl">
+              {work.clientObjective && (
+                <Reveal>
+                  <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.1rem)] font-extrabold tracking-tight text-ink">
+                    What they came for
+                  </h2>
+                  <p className="mt-5 text-[1.0625rem] leading-relaxed text-ink-soft">
+                    {work.clientObjective}
+                  </p>
+                </Reveal>
+              )}
+
               <Reveal>
-                <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.1rem)] font-extrabold tracking-tight text-ink">
+                <h2
+                  className={cn(
+                    "font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.1rem)] font-extrabold tracking-tight text-ink",
+                    work.clientObjective && "mt-16",
+                  )}
+                >
                   The problem
                 </h2>
                 <p className="mt-5 text-[1.0625rem] leading-relaxed text-ink-soft">{work.challenge}</p>
@@ -209,6 +241,41 @@ export default async function WorkPage({ params }: Params) {
           </div>
         </div>
       </article>
+
+      {work.gallery && work.gallery.length > 0 && (
+        <section className="border-t border-line bg-surface py-16 md:py-24" aria-label="Gallery">
+          <div className="container-x">
+            <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.1rem)] font-extrabold tracking-tight text-ink">
+              The work
+            </h2>
+            {/* One column on a phone, two from md — a screenshot shrunk into a
+                third of a phone screen shows nothing worth showing. */}
+            <ul className="mt-10 grid gap-5 md:grid-cols-2">
+              {work.gallery.map((shot, i) => (
+                <Reveal as="li" key={shot.url} delay={(i % 2) * 0.07}>
+                  <figure>
+                    <span className="relative block aspect-[4/3] overflow-hidden rounded-[22px] border border-line bg-canvas-2">
+                      <Image
+                        src={shot.url}
+                        alt={shot.alt ?? `${work.client} — image ${i + 1}`}
+                        fill
+                        loading="lazy"
+                        sizes="(max-width: 768px) 92vw, 36rem"
+                        className="object-cover"
+                      />
+                    </span>
+                    {shot.caption && (
+                      <figcaption className="mt-3 text-sm leading-relaxed text-muted">
+                        {shot.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                </Reveal>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <CtaBand />
 

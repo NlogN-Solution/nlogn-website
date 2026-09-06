@@ -33,6 +33,8 @@ export type UnifiedWork = Work & {
   heroImage?: string;
   thumbnail?: string;
   gallery?: { url: string; alt?: string | null; caption?: string | null }[];
+  /** CMS-only. The hardcoded case studies have no equivalent field. */
+  clientObjective?: string;
 };
 
 /**
@@ -94,16 +96,33 @@ function toPost(row: CmsArticle, kind: PostKind): UnifiedPost {
   };
 }
 
-/** Pulls the table of contents out of rendered HTML, matching the MDX behaviour. */
+/**
+ * Pulls the table of contents out of rendered HTML, matching the MDX behaviour.
+ *
+ * The id is read back off the tag rather than derived from the text a second
+ * time: `content-render.ts` already decided it, duplicates included, and a
+ * second guess here is how the two drift apart and the links stop landing.
+ */
 function extractHeadings(html: string) {
   const out: { id: string; text: string; level: number }[] = [];
-  const re = /<h([23])>(.*?)<\/h\1>/gi;
+  const re = /<h([23])(?:\s+id="([^"]*)")?\s*>(.*?)<\/h\1>/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(html)) !== null) {
-    const text = match[2].replace(/<[^>]+>/g, "").trim();
-    if (text) out.push({ id: slugify(text), text, level: Number(match[1]) });
+    const text = decodeEntities(match[3].replace(/<[^>]+>/g, "")).trim();
+    const id = match[2] ? decodeEntities(match[2]) : slugify(text);
+    if (text && id) out.push({ id, text, level: Number(match[1]) });
   }
   return out;
+}
+
+/** Undoes the escaping the renderer applied, so the id matches the DOM's. */
+function decodeEntities(value: string) {
+  return value
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, ">")
+    .replace(/&lt;/g, "<")
+    .replace(/&amp;/g, "&");
 }
 
 const articleInclude = {
@@ -187,6 +206,7 @@ type CmsCase = {
   projectType: string | null;
   summary: string | null;
   shortDescription: string | null;
+  clientObjective: string | null;
   challenge: string | null;
   approach: unknown;
   outcome: string | null;
@@ -219,6 +239,7 @@ function toWork(row: CmsCase): UnifiedWork {
     year: row.year ?? String(new Date().getFullYear()),
     summary: row.summary ?? row.shortDescription ?? "",
     challenge: row.challenge ?? "",
+    clientObjective: row.clientObjective ?? undefined,
     approach,
     outcome: row.outcome ?? "",
     metrics,

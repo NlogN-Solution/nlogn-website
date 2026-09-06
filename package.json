@@ -14,6 +14,7 @@
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
     "db:doctor": "node scripts/db-doctor.mjs",
+    "content:rerender": "tsx scripts/rerender-content.ts",
     "seo:check": "tsx scripts/seo-checks/run.ts"
   },
   "dependencies": {

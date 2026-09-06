@@ -333,6 +333,217 @@
 .prose-nlogn pre .sh__token--property { color: #93c5fd; }
 .prose-nlogn pre .sh__token--entity { color: #fcd34d; }
 
+/* ── Blocks the CMS renderer emits (server/content-render.ts) ──────────────
+ *
+ * The MDX posts and the CMS posts land in the same `.prose-nlogn` column, so
+ * every node `renderEditorDoc` can produce needs a rule here — a figure, a
+ * callout, a scrollable table wrapper and a video have no styling otherwise and
+ * drop out of the article's rhythm.
+ */
+.prose-nlogn > :first-child { margin-top: 0; }
+.prose-nlogn h4 {
+  font-size: 1.0625rem;
+  color: var(--color-ink);
+  font-weight: 700;
+  margin-top: 1.75em;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 7rem;
+}
+/* A heading and the line under it belong together. */
+.prose-nlogn :is(h2, h3, h4) + * { margin-top: 0.85em; }
+
+/* `> * + *` only reaches direct children, so nested prose needs its own rhythm. */
+.prose-nlogn :is(li, blockquote, figcaption, .callout) > * + * { margin-top: 0.7em; }
+.prose-nlogn :is(ul, ol) :is(ul, ol) { margin-top: 0.5em; }
+
+/* Images: block-level, full measure, never overflowing the column. */
+.prose-nlogn > img,
+.prose-nlogn > p > img,
+.prose-nlogn figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-line);
+  background: var(--color-canvas);
+  border-radius: var(--radius-md);
+}
+.prose-nlogn figure { margin-block: 2.25em; }
+.prose-nlogn figcaption {
+  margin-top: 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+  text-align: center;
+}
+.prose-nlogn video {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+/* Callouts — one accent per tone, sharing the article's radius. */
+.prose-nlogn .callout {
+  margin-block: 2em;
+  border: 1px solid var(--color-line);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1.4rem;
+  font-size: 1rem;
+  background: var(--color-canvas);
+}
+.prose-nlogn .callout > :first-child { margin-top: 0; }
+.prose-nlogn .callout--info {
+  border-color: color-mix(in srgb, var(--color-violet) 25%, var(--color-line));
+  border-left-color: var(--color-violet);
+  background: var(--color-violet-wash);
+}
+.prose-nlogn .callout--warn {
+  border-color: #f5d9a8;
+  border-left-color: #d98a04;
+  background: #fdf6e7;
+}
+.prose-nlogn .callout--success {
+  border-color: #b8e3c9;
+  border-left-color: #10804d;
+  background: #edf8f2;
+}
+
+/* A wrapped table scrolls in its wrapper, so the table itself stays a table. */
+.prose-nlogn .table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+.prose-nlogn .table-scroll table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border: 0;
+}
+.prose-nlogn .table-scroll :is(th, td):first-child { border-left: 0; }
+.prose-nlogn .table-scroll :is(th, td):last-child { border-right: 0; }
+.prose-nlogn .table-scroll tr:first-child :is(th, td) { border-top: 0; }
+.prose-nlogn .table-scroll tr:last-child :is(th, td) { border-bottom: 0; }
+
+/* ── The editor surface ────────────────────────────────────────────────────
+ *
+ * `.prose-admin` is what the writer types into. It deliberately mirrors
+ * `.prose-nlogn` — same hierarchy, same spacing ratios, one step down in scale
+ * to fit the admin column — because an editor that does not show the shape of
+ * the published page is not a preview of anything. Without these rules TipTap's
+ * output inherits Tailwind's preflight: headings the size of body text and
+ * lists with no markers at all.
+ */
+.prose-admin {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}
+.prose-admin > * + * { margin-top: 1.15em; }
+.prose-admin > :first-child { margin-top: 0; }
+.prose-admin h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-top: 1.9em;
+}
+.prose-admin h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  margin-top: 1.7em;
+}
+.prose-admin h4 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-top: 1.5em;
+}
+.prose-admin :is(h2, h3, h4) + * { margin-top: 0.7em; }
+.prose-admin strong { color: var(--color-ink); font-weight: 600; }
+.prose-admin em { font-style: italic; }
+.prose-admin s { text-decoration: line-through; }
+.prose-admin u { text-decoration: underline; text-underline-offset: 2px; }
+.prose-admin a {
+  color: var(--color-violet-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+}
+.prose-admin ul, .prose-admin ol { padding-left: 1.35rem; }
+.prose-admin ul { list-style: disc; }
+.prose-admin ol { list-style: decimal; }
+.prose-admin li::marker { color: var(--color-violet-soft); }
+.prose-admin li + li { margin-top: 0.35em; }
+.prose-admin :is(ul, ol) :is(ul, ol) { margin-top: 0.35em; }
+.prose-admin :is(li, blockquote) > * + * { margin-top: 0.5em; }
+.prose-admin blockquote {
+  border-left: 2px solid var(--color-violet);
+  padding-left: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.prose-admin code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--color-canvas-2);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  color: var(--color-violet-deep);
+}
+.prose-admin pre {
+  background: #0b0b0f;
+  color: #e7e7ef;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: pre;
+}
+.prose-admin pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+.prose-admin hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin-block: 2em;
+}
+.prose-admin img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+}
+/* ProseMirror marks the node under the cursor; without this an image gives no
+   sign it is selected and Delete looks like it did nothing. */
+.prose-admin .ProseMirror-selectednode {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+}
+/* TipTap's Placeholder extension writes the text into a data attribute. */
+.prose-admin p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-muted);
+}
+
 /* Scroll reveals are an enhancement: without scripting, show everything. */
 @media (scripting: none) {
   [data-reveal] {

@@ -64,7 +64,10 @@ export function ArticleEditor({
   const router = useRouter();
   const toast = useToast();
   const isNew = !record;
-  const publicPath = kind === "blogs" ? "/blog" : "/insights";
+  // Both kinds are served by `app/(site)/blog/[slug]` — the insights listing
+  // links there too. Pointing "View" at `/insights/<slug>` opened a 404.
+  const publicPath = "/blog";
+  const listingPath = kind === "blogs" ? "/blog" : "/insights";
 
   const [title, setTitle] = useState(record?.title ?? "");
   // The slug is derived from the title until someone edits it, at which point
@@ -229,7 +232,7 @@ export function ArticleEditor({
                 hint={
                   status === "PUBLISHED"
                     ? "This is a live URL. Changing it creates a redirect from the old one."
-                    : `The page will live at ${publicPath}/${slug || "…"}`
+                    : `The page will live at ${publicPath}/${slug || "…"} and be listed on ${listingPath}.`
                 }
               >
                 <Input
@@ -256,11 +259,14 @@ export function ArticleEditor({
             </div>
           </Panel>
 
-          <Panel>
-            <PanelHeader title="Content" />
-            <div className="p-4">
-              <RichTextEditor value={content} onChange={setContent} />
-            </div>
+          {/* The editor draws its own frame, toolbar and footer, so it sits
+              flush in the panel rather than as a bordered box inside one. */}
+          <Panel className="overflow-hidden">
+            <PanelHeader
+              title="Content"
+              description="This is how the published article is structured — headings become the table of contents."
+            />
+            <RichTextEditor value={content} onChange={setContent} />
           </Panel>
 
           <Panel>
