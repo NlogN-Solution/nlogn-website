@@ -21,6 +21,14 @@ import { MediaPicker, type MediaItem } from "@/components/admin/media-picker";
  * the document. General HTML Support is deliberately absent — it exists to let
  * arbitrary markup through, which is the opposite of what this editor is for.
  *
+ * Three plugins are missing for a different reason. The CKEditor 5 Free licence
+ * lists PasteFromOffice, WordCount and FindAndReplace in its `removeFeatures`
+ * claim, and naming a feature the licence has removed stops the editor loading
+ * at all. Their absence costs little here: the word count below is counted from
+ * the document directly, and pasted Word and Google Docs markup is normalised
+ * by the server sanitiser, which strips the fonts, colours and wrapper elements
+ * those applications emit whether or not the editor got to them first.
+ *
  * The editing root is given the `article-content` class in `onReady`, so the
  * text being written is laid out by exactly the stylesheet that will lay out
  * the published page. That is the visual parity requirement, met structurally
@@ -47,6 +55,24 @@ const CKEDITOR_VERSION = "46.0.0";
 const LICENSE_KEY = process.env.NEXT_PUBLIC_CKEDITOR_LICENSE_KEY?.trim();
 
 export type CkEditorHandle = { getData: () => string };
+
+/**
+ * Words in a document, counted the way the server counts them.
+ *
+ * CKEditor's own WordCount plugin is not available on every licence tier, and
+ * the number under the editor should not depend on which plan is in force. Tags
+ * become spaces so the last word of a paragraph does not fuse with the first of
+ * the next — the same rule `htmlToPlainText` follows on the server, so the
+ * count shown here and the stored reading time agree.
+ */
+function countWords(html: string): number {
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&[a-z]+;/gi, "")
+    .trim();
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+}
 
 export function CkEditor({
   value,
@@ -88,7 +114,6 @@ export function CkEditor({
       Code,
       CodeBlock,
       Essentials,
-      FindAndReplace,
       Heading,
       HorizontalLine,
       Image,
@@ -101,14 +126,12 @@ export function CkEditor({
       Link,
       List,
       Paragraph,
-      PasteFromOffice,
       Strikethrough,
       Table,
       TableCaption,
       TableColumnResize,
       TableToolbar,
       Underline,
-      WordCount,
       ButtonView,
       Plugin,
     } = cloud.CKEditor;
@@ -173,9 +196,6 @@ export function CkEditor({
         TableToolbar,
         TableCaption,
         TableColumnResize,
-        PasteFromOffice,
-        FindAndReplace,
-        WordCount,
         NlognMediaLibrary,
       ],
       toolbar: {
@@ -200,8 +220,6 @@ export function CkEditor({
           "blockQuote",
           "codeBlock",
           "horizontalLine",
-          "|",
-          "findAndReplace",
         ],
         // Wraps onto a second row instead of hiding controls behind an overflow
         // menu, which on a narrow admin column is most of them.
@@ -313,15 +331,13 @@ export function CkEditor({
             writer.addClass("article-content", editor.editing.view.document.getRoot()!);
           });
 
-          const wordCount = editor.plugins.has("WordCount")
-            ? editor.plugins.get("WordCount")
-            : null;
-          if (wordCount) {
-            setWords(wordCount.words);
-            wordCount.on("update", (_event, stats: { words: number }) => setWords(stats.words));
-          }
+          setWords(countWords(editor.getData()));
         }}
-        onChange={(_event, editor) => onChange(editor.getData())}
+        onChange={(_event, editor) => {
+          const html = editor.getData();
+          onChange(html);
+          setWords(countWords(html));
+        }}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-canvas px-4 py-2 text-[0.75rem] text-muted">
