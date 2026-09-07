@@ -5,11 +5,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { ProcessReel } from "@/components/ui/process-reel";
 import { cloudinaryPoster, cloudinaryVideo } from "@/config/clients";
-import { siteConfig } from "@/config/site";
+import { showreelCrop, siteConfig } from "@/config/site";
 
 const RAW_SRC = siteConfig.videoUrl || "/videos/how-we-work.mp4";
-const FILE_SRC = cloudinaryVideo(RAW_SRC);
-const POSTER = cloudinaryPoster(RAW_SRC);
+const FILE_SRC = cloudinaryVideo(RAW_SRC, `${showreelCrop}/q_auto,f_auto`);
+const POSTER = cloudinaryPoster(RAW_SRC, showreelCrop);
 
 export function VideoModal({
   open,

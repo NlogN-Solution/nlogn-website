@@ -8,18 +8,25 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { VideoModal } from "@/components/ui/video-modal";
 import { GrowthCurve } from "@/components/ui/growth-curve";
 import { cloudinaryPoster, cloudinaryVideo } from "@/config/clients";
-import { showreelChapters, siteConfig } from "@/config/site";
+import {
+  showreelChapters,
+  showreelCrop,
+  showreelRuntime,
+  siteConfig,
+} from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const RAW_SRC = siteConfig.videoUrl || "/videos/how-we-work.mp4";
-const POSTER = cloudinaryPoster(RAW_SRC);
+const POSTER = cloudinaryPoster(RAW_SRC, showreelCrop);
 /**
  * The first six seconds, small and cheap — it only ever loads on hover, so the
- * frame costs one still until someone shows interest.
+ * frame costs one still until someone shows interest. Narrow, because the crop
+ * leaves a portrait: 480 wide is a full-height preview here.
  */
-const PREVIEW_SRC = cloudinaryVideo(RAW_SRC, "q_auto:eco,f_auto,w_720,eo_6");
-
-const RUNTIME = "08:12";
+const PREVIEW_SRC = cloudinaryVideo(
+  RAW_SRC,
+  `${showreelCrop}/q_auto:eco,f_auto,w_480,eo_6`,
+);
 
 export function VideoShowcase() {
   const [openAt, setOpenAt] = useState<number | null>(null);
@@ -136,7 +143,7 @@ export function VideoShowcase() {
               </motion.span>
 
               <span className="label absolute bottom-5 left-5 text-white/75">
-                How we work · {RUNTIME}
+                How we work · {showreelRuntime.label}
               </span>
               <span className="label absolute bottom-5 right-5 hidden text-white/45 sm:block">
                 {preview ? "Preview" : "Hover to peek"}
@@ -147,10 +154,10 @@ export function VideoShowcase() {
                 aria-hidden
                 className="absolute inset-x-5 bottom-[2.9rem] hidden h-px bg-white/15 sm:block"
               >
-                {showreelChapters.map((chapter, i) => (
+                {showreelChapters.map((chapter) => (
                   <span
                     key={chapter.at}
-                    style={{ left: `${(i / showreelChapters.length) * 100}%` }}
+                    style={{ left: `${(chapter.at / showreelRuntime.seconds) * 100}%` }}
                     className="absolute top-1/2 h-2 w-px -translate-y-1/2 bg-white/35"
                   />
                 ))}
@@ -170,9 +177,9 @@ export function VideoShowcase() {
               <span className="text-violet-soft">before you hire us.</span>
             </h2>
             <p className="mt-6 max-w-lg text-[1.0625rem] leading-relaxed text-white/65">
-              Eight minutes inside a real engagement: the audit that opens it, the
-              decisions we argue about, the build, and the dashboard the client reads
-              on the Monday after launch.
+              Thirty-three seconds, straight to camera: why we start with
+              understanding rather than technology, how what is holding you back
+              turns into a strategy, and why the work carries on past launch.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4">

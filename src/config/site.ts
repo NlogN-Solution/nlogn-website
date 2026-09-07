@@ -43,7 +43,7 @@ export const siteConfig = {
    */
   videoUrl:
     process.env.NEXT_PUBLIC_SHOWREEL_URL ||
-    "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788350487/carzspa.mp4",
+    "https://res.cloudinary.com/iqv7ifzx/video/upload/v1788772999/nlogn_final_video.mp4",
 } as const;
 
 export type NavItem = {
@@ -538,34 +538,51 @@ export const stats = [
 ] as const;
 
 /**
- * Chapters of the studio film. `at` is the second the chapter opens, so the
- * home showcase can deep-link the player; a chapter past the end of the current
- * cut is simply ignored by the modal rather than seeking into nothing.
+ * Runtime of the current cut. The showcase reads it for the label on the frame
+ * and to space the chapter marks by where they actually fall, so the scrubber
+ * matches the film rather than dividing the bar into equal quarters.
+ */
+export const showreelRuntime = { seconds: 33, label: "00:33" } as const;
+
+/**
+ * The cut is a 9:16 portrait exported into a 1080p landscape frame, so it
+ * arrives with black pillarbox bars baked into the pixels. Cropping them off in
+ * delivery hands the players a true portrait, which is what lets the blurred
+ * still behind it fill the frame — otherwise that treatment sits hidden behind
+ * two black bars. Drop this constant if a 16:9 cut ever replaces the file.
+ */
+export const showreelCrop = "c_crop,w_608,h_1080,x_656,y_0";
+
+/**
+ * Chapters of the studio film — the four beats of the piece to camera. `at` is
+ * the second the chapter opens, so the home showcase can deep-link the player;
+ * a chapter past the end of the current cut is simply ignored by the modal
+ * rather than seeking into nothing.
  */
 export const showreelChapters = [
   {
     at: 0,
     time: "00:00",
-    title: "The audit",
-    detail: "What the numbers said before we touched anything",
+    title: "Understanding first",
+    detail: "Why the work never starts with the technology",
   },
   {
-    at: 108,
-    time: "01:48",
-    title: "The argument",
-    detail: "Picking the one metric worth building for",
+    at: 7,
+    time: "00:07",
+    title: "The diagnosis",
+    detail: "How your business works, and what is holding it back",
   },
   {
-    at: 246,
-    time: "04:06",
-    title: "The build",
-    detail: "Staging from day one, demos every Friday",
+    at: 16,
+    time: "00:16",
+    title: "Design, build, automate",
+    detail: "Software, AI, and systems shaped around the business",
   },
   {
-    at: 402,
-    time: "06:42",
-    title: "Monday after launch",
-    detail: "The dashboard the client actually reads",
+    at: 23,
+    time: "00:23",
+    title: "Idea to impact",
+    detail: "Launch, measure, improve, and keep building as you grow",
   },
 ] as const;
 

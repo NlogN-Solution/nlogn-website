@@ -189,11 +189,16 @@ export function cloudinaryVideo(url: string, transform = "q_auto,f_auto") {
     : url;
 }
 
-/** A poster pulled from the video's first frame, so none is needed by hand. */
-export function cloudinaryPoster(url: string) {
+/**
+ * A poster pulled from the video's first frame, so none is needed by hand.
+ * `lead` is a transform chained *before* the resize — a crop has to run on the
+ * full frame, not on a still that has already been scaled to 1200 wide.
+ */
+export function cloudinaryPoster(url: string, lead?: string) {
   if (!url.includes("/video/upload/")) return undefined;
+  const prefix = lead ? `${lead}/` : "";
   return url
-    .replace("/video/upload/", "/video/upload/so_0,q_auto,f_auto,w_1200/")
+    .replace("/video/upload/", `/video/upload/${prefix}so_0,q_auto,f_auto,w_1200/`)
     .replace(/\.(mp4|mov|webm|m4v)$/i, ".jpg");
 }
 
