@@ -3,6 +3,7 @@ import { publicRoute } from "@/server/middleware/guard";
 import { commentSchema, engagementTargetSchema } from "@/server/schemas/engagement";
 import { createComment, listComments } from "@/server/services/engagement.service";
 import { getMergedPost, getMergedWork } from "@/server/public-content";
+import { getPublishedResource } from "@/server/services/resource.service";
 import { commentNotification, sendMail, smtpConfigured } from "@/server/integrations/email";
 import { absoluteUrl } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
@@ -28,8 +29,29 @@ export const dynamic = "force-dynamic";
  */
 async function contentExists(kind: ContentKind, slug: string) {
   if (kind === "CASE_STUDY") return Boolean(await getMergedWork(slug));
+  if (kind === "RESOURCE") return Boolean(await getPublishedResource(slug));
   return Boolean(await getMergedPost(slug));
 }
+
+/**
+ * Where each kind lives, for the notification's "view the page" link.
+ *
+ * Blogs and insights share `/blog` — the insights listing links there too, so
+ * `/insights/<slug>` is a 404. See `article-editor.tsx`.
+ */
+const PUBLIC_PATH: Record<ContentKind, string> = {
+  BLOG: "/blog",
+  INSIGHT: "/blog",
+  CASE_STUDY: "/case-studies",
+  RESOURCE: "/resources",
+};
+
+const KIND_LABEL: Record<ContentKind, string> = {
+  BLOG: "blog",
+  INSIGHT: "insight",
+  CASE_STUDY: "case study",
+  RESOURCE: "resource",
+};
 
 export const GET = publicRoute("comments-read", { max: 60, windowMs: 60_000 }, async (_request, { url }) => {
   const parsed = engagementTargetSchema.safeParse({
@@ -67,8 +89,8 @@ export const POST = publicRoute("comment", { max: 3, windowMs: 10 * 60_000 }, as
   // Best-effort: the comment is already saved, and a mail server having a bad
   // day must not turn a successful post into an error the visitor sees.
   if (smtpConfigured) {
-    const kindLabel = data.kind === "CASE_STUDY" ? "case study" : data.kind.toLowerCase();
-    const path = data.kind === "CASE_STUDY" ? "/case-studies" : "/blog";
+    const kindLabel = KIND_LABEL[data.kind];
+    const path = PUBLIC_PATH[data.kind];
     const mail = commentNotification({
       name: comment.name,
       email: data.email,

@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 
 type Comment = {
   id: string;
-  kind: "BLOG" | "INSIGHT" | "CASE_STUDY";
+  kind: "BLOG" | "INSIGHT" | "CASE_STUDY" | "RESOURCE";
   slug: string;
   name: string;
   email: string;
@@ -60,12 +60,20 @@ const KIND_LABEL: Record<Comment["kind"], string> = {
   BLOG: "Blog",
   INSIGHT: "Insight",
   CASE_STUDY: "Case study",
+  RESOURCE: "Resource",
 };
 
-/** Insights are served under /blog too — see `article-editor.tsx`. */
+/** Where each kind's public page actually lives. */
+const KIND_BASE: Record<Comment["kind"], string> = {
+  // Insights are served under /blog too — see `article-editor.tsx`.
+  BLOG: "/blog",
+  INSIGHT: "/blog",
+  CASE_STUDY: "/case-studies",
+  RESOURCE: "/resources",
+};
+
 function publicHref(comment: Comment) {
-  const base = comment.kind === "CASE_STUDY" ? "/case-studies" : "/blog";
-  return `${base}/${comment.slug}#comments`;
+  return `${KIND_BASE[comment.kind]}/${comment.slug}#comments`;
 }
 
 export function CommentsModeration() {
@@ -164,6 +172,7 @@ export function CommentsModeration() {
             <option value="BLOG">Blogs</option>
             <option value="INSIGHT">Insights</option>
             <option value="CASE_STUDY">Case studies</option>
+            <option value="RESOURCE">Resources</option>
           </Select>
         </div>
 

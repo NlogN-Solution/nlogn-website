@@ -47,12 +47,15 @@ export function ContentList({
   description,
   publicPath,
   staticCount,
+  headerExtra,
 }: {
-  kind: "blogs" | "insights" | "case-studies";
+  kind: "blogs" | "insights" | "case-studies" | "resources";
   title: string;
   description: string;
   publicPath: string;
   staticCount: number;
+  /** Rendered beside "New" — a per-kind link that does not belong in this shared list. */
+  headerExtra?: React.ReactNode;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -129,13 +132,16 @@ export function ContentList({
         title={title}
         description={description}
         action={
-          <Button
-            variant="primary"
-            icon={<Plus className="size-4" />}
-            onClick={() => router.push(`/admin/${kind}/new`)}
-          >
-            New
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            {headerExtra}
+            <Button
+              variant="primary"
+              icon={<Plus className="size-4" />}
+              onClick={() => router.push(`/admin/${kind}/new`)}
+            >
+              New
+            </Button>
+          </div>
         }
       />
 

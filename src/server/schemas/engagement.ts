@@ -3,7 +3,7 @@ import { slugSchema } from "@/server/schemas/common";
 
 /** Shapes for the public engagement endpoints. */
 
-export const contentKindSchema = z.enum(["BLOG", "INSIGHT", "CASE_STUDY"]);
+export const contentKindSchema = z.enum(["BLOG", "INSIGHT", "CASE_STUDY", "RESOURCE"]);
 
 export const engagementTargetSchema = z.object({
   kind: contentKindSchema,

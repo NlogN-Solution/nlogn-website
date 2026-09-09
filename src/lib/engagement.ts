@@ -7,7 +7,7 @@
  * client, in the API and in the cache.
  */
 
-export type ContentKind = "BLOG" | "INSIGHT" | "CASE_STUDY";
+export type ContentKind = "BLOG" | "INSIGHT" | "CASE_STUDY" | "RESOURCE";
 
 export type EngagementKey = `${ContentKind}:${string}`;
 
@@ -31,7 +31,9 @@ export function parseEngagementKey(key: string): { kind: ContentKind; slug: stri
 
   const kind = key.slice(0, index);
   const slug = key.slice(index + 1);
-  if (kind !== "BLOG" && kind !== "INSIGHT" && kind !== "CASE_STUDY") return null;
+  if (kind !== "BLOG" && kind !== "INSIGHT" && kind !== "CASE_STUDY" && kind !== "RESOURCE") {
+    return null;
+  }
   if (!slug) return null;
 
   return { kind, slug };

@@ -335,3 +335,71 @@ export function commentNotification(payload: {
 
   return { subject: `New comment from ${payload.name}`, html, text, replyTo: payload.email };
 }
+
+/**
+ * The copy of a download link that lands in the inbox.
+ *
+ * Sent even though the page already unlocked in place, and that duplication is
+ * the point: the in-page unlock is what the visitor came for, the email is what
+ * makes the address real and what they still have on the laptop tomorrow. The
+ * link is the same expiring grant either way — nothing here is a second door.
+ */
+export function resourceDelivery(payload: {
+  title: string;
+  url: string;
+  expiresAt: Date;
+  /** "ZIP · 4.2 MB", "Opens in Notion", "Public repository". */
+  what?: string | null;
+  licence?: string | null;
+}) {
+  const heading = "Here's your download";
+  const expires = payload.expiresAt.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const html = shell({
+    heading,
+    preheader: `${payload.title} — your link is inside.`,
+    body: `
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#3f3f4a;">
+      Thanks for grabbing <strong style="color:${INK};">${escapeHtml(payload.title)}</strong>.
+      The link below is yours — it works for a few days and on any device.
+    </p>
+    <p style="margin:0 0 22px;">
+      <a href="${escapeHtml(payload.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 26px;border-radius:12px;">Download it now</a>
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      ${rows([
+        ["What you get", payload.what],
+        ["Licence", payload.licence],
+        ["Link expires", expires],
+      ])}
+    </table>
+    <p style="margin:22px 0 0;font-size:13px;line-height:1.65;color:${MUTED};">
+      If the button does not work, paste this into your browser:<br>
+      <span style="color:${BRAND};word-break:break-all;">${escapeHtml(payload.url)}</span>
+    </p>
+    <p style="margin:18px 0 0;font-size:13px;line-height:1.65;color:${MUTED};">
+      Built something with it? Reply and show me — I read every one.
+    </p>`,
+  });
+
+  const text = [
+    heading,
+    "",
+    payload.title,
+    "",
+    `Download: ${payload.url}`,
+    payload.what ? `What you get: ${payload.what}` : "",
+    payload.licence ? `Licence: ${payload.licence}` : "",
+    `Link expires: ${expires}`,
+    "",
+    "Built something with it? Just reply — I read every one.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return { subject: `Your download: ${payload.title}`, html, text };
+}

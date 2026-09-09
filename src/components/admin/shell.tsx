@@ -16,6 +16,7 @@ import {
   Lightbulb,
   LogOut,
   Menu,
+  Package,
   Settings,
   TrendingUp,
   Users,
@@ -61,6 +62,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Blogs", href: "/admin/blogs", icon: BookOpen, capability: "content:read" },
       { label: "Insights", href: "/admin/insights", icon: Lightbulb, capability: "content:read" },
+      { label: "Resources", href: "/admin/resources", icon: Package, capability: "content:read" },
       {
         label: "Case studies",
         href: "/admin/case-studies",

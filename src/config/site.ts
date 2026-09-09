@@ -62,6 +62,11 @@ export const nav: NavItem[] = [
     href: "/resources",
     children: [
       {
+        label: "Free downloads",
+        href: "/resources",
+        description: "Starter repos, templates and workflows you can take today",
+      },
+      {
         label: "Insights",
         href: "/insights",
         description: "Long-form pieces on what actually moves a number",

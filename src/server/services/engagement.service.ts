@@ -266,7 +266,7 @@ export async function listCommentsForAdmin(params: {
   const status = ["PUBLISHED", "HIDDEN", "SPAM"].includes(params.status ?? "")
     ? (params.status as "PUBLISHED" | "HIDDEN" | "SPAM")
     : undefined;
-  const kind = ["BLOG", "INSIGHT", "CASE_STUDY"].includes(params.kind ?? "")
+  const kind = ["BLOG", "INSIGHT", "CASE_STUDY", "RESOURCE"].includes(params.kind ?? "")
     ? (params.kind as ContentKind)
     : undefined;
 

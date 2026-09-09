@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { softwareProducts } from "@/config/software";
 import { getCategories, getTags } from "@/lib/blog";
 import { getMergedAllPosts, getMergedWorks } from "@/server/public-content";
+import { getPublishedResourceSlugs } from "@/server/services/resource.service";
 import { absoluteUrl } from "@/lib/utils";
 
 /**
@@ -20,6 +21,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const posts = await getMergedAllPosts();
   const caseStudies = await getMergedWorks();
+  // Already excludes anything flagged noIndex — a page kept out of search but
+  // still linked from a reel has no business in the sitemap.
+  const resources = await getPublishedResourceSlugs();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "weekly", priority: 1 },
@@ -43,6 +47,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: absoluteUrl(`/case-studies/${w.slug}`),
       lastModified: now,
       changeFrequency: "yearly" as const,
+      priority: 0.7,
+    })),
+    ...resources.map((r) => ({
+      url: absoluteUrl(`/resources/${r.slug}`),
+      lastModified: r.updatedAt,
+      changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
     ...softwareProducts.map((p) => ({

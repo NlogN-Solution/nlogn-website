@@ -6,7 +6,14 @@
  * Node SDK — and `fs` — into the client bundle.
  */
 
-export const MEDIA_FOLDERS = ["blogs", "insights", "case-studies", "portfolio", "general"] as const;
+export const MEDIA_FOLDERS = [
+  "blogs",
+  "insights",
+  "case-studies",
+  "portfolio",
+  "resources",
+  "general",
+] as const;
 
 export type MediaFolder = (typeof MEDIA_FOLDERS)[number];
 

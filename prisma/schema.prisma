@@ -56,6 +56,7 @@ model Category {
   blogs       Blog[]
   caseStudies CaseStudy[]
   insights    Insight[]
+  resources   Resource[]
 
   @@index([slug])
 }
@@ -68,6 +69,7 @@ model Tag {
   blogs       Blog[]      @relation("BlogToTag")
   caseStudies CaseStudy[] @relation("CaseStudyToTag")
   insights    Insight[]   @relation("InsightToTag")
+  resources   Resource[]  @relation("ResourceToTag")
 
   @@index([slug])
 }
@@ -227,31 +229,34 @@ model Redirect {
 
 /// One row per Cloudinary asset. The app never stores bytes itself.
 model Media {
-  id            String      @id @default(cuid())
-  publicId      String      @unique
-  secureUrl     String
-  resourceType  String
-  type          MediaType   @default(IMAGE)
-  format        String?
-  width         Int?
-  height        Int?
-  bytes         Int         @default(0)
-  duration      Float?
-  originalName  String?
-  folder        String?
-  alt           String?
-  caption       String?
-  uploadedById  String?
-  createdAt     DateTime    @default(now())
-  blogCovers    Blog[]      @relation("BlogCover")
-  blogOg        Blog[]      @relation("BlogOg")
-  caseHeroes    CaseStudy[] @relation("CaseHero")
-  caseOg        CaseStudy[] @relation("CaseOg")
-  caseThumbs    CaseStudy[] @relation("CaseThumb")
-  insightCovers Insight[]   @relation("InsightCover")
-  insightOg     Insight[]   @relation("InsightOg")
-  uploadedBy    AdminUser?  @relation(fields: [uploadedById], references: [id])
-  caseGalleries CaseStudy[] @relation("CaseGallery")
+  id             String      @id @default(cuid())
+  publicId       String      @unique
+  secureUrl      String
+  resourceType   String
+  type           MediaType   @default(IMAGE)
+  format         String?
+  width          Int?
+  height         Int?
+  bytes          Int         @default(0)
+  duration       Float?
+  originalName   String?
+  folder         String?
+  alt            String?
+  caption        String?
+  uploadedById   String?
+  createdAt      DateTime    @default(now())
+  blogCovers     Blog[]      @relation("BlogCover")
+  blogOg         Blog[]      @relation("BlogOg")
+  caseHeroes     CaseStudy[] @relation("CaseHero")
+  caseOg         CaseStudy[] @relation("CaseOg")
+  caseThumbs     CaseStudy[] @relation("CaseThumb")
+  insightCovers  Insight[]   @relation("InsightCover")
+  insightOg      Insight[]   @relation("InsightOg")
+  uploadedBy     AdminUser?  @relation(fields: [uploadedById], references: [id])
+  caseGalleries  CaseStudy[] @relation("CaseGallery")
+  resourceCovers Resource[]  @relation("ResourceCover")
+  resourceFiles  Resource[]  @relation("ResourceFile")
+  resourceOg     Resource[]  @relation("ResourceOg")
 
   @@index([type, createdAt])
   @@index([folder])
@@ -614,10 +619,9 @@ enum PageSpeedStrategy {
   DESKTOP
 }
 
-/* ── Engagement ──────────────────────────────────────────────────────────────
- *
+/**
+ * ── Engagement ──────────────────────────────────────────────────────────────
  * Views, likes and comments for every piece of published content.
- *
  * Keyed by `kind` + `slug` rather than by a foreign key, because half the
  * content on this site has no database row at all: the committed MDX posts in
  * `src/content/blog` and the hardcoded case studies in `config/site.ts` are
@@ -629,6 +633,7 @@ enum ContentKind {
   BLOG
   INSIGHT
   CASE_STUDY
+  RESOURCE
 }
 
 enum CommentStatus {
@@ -697,4 +702,181 @@ model ContentComment {
 
   @@index([kind, slug, status, createdAt])
   @@index([status, createdAt])
+}
+
+/**
+ * ── resources ───────────────────────────────────────────────────────────────
+ * The downloadable library: repos, templates, workflow exports, asset packs.
+ * Traffic arrives from a reel, so the shape of these tables is decided by that
+ * journey rather than by the CMS — see `ShortLink` and `ResourceLead`.
+ */
+
+/// What the thing *is*, which is also what the card and the schema.org type say.
+enum ResourceType {
+  REPO
+  TEMPLATE
+  ASSET_PACK
+  WORKFLOW
+  SNIPPET
+  VIDEO
+  EBOOK
+}
+
+/// How much a visitor has to give up to get it.
+///
+/// FREE is not a lesser tier — a public GitHub URL cannot be gated by anything
+/// (the first person through re-posts it in the comments), so pretending
+/// otherwise only costs conversions. Gate what is genuinely private and let the
+/// public repos do the work of earning trust.
+///
+/// ACCOUNT is declared but unused: nothing in the app issues visitor logins yet.
+/// It exists so the column does not need a migration the day something does.
+enum ResourceGate {
+  FREE
+  EMAIL
+  ACCOUNT
+}
+
+model Resource {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  /// One line, used on the card and as the meta description fallback.
+  summary         String?
+  /// Long-form, written in the same CKEditor as an article and sanitised by
+  /// the same allow-list before it is stored.
+  descriptionHtml String?
+  type            ResourceType  @default(TEMPLATE)
+  gate            ResourceGate  @default(EMAIL)
+  status          ContentStatus @default(DRAFT)
+  featured        Boolean       @default(false)
+
+  /// What the visitor gets, listed above the gate. Showing the contents is what
+  /// makes an email feel like a fair trade.
+  includes  String[]
+  /// "MIT", "CC BY 4.0", "Personal use" — stated before the download, not after.
+  licence   String?
+  /// Free text: "v2.1", "Next 16", "n8n 1.4x". Rendered as a chip.
+  version   String?
+  /// Rough size for the button label ("ZIP · 4.2 MB"), when a file is attached.
+  fileLabel String?
+
+  /// The gated payload. Exactly one delivery route is used per resource:
+  /// `fileMedia` for bytes we host, `externalUrl` for a Notion/Figma/Drive
+  /// destination, `repoUrl` for a public repo (which should be gate FREE).
+  fileMediaId String?
+  externalUrl String?
+  repoUrl     String?
+  demoUrl     String?
+
+  coverMediaId String?
+  categoryId   String?
+
+  /// Denormalised counters. `unlocks` counts leads captured, `downloads` counts
+  /// grants actually redeemed — the gap between them is the drop-off worth
+  /// looking at.
+  unlocks   Int @default(0)
+  downloads Int @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogImageId      String?
+  noIndex        Boolean @default(false)
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category   Category?       @relation(fields: [categoryId], references: [id])
+  coverMedia Media?          @relation("ResourceCover", fields: [coverMediaId], references: [id])
+  fileMedia  Media?          @relation("ResourceFile", fields: [fileMediaId], references: [id])
+  ogImage    Media?          @relation("ResourceOg", fields: [ogImageId], references: [id])
+  tags       Tag[]           @relation("ResourceToTag")
+  leads      ResourceLead[]
+  grants     DownloadGrant[]
+  links      ShortLink[]
+
+  @@index([status, publishedAt])
+  @@index([type, status])
+  @@index([featured])
+}
+
+/// One row per address per resource.
+///
+/// Separate from `NewsletterSubscriber` on purpose: this records *which* asset
+/// earned the address and which reel sent them, which is the only way to tell
+/// a good hook from a bad one. The subscriber list is still upserted alongside,
+/// so there stays exactly one mailing list.
+model ResourceLead {
+  id               String   @id @default(cuid())
+  resourceId       String
+  email            String
+  name             String?
+  /// Where the click came from — "ig-reel-42", "fb", "newsletter". Taken from
+  /// the ShortLink that set the attribution cookie, not from the query string
+  /// alone, so it survives the visitor browsing around before converting.
+  campaign         String?
+  source           String?
+  referer          String?
+  /// Consent to be emailed *beyond* the delivery of this file. Kept apart from
+  /// the download itself: sending the asset is fulfilling a request, marketing
+  /// to them afterwards is not, and one checkbox cannot honestly cover both.
+  marketingConsent Boolean  @default(false)
+  ip               String?
+  userAgent        String?
+  createdAt        DateTime @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, email])
+  @@index([createdAt])
+  @@index([campaign])
+}
+
+/// A capability to download, handed out once the gate is satisfied.
+///
+/// The database stores only the SHA-256 of the token, exactly as `AdminSession`
+/// does: a dump of this table cannot be replayed as a download link. The grant
+/// expires and counts its uses, so a link pasted into a group chat stops
+/// working instead of becoming a permanent public mirror.
+model DownloadGrant {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  resourceId String
+  email      String
+  expiresAt  DateTime
+  maxUses    Int       @default(5)
+  useCount   Int       @default(0)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId])
+  @@index([expiresAt])
+}
+
+/// `/r/<code>` — the link that goes in a reel caption, a comment reply or a DM.
+///
+/// Short because people transcribe it by hand off a phone screen, and one per
+/// video because "which reel actually converted" is otherwise unanswerable:
+/// Instagram sends no referer worth having from its in-app browser.
+model ShortLink {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  resourceId  String
+  /// "instagram", "facebook", "youtube", "newsletter" — free text, grouped in
+  /// the admin rather than constrained here, because a new channel should not
+  /// need a migration.
+  platform    String?
+  /// What this link was for, in the admin's own words: "reel: 5 VS Code tricks".
+  note        String?
+  clicks      Int       @default(0)
+  lastClickAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId])
 }

@@ -56,6 +56,19 @@ export function revalidateCaseStudy(...slugs: (string | null | undefined)[]) {
   });
 }
 
+/** The public surfaces a resource appears on. */
+export function revalidateResource(...slugs: (string | null | undefined)[]) {
+  const paths = [
+    ...new Set(slugs.filter((s): s is string => Boolean(s)).map((s) => `/resources/${s}`)),
+    "/resources",
+    "/sitemap.xml",
+  ];
+
+  safely(() => {
+    for (const path of paths) revalidatePath(path);
+  });
+}
+
 /**
  * The write has already been committed by the time this runs, so a cache error
  * must not turn a successful save into a failed request. Worst case the content
