@@ -39,6 +39,53 @@ export const RESOURCE_TYPE_CHIPS: Record<ResourceTypeName, string> = {
   EBOOK: "Guide",
 };
 
+/**
+ * Where a resource actually sends the visitor.
+ *
+ * One order, used by the button that makes the promise and by the route that
+ * keeps it (`server/resource-download.ts`), so a label can never advertise a
+ * repository and then deliver a zip.
+ *
+ * A repository URL wins outright, and it is now the only destination the admin
+ * can set: the library is a shelf of public repos, so the thing being offered
+ * *is* the GitHub page. `external` and `file` remain only because rows created
+ * before that decision still hold them and must keep working — nothing new can
+ * be given either one.
+ */
+export type ResourceDestination = "repo" | "external" | "file";
+
+export function resourceDestination(has: {
+  repo: boolean;
+  external: boolean;
+  file: boolean;
+}): ResourceDestination | null {
+  if (has.repo) return "repo";
+  if (has.external) return "external";
+  if (has.file) return "file";
+  return null;
+}
+
+/**
+ * What the button says, given where it goes.
+ *
+ * The label is the thing a visitor decides on, so it has to name the
+ * destination. "Download source code" is the phrase for a repository because it
+ * is what the visitor came to do and what GitHub itself calls the button on the
+ * other side — while still being honest that the click leaves this site. An
+ * explicit button label from the admin always wins.
+ */
+export function resourceCtaLabel(
+  delivery: ResourceDestination | null,
+  type: ResourceTypeName,
+  fileLabel?: string | null,
+): string {
+  const custom = fileLabel?.trim();
+  if (custom) return custom;
+  if (delivery === "repo") return "Download source code";
+  if (delivery === "external") return "Open it";
+  return `Download the ${RESOURCE_TYPE_CHIPS[type].toLowerCase()}`;
+}
+
 export const RESOURCE_GATES = ["FREE", "EMAIL", "ACCOUNT"] as const;
 
 export type ResourceGateName = (typeof RESOURCE_GATES)[number];
@@ -55,9 +102,9 @@ export const RESOURCE_GATE_LABELS: Record<ResourceGateName, string> = {
  */
 export const RESOURCE_GATE_HINTS: Record<ResourceGateName, string> = {
   FREE:
-    "The right choice for a public GitHub repo. That URL cannot be gated by anything — the first visitor through re-posts it — so asking for an email only costs conversions.",
+    "The repository URL is shown outright. Honest, and it converts: that URL cannot be gated by anything — the first visitor through re-posts it — so asking for an email only costs clicks.",
   EMAIL:
-    "For anything genuinely private: a zip, a Notion or Figma link, a workflow export. One field, delivered instantly and by email.",
+    "One field in front of the repo link, and the link also goes out by email. Worth it when the resource is the reason somebody came from a reel; not worth it when the repo is already linked from elsewhere.",
   ACCOUNT:
     "Not yet available. There are no visitor accounts on this site; a resource set to this will refuse to unlock.",
 };

@@ -13,8 +13,6 @@ import { absoluteUrl } from "@/lib/utils";
 import { getPublishedResources } from "@/server/services/resource.service";
 import { ResourceLibrary } from "@/components/resources/library";
 import { LinkNotice } from "@/components/resources/link-notice";
-import { EngagementProvider } from "@/components/engagement/provider";
-import { engagementKey } from "@/lib/engagement";
 
 export const metadata: Metadata = buildMetadata({
   title: "Resources — templates, repos and everything we publish",
@@ -43,10 +41,6 @@ export default async function ResourcesPage() {
   const insights = getPostsByKind("insight");
   const posts = getPostsByKind("post");
   const resources = await getPublishedResources();
-
-  // Every card on the page, asked for in one request after hydration. The
-  // page is cached by ISR, so these numbers cannot be rendered into it.
-  const keys = resources.map((resource) => engagementKey("RESOURCE", resource.slug));
 
   const sections = [
     {
@@ -87,7 +81,7 @@ export default async function ResourcesPage() {
             Take it and <span className="text-gradient-violet">build something</span>
           </>
         }
-        lead="Starter repos, workflow templates, asset packs and snippets from the work we actually ship. Most of it is a click away; a few things ask for an email so we can send you the file."
+        lead="Starter repos, workflow templates and snippets from the work we actually ship — every one of them a public repository you can clone today. Most are a click away; a few ask for an email so we can send you the link as well."
         crumbs={crumbs}
       />
 
@@ -97,9 +91,7 @@ export default async function ResourcesPage() {
         </Suspense>
 
         {resources.length > 0 ? (
-          <EngagementProvider keys={keys}>
-            <ResourceLibrary resources={resources} />
-          </EngagementProvider>
+          <ResourceLibrary resources={resources} />
         ) : (
           <div className="rounded-[26px] border border-dashed border-line bg-surface px-8 py-14 text-center">
             <h2 className="font-display text-xl font-bold tracking-[-0.03em] text-ink">

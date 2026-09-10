@@ -5,7 +5,7 @@ import { publicRoute } from "@/server/middleware/guard";
 import { unlockSchema } from "@/server/schemas/resources";
 import { issueGrant, isDisposableEmail, recordLead } from "@/server/services/resource-access.service";
 import { resourceDelivery, sendMail } from "@/server/integrations/email";
-import { CAMPAIGN_COOKIE, RESOURCE_TYPE_LABELS } from "@/config/resources";
+import { CAMPAIGN_COOKIE, RESOURCE_TYPE_LABELS, resourceDestination } from "@/config/resources";
 import { absoluteUrl } from "@/lib/utils";
 
 /**
@@ -87,9 +87,30 @@ export const POST = publicRoute(
     const grant = await issueGrant(resource.id, email);
     const downloadPath = `/api/resources/download/${grant.token}`;
 
+    /*
+     * What the email promises, decided by the same function as the button on
+     * the page. A resource with a repository URL sends them to GitHub, and the
+     * mail has to say so — an email headed "your download" that opens a repo is
+     * the same broken promise as the button that used to say it.
+     */
+    const destination = resourceDestination({
+      repo: Boolean(resource.repoUrl),
+      external: Boolean(resource.externalUrl),
+      file: Boolean(resource.fileMediaId),
+    });
     const what =
       resource.fileLabel ||
-      (resource.externalUrl ? "Opens in a new tab" : RESOURCE_TYPE_LABELS[resource.type]);
+      (destination === "repo"
+        ? "Public repository"
+        : destination === "external"
+          ? "Opens in a new tab"
+          : RESOURCE_TYPE_LABELS[resource.type]);
+    const cta =
+      destination === "repo"
+        ? "Download source code"
+        : destination === "external"
+          ? "Open it"
+          : "Download it now";
 
     /*
      * Not awaited on the critical path. The page needs its link now; the email
@@ -103,6 +124,7 @@ export const POST = publicRoute(
         url: absoluteUrl(downloadPath),
         expiresAt: grant.expiresAt,
         what,
+        cta,
         licence: resource.licence,
       }),
     }).catch((error) => console.error("[resources] delivery email failed:", error));

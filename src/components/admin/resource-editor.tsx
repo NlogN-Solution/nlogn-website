@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Download, Eye, Link2, Plus, Save, Send, Upload, Users } from "lucide-react";
+import { Copy, Download, Eye, Link2, Plus, Save, Send, Users } from "lucide-react";
 import { api, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
-import { CkEditor } from "@/components/admin/ckeditor";
-import { ImageField, MediaPicker, type MediaItem } from "@/components/admin/media-picker";
+import { RichEditor } from "@/components/admin/rich-editor";
+import { ImageField, type MediaItem } from "@/components/admin/media-picker";
 import { PageHeader } from "@/components/admin/shell";
 import {
   Banner,
@@ -103,13 +103,11 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
   const [licence, setLicence] = useState(record?.licence ?? "");
   const [version, setVersion] = useState(record?.version ?? "");
   const [fileLabel, setFileLabel] = useState(record?.fileLabel ?? "");
-  const [externalUrl, setExternalUrl] = useState(record?.externalUrl ?? "");
   const [repoUrl, setRepoUrl] = useState(record?.repoUrl ?? "");
   const [demoUrl, setDemoUrl] = useState(record?.demoUrl ?? "");
   const [categoryId, setCategoryId] = useState(record?.categoryId ?? "");
   const [tagText, setTagText] = useState(record?.tags.map((t) => t.name).join(", ") ?? "");
   const [cover, setCover] = useState<MediaItem | null>(record?.coverMedia ?? null);
-  const [file, setFile] = useState<MediaItem | null>(record?.fileMedia ?? null);
   const [ogImage, setOgImage] = useState<MediaItem | null>(record?.ogImage ?? null);
   const [seoTitle, setSeoTitle] = useState(record?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(record?.seoDescription ?? "");
@@ -147,7 +145,6 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
       licence: licence.trim(),
       version: version.trim(),
       fileLabel: fileLabel.trim(),
-      externalUrl: externalUrl.trim(),
       repoUrl: repoUrl.trim(),
       demoUrl: demoUrl.trim(),
       categoryId: categoryId || null,
@@ -156,7 +153,6 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
         .map((t) => t.trim())
         .filter(Boolean),
       coverMediaId: cover?.id ?? null,
-      fileMediaId: file?.id ?? null,
       ogImageId: ogImage?.id ?? null,
       seoTitle: seoTitle.trim(),
       seoDescription: seoDescription.trim(),
@@ -165,8 +161,8 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
     }),
     [
       title, slug, summary, description, type, gate, featured, includes, licence,
-      version, fileLabel, externalUrl, repoUrl, demoUrl, categoryId, tagText,
-      cover, file, ogImage, seoTitle, seoDescription, canonicalUrl, noIndex,
+      version, fileLabel, repoUrl, demoUrl, categoryId, tagText,
+      cover, ogImage, seoTitle, seoDescription, canonicalUrl, noIndex,
     ],
   );
 
@@ -317,48 +313,27 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
               title="Description"
               description="The long version, for anyone still deciding. Optional — the summary and the contents list carry most of the weight."
             />
-            <CkEditor value={description} onChange={setDescription} />
+            <RichEditor value={description} onChange={setDescription} />
           </Panel>
 
           <Panel>
             <PanelHeader
               title="What they get"
-              description="One of these three is the payload. A file is streamed through the site so its storage URL is never handed out; an external or repository URL is a redirect."
+              description="The repository, and optionally somewhere to see it running. Nothing is hosted here any more — the library hands over source code, so the destination is always the repo."
             />
             <div className="space-y-4 p-4">
               <Field
-                label="File"
-                error={fieldErrors.fileMediaId}
-                hint="Zips, PDFs and anything else hosted here."
-              >
-                <FileField value={file} onChange={setFile} />
-              </Field>
-
-              <Field
-                label="External URL"
-                htmlFor="externalUrl"
-                error={fieldErrors.externalUrl}
-                hint="Notion, Figma, Drive — anywhere the real thing already lives."
-              >
-                <Input
-                  id="externalUrl"
-                  value={externalUrl}
-                  onChange={(e) => setExternalUrl(e.target.value)}
-                  placeholder="https://www.notion.so/…"
-                />
-              </Field>
-
-              <Field
                 label="Repository URL"
                 htmlFor="repoUrl"
+                required
                 error={fieldErrors.repoUrl}
-                hint="A public repo. Shown openly on a free resource, since that URL cannot be gated by anything."
+                hint="The public repo. This is the destination: the button reads “Download source code” and goes straight to GitHub. Needed before this can be published."
               >
                 <Input
                   id="repoUrl"
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
-                  placeholder="https://github.com/…"
+                  placeholder="https://github.com/nlogn/…"
                 />
               </Field>
 
@@ -454,7 +429,7 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
                 label="Button label"
                 htmlFor="fileLabel"
                 error={fieldErrors.fileLabel}
-                hint='What the download button says. "ZIP · 4.2 MB" beats "Download".'
+                hint='Overrides the button text. Left empty it reads "Download source code", which is usually the right thing to say — fill this in only when you can beat it.'
               >
                 <Input
                   id="fileLabel"
@@ -523,65 +498,6 @@ export function ResourceEditor({ record }: { record?: ResourceRecord }) {
         </div>
       </div>
     </>
-  );
-}
-
-/**
- * The payload picker.
- *
- * `ImageField` is image-only by design; this one accepts whatever the media
- * library holds, because the thing being handed over is usually a zip.
- */
-function FileField({
-  value,
-  onChange,
-}: {
-  value: MediaItem | null;
-  onChange: (item: MediaItem | null) => void;
-}) {
-  const [picking, setPicking] = useState(false);
-
-  return (
-    <div>
-      {value ? (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2.5">
-          <span className="min-w-0 truncate text-[0.8125rem] text-ink">
-            {value.originalName ?? value.publicId}
-            <span className="ml-2 text-[0.75rem] text-muted">
-              {(value.bytes / 1024 / 1024).toFixed(1)} MB
-            </span>
-          </span>
-          <div className="flex shrink-0 gap-1">
-            <Button size="sm" variant="ghost" onClick={() => setPicking(true)}>
-              Change
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => onChange(null)}>
-              Remove
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setPicking(true)}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-line bg-canvas px-4 py-8 text-center transition-colors hover:border-violet/50"
-        >
-          <Upload className="size-5 text-muted" aria-hidden />
-          <span className="text-[0.8125rem] font-medium text-ink">Choose a file</span>
-          <span className="text-[0.75rem] text-muted">Pick from the library or upload a new one</span>
-        </button>
-      )}
-
-      <MediaPicker
-        open={picking}
-        onClose={() => setPicking(false)}
-        folder={RESOURCE_MEDIA_FOLDER}
-        onSelect={(item) => {
-          onChange(item);
-          setPicking(false);
-        }}
-      />
-    </div>
   );
 }
 

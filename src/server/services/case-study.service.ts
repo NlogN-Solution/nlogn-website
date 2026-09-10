@@ -3,6 +3,7 @@ import { slugify } from "@/server/schemas/common";
 import type { CreateCaseStudyInput, UpdateCaseStudyInput } from "@/server/schemas/content";
 import type { ContentStatus, Prisma } from "@/generated/prisma";
 import { sanitizeArticleHtml, readingMinutesFromHtml } from "@/server/content-sanitize";
+import { editorMediaSelect } from "@/server/services/media.service";
 
 /**
  * Case studies are structured records rather than articles: the public template
@@ -13,14 +14,14 @@ import { sanitizeArticleHtml, readingMinutesFromHtml } from "@/server/content-sa
 const listInclude = {
   category: { select: { id: true, name: true, slug: true } },
   tags: { select: { id: true, name: true, slug: true } },
-  thumbnail: { select: { id: true, secureUrl: true, alt: true } },
-  heroMedia: { select: { id: true, secureUrl: true, alt: true } },
+  thumbnail: { select: editorMediaSelect },
+  heroMedia: { select: editorMediaSelect },
 };
 
 const detailInclude = {
   ...listInclude,
-  gallery: { select: { id: true, secureUrl: true, alt: true, caption: true, width: true, height: true } },
-  ogImage: { select: { id: true, secureUrl: true } },
+  gallery: { select: editorMediaSelect },
+  ogImage: { select: editorMediaSelect },
   author: { select: { id: true, name: true } },
 };
 

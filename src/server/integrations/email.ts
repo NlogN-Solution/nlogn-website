@@ -350,9 +350,16 @@ export function resourceDelivery(payload: {
   expiresAt: Date;
   /** "ZIP · 4.2 MB", "Opens in Notion", "Public repository". */
   what?: string | null;
+  /**
+   * The button, which has to name where it goes. A repository resource opens
+   * GitHub, and "Download it now" in front of that is a promise the click does
+   * not keep.
+   */
+  cta?: string | null;
   licence?: string | null;
 }) {
-  const heading = "Here's your download";
+  const cta = payload.cta?.trim() || "Download it now";
+  const heading = "Here's your link";
   const expires = payload.expiresAt.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -368,7 +375,7 @@ export function resourceDelivery(payload: {
       The link below is yours — it works for a few days and on any device.
     </p>
     <p style="margin:0 0 22px;">
-      <a href="${escapeHtml(payload.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 26px;border-radius:12px;">Download it now</a>
+      <a href="${escapeHtml(payload.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 26px;border-radius:12px;">${escapeHtml(cta)}</a>
     </p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
       ${rows([
@@ -391,7 +398,7 @@ export function resourceDelivery(payload: {
     "",
     payload.title,
     "",
-    `Download: ${payload.url}`,
+    `${cta}: ${payload.url}`,
     payload.what ? `What you get: ${payload.what}` : "",
     payload.licence ? `Licence: ${payload.licence}` : "",
     `Link expires: ${expires}`,
@@ -401,5 +408,5 @@ export function resourceDelivery(payload: {
     .filter(Boolean)
     .join("\n");
 
-  return { subject: `Your download: ${payload.title}`, html, text };
+  return { subject: `Your link: ${payload.title}`, html, text };
 }

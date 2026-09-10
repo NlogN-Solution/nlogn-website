@@ -9,13 +9,14 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { ArticleContent } from "@/components/blog/article-content";
 import { ResourceGate } from "@/components/resources/resource-gate";
 import { ResourceCard } from "@/components/resources/resource-card";
-import { EngagementProvider } from "@/components/engagement/provider";
-import { ArticleEngagement } from "@/components/engagement/engagement-bar";
-import { Comments } from "@/components/engagement/comments";
-import { engagementKey } from "@/lib/engagement";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/utils";
-import { RESOURCE_TYPE_LABELS } from "@/config/resources";
+import { ProtectedImage } from "@/components/ui/protected-image";
+import {
+  RESOURCE_TYPE_LABELS,
+  resourceCtaLabel,
+  resourceDestination,
+} from "@/config/resources";
 import {
   getPublishedResource,
   getPublishedResourceSlugs,
@@ -88,11 +89,15 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
     { name: resource.title, path: `/resources/${resource.slug}` },
   ];
 
-  // This resource, plus every card in the "more from the library" strip.
-  const keys = [resource, ...related].map((item) => engagementKey("RESOURCE", item.slug));
-
+  /*
+   * No views, likes or comments here, and that is deliberate rather than
+   * unfinished. A library page has one job — get the visitor to the repository
+   * — and a social row beside that button is a second thing to press. The
+   * engagement ledger still runs for blogs, insights and case studies, where
+   * the conversation is the point.
+   */
   return (
-    <EngagementProvider keys={keys}>
+    <>
       <PageHero
         eyebrow={RESOURCE_TYPE_LABELS[resource.type]}
         title={resource.title}
@@ -118,10 +123,6 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
             </span>
           )}
         </div>
-
-        {/* Also where the view is recorded — the beacon fires from the component
-            that shows the number, so the two cannot be wired up separately. */}
-        <ArticleEngagement kind="RESOURCE" slug={resource.slug} className="mt-6" />
       </PageHero>
 
       <div className="container-x py-16 md:py-24">
@@ -129,14 +130,14 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
           <div className="min-w-0">
             {resource.coverUrl && (
               <Reveal>
-                <div className="overflow-hidden rounded-[26px] border border-line bg-canvas">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resource.coverUrl}
-                    alt={resource.coverAlt ?? ""}
-                    className="w-full object-cover"
-                  />
-                </div>
+                {/* Not saveable by right-click or long-press — see
+                    `ProtectedImage` for what that does and does not buy. */}
+                <ProtectedImage
+                  src={resource.coverUrl}
+                  alt={resource.coverAlt ?? ""}
+                  wrapperClassName="overflow-hidden rounded-[26px] border border-line bg-canvas"
+                  className="w-full object-cover"
+                />
               </Reveal>
             )}
 
@@ -216,10 +217,6 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
           </section>
         )}
 
-        <section id="comments" className="mt-20 border-t border-line pt-16 md:mt-28">
-          <Comments kind="RESOURCE" slug={resource.slug} />
-        </section>
-
         <p className="mt-16">
           <Link
             href="/resources"
@@ -256,31 +253,48 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
         ]}
         id="resource-schema"
       />
-    </EngagementProvider>
+    </>
   );
 }
 
 /**
- * What the visitor is offered, which is decided entirely by the gate.
+ * What the visitor is offered, which is decided by the gate and by where the
+ * thing actually lives.
  *
- * A FREE resource shows its destination as an ordinary link — the repo URL is
+ * The button names its destination rather than always saying "Download": a
+ * resource with a repository URL sends people to GitHub, and labelling that
+ * click as a download is the kind of small lie that gets the tab closed. The
+ * label comes from `resourceCtaLabel` and the destination from
+ * `resourceDestination` — the same pair the delivery route uses — so the promise
+ * and the redirect cannot drift apart.
+ *
+ * A FREE resource shows its destination as an ordinary link: the repo URL is
  * public, and putting a form in front of a URL that will be re-posted in the
  * comments buys nothing and costs the click.
  */
 function Access({ resource }: { resource: PublicResource }) {
-  const label = resource.fileLabel ?? "Download";
+  const delivery = resourceDestination({
+    repo: resource.hasRepo,
+    external: resource.hasExternal,
+    file: resource.hasFile,
+  });
+  const label = resourceCtaLabel(delivery, resource.type, resource.fileLabel);
+  const Icon = delivery === "repo" ? Code2 : delivery === "external" ? ExternalLink : Download;
+  // A redirect off this site opens in its own tab; a streamed file must not,
+  // or the visitor is left staring at a blank one.
+  const leavesTheSite = delivery === "repo" || delivery === "external";
 
   if (resource.gate === "FREE") {
-    const destination = resource.repoUrl
-      ? { href: resource.repoUrl, text: "View the repository", icon: Code2, external: true }
-      : resource.externalUrl
-        ? { href: resource.externalUrl, text: "Open it", icon: ExternalLink, external: true }
-        : resource.hasFile
-          ? { href: `/api/resources/file/${resource.slug}`, text: label, icon: Download, external: false }
-          : null;
+    const href =
+      delivery === "repo"
+        ? resource.repoUrl
+        : delivery === "external"
+          ? resource.externalUrl
+          : delivery === "file"
+            ? `/api/resources/file/${resource.slug}`
+            : null;
 
-    if (!destination) return null;
-    const Icon = destination.icon;
+    if (!href) return null;
 
     return (
       <div className="rounded-[22px] border border-violet/30 bg-violet-wash p-7 md:p-8">
@@ -291,12 +305,12 @@ function Access({ resource }: { resource: PublicResource }) {
           Take it, fork it, ship it. If it saves you an afternoon, tell someone where you got it.
         </p>
         <a
-          href={destination.href}
-          {...(destination.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          href={href}
+          {...(leavesTheSite ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5"
         >
           <Icon className="size-4" aria-hidden />
-          {destination.text}
+          {label}
         </a>
       </div>
     );
@@ -321,7 +335,7 @@ function Access({ resource }: { resource: PublicResource }) {
 
   return (
     <>
-      <ResourceGate slug={resource.slug} buttonLabel={label} />
+      <ResourceGate slug={resource.slug} buttonLabel={label} destination={delivery} />
       <p className="mt-4 flex items-start gap-2 px-1 text-[0.8125rem] leading-relaxed text-muted">
         <ArrowRight className="mt-0.5 size-4 shrink-0 text-violet" aria-hidden />
         Already unlocked this? Enter the same address and we&rsquo;ll send a fresh link.

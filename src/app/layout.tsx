@@ -76,10 +76,16 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/apple-icon.png" }],
-  },
+  /*
+   * No `icons` here on purpose.
+   *
+   * `app/favicon.ico`, `app/icon.svg` and `app/apple-icon.tsx` are file
+   * conventions: Next emits the <link> tags for them, with the right `type` and
+   * `sizes`, from the files that actually exist. The block that used to sit here
+   * emitted them by hand and named `/apple-icon.png`, which nothing serves —
+   * `apple-icon.tsx` answers at `/apple-icon`. A 404 in a `rel="icon"` link is
+   * exactly how a site ends up with a generic globe next to it in search.
+   */
   manifest: "/manifest.webmanifest",
   formatDetection: { telephone: false },
 };

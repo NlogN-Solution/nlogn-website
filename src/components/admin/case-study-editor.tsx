@@ -7,7 +7,7 @@ import { api, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
 import { ImageField, MediaPicker, MediaThumb, type MediaItem } from "@/components/admin/media-picker";
 import { PageHeader } from "@/components/admin/shell";
-import { CkEditor } from "@/components/admin/ckeditor";
+import { RichEditor } from "@/components/admin/rich-editor";
 import {
   Banner,
   Button,
@@ -338,7 +338,7 @@ export function CaseStudyEditor({ record }: { record?: CaseStudyRecord }) {
               title="Full write-up"
               description="Optional. The long-form narrative, shown under the results on the public page."
             />
-            <CkEditor
+            <RichEditor
               value={content}
               onChange={setContent}
               placeholder="The longer story — what you found, what you built, what changed."

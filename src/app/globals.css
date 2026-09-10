@@ -247,23 +247,24 @@
 
      1. `<div class="article-content">` on the public blog, insight and case
         study pages.
-     2. CKEditor's editing root, which `components/admin/ckeditor.tsx` adds the
-        same class to once the editor is ready.
+     2. Tiptap's editing surface, which `components/admin/rich-editor.tsx` gives
+        the same class to.
 
    That is deliberate, and it is the whole reason the editor and the published
    page agree: they are not two stylesheets kept in sync by hand, they are one
    stylesheet applied twice. A heading whose size changes here changes in both.
 
    Every selector is doubled - `.article-content.article-content` - to raise its
-   specificity above CKEditor's own `.ck-content` rules. The editor's CSS
-   arrives from the CDN at runtime and therefore lands *after* this file in the
-   cascade, so equal specificity would lose. Doubling a class is the least
-   invasive way to win that without `!important` on sixty declarations.
+   specificity above any rule a future editor's own stylesheet might land after
+   this file in the cascade. Doubling a class is the least invasive way to win
+   that without `!important` on sixty declarations.
 
    Content reaching this container has been through the allow-list in
-   `server/content-sanitize.ts` (CKEditor HTML) or `server/content-render.ts`
+   `server/content-sanitize.ts` (editor HTML) or `server/content-render.ts`
    (legacy TipTap documents). The element set below is exactly what those two
-   can emit - nothing here styles markup that could not appear.
+   can emit - nothing here styles markup that could not appear. The `figure.*`
+   rules are for archive content written in the previous CKEditor; nothing new
+   emits them.
    =========================================================================== */
 
 .article-content.article-content {
@@ -567,30 +568,70 @@
   background: #edf8f2;
 }
 
-/* -- inside CKEditor only ----------------------------------------------------
+/* -- inside the admin editor only --------------------------------------------
    Chrome, not typography. The rules above already gave the content its shape;
-   these stop the editor's own furniture from fighting it. */
+   these stop the editor's own furniture from fighting it.
 
-.ck-editor__editable_inline {
+   `.nlogn-editor` is the frame drawn by `components/admin/rich-editor.tsx`;
+   `.ProseMirror` is the editing surface Tiptap creates inside it, which that
+   component also stamps with `article-content`. */
+
+.nlogn-editor {
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+.nlogn-editor .ProseMirror {
   /* A writing surface sized like a page, not like a form field. */
   min-height: 30rem;
-  padding: 2rem 2.25rem !important;
+  padding: 2rem 2.25rem;
+  outline: none;
+  /* The canvas fills the panel; the measure applies to the text inside it. */
+  max-width: none;
 }
-/* The canvas fills the panel; the measure applies to the text inside it. */
-.ck-editor__editable_inline.article-content { max-width: none; }
-.ck-editor__editable_inline.article-content > * { max-width: 46rem; margin-inline: auto; }
+.nlogn-editor .ProseMirror > * { max-width: 46rem; margin-inline: auto; }
 
-/* CKEditor draws its own focus ring on the container; this one is redundant. */
-.ck.ck-editor__editable.ck-focused {
-  border-color: transparent !important;
-  box-shadow: none !important;
+/* Tiptap's placeholder: an attribute on the first node, not a real character,
+   so it never ends up in `getHTML()`. */
+.nlogn-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-muted);
 }
 
-/* Placeholder, matched to the admin palette. */
-.ck.ck-editor__editable > .ck-placeholder::before { color: var(--color-muted); }
+/* Selected images and other atoms, so a click reads as a selection. */
+.nlogn-editor .ProseMirror .ProseMirror-selectednode {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* A table being edited needs its own scroll container and visible cell edges
+   even before the published page wraps it in `.table-scroll`. */
+.nlogn-editor .ProseMirror .tableWrapper { overflow-x: auto; margin: 2em 0; }
+.nlogn-editor .ProseMirror table { min-width: 0; }
+.nlogn-editor .ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-violet) 14%, transparent);
+  pointer-events: none;
+}
+.nlogn-editor .ProseMirror :is(th, td) { position: relative; }
+.nlogn-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-violet);
+  pointer-events: none;
+}
 
 @media (max-width: 640px) {
-  .ck-editor__editable_inline { padding: 1.25rem 1rem !important; }
+  .nlogn-editor .ProseMirror { padding: 1.25rem 1rem; }
 }
 
 /* Scroll reveals are an enhancement: without scripting, show everything. */

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Download, Lock, Unlock } from "lucide-react";
 import { RESOURCE_TYPE_CHIPS } from "@/config/resources";
-import { CardEngagement } from "@/components/engagement/engagement-bar";
+import { ProtectedImage } from "@/components/ui/protected-image";
 import type { PublicResource } from "@/server/services/resource.service";
 
 /**
@@ -10,6 +10,9 @@ import type { PublicResource } from "@/server/services/resource.service";
  * The gate is stated on the card rather than discovered after the click. A
  * visitor who arrives from a reel expecting a free repo and meets a form has
  * been misled by the card, and that costs more than the email was worth.
+ *
+ * No views, likes or comments: the library's job is to get somebody to a
+ * repository, and a social row is a second thing to press on the way there.
  */
 export function ResourceCard({ resource }: { resource: PublicResource }) {
   const gated = resource.gate !== "FREE";
@@ -20,15 +23,13 @@ export function ResourceCard({ resource }: { resource: PublicResource }) {
       className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-line bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-violet/30 hover:shadow-lift"
     >
       {resource.coverUrl && (
-        <div className="aspect-[16/9] overflow-hidden bg-canvas">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={resource.coverUrl}
-            alt={resource.coverAlt ?? ""}
-            loading="lazy"
-            className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-        </div>
+        <ProtectedImage
+          src={resource.coverUrl}
+          alt={resource.coverAlt ?? ""}
+          loading="lazy"
+          wrapperClassName="aspect-[16/9] overflow-hidden bg-canvas"
+          className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        />
       )}
 
       <div className="flex flex-1 flex-col p-7 md:p-8">
@@ -72,13 +73,6 @@ export function ResourceCard({ resource }: { resource: PublicResource }) {
               {resource.downloads.toLocaleString("en-GB")}
             </span>
           )}
-        </div>
-
-        {/* Views, comments and a like, on the same ledger as every post and case
-            study. Renders nothing until the counts arrive — see `CardEngagement`
-            — so a card without a provider around it simply has no second row. */}
-        <div className="mt-3">
-          <CardEngagement kind="RESOURCE" slug={resource.slug} />
         </div>
       </div>
     </Link>

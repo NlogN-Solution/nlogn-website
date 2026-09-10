@@ -18,7 +18,7 @@ const resourceBase = z.object({
   title: z.string().trim().min(3, "Give it a title.").max(220),
   slug: slugSchema.optional(),
   summary: z.string().trim().max(600).optional().or(z.literal("")),
-  /** CKEditor HTML, sanitised by `content-sanitize` in the service before storage. */
+  /** Editor HTML, sanitised by `content-sanitize` in the service before storage. */
   descriptionHtml: descriptionHtmlSchema.nullish(),
   type: z.enum(RESOURCE_TYPES).default("TEMPLATE"),
   gate: z.enum(RESOURCE_GATES).default("EMAIL"),
@@ -84,10 +84,19 @@ export function publishBlockers(record: {
 
   const blockers: { path: string[]; message: string }[] = [];
 
-  if (!record.fileMediaId && !record.externalUrl && !record.repoUrl) {
+  /*
+   * A repository URL, or something a previous version of the library attached.
+   *
+   * New resources are repos and nothing else — the admin form offers no other
+   * field — so the message names the repo alone. The two legacy columns still
+   * satisfy the rule because rows that predate the change hold a file or an
+   * external URL and are perfectly publishable; they simply cannot be created
+   * or edited into that state any more.
+   */
+  if (!record.repoUrl && !record.fileMediaId && !record.externalUrl) {
     blockers.push({
-      path: ["fileMediaId"],
-      message: "Attach a file, or give an external or repository URL, before publishing.",
+      path: ["repoUrl"],
+      message: "Add the public repository URL before publishing.",
     });
   }
 

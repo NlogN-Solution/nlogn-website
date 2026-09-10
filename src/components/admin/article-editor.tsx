@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, Save, Send } from "lucide-react";
 import { api, ApiError } from "@/components/admin/api";
 import { useToast } from "@/components/admin/toast";
-import { CkEditor } from "@/components/admin/ckeditor";
+import { RichEditor } from "@/components/admin/rich-editor";
 import { ImageField, type MediaItem } from "@/components/admin/media-picker";
 import { PageHeader } from "@/components/admin/shell";
 import {
@@ -284,7 +284,7 @@ export function ArticleEditor({
                   : "Laid out exactly as the published page will be. Heading 2 starts a section and appears in the contents list."
               }
             />
-            <CkEditor value={content} onChange={setContent} />
+            <RichEditor value={content} onChange={setContent} />
           </Panel>
 
           <Panel>

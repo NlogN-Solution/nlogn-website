@@ -2,7 +2,7 @@ import sanitizeHtml from "sanitize-html";
 import { addHeadingIds } from "@/server/heading-slug";
 
 /**
- * The gate every piece of CKEditor HTML passes through before it is stored.
+ * The gate every piece of editor HTML passes through before it is stored.
  *
  * The rule is the same one `content-render.ts` follows for TipTap documents:
  * only markup this codebase has decided to allow ever reaches a reader. The
@@ -13,13 +13,13 @@ import { addHeadingIds } from "@/server/heading-slug";
  *
  * Sanitising happens on the way **in**, not on the way out. The database then
  * holds only markup that has already been through this, and the public page can
- * render `contentHtml` directly — which is what makes the TipTap and CKEditor
- * paths interchangeable downstream. That is not a reason to trust the column:
- * anything that reaches a reader was written by this function or by the TipTap
- * renderer, and nothing else has ever been given the chance.
+ * render `contentHtml` directly — which is what makes the legacy TipTap-document
+ * path and this one interchangeable downstream. That is not a reason to trust
+ * the column: anything that reaches a reader was written by this function or by
+ * the TipTap renderer, and nothing else has ever been given the chance.
  *
- * CKEditor being the source is explicitly *not* the reason any of this is safe.
- * The editor is a browser control; its output is a request body like any other.
+ * The editor being the source is explicitly *not* the reason any of this is
+ * safe. It is a browser control; its output is a request body like any other.
  */
 
 /** Percentages only — this is the one thing image resizing needs to persist. */
@@ -37,6 +37,9 @@ const OPTIONS: sanitizeHtml.IOptions = {
     "hr",
     "pre",
     "table", "thead", "tbody", "tr", "th", "td",
+    // Only ever `div.table-scroll` — see `wrapTables`. Listed so that
+    // re-sanitising already-stored content keeps the wrapper it was given.
+    "div",
   ],
 
   allowedAttributes: {
@@ -46,15 +49,19 @@ const OPTIONS: sanitizeHtml.IOptions = {
     h2: ["id"],
     h3: ["id"],
     h4: ["id"],
-    // CKEditor wraps images and tables in a figure and marks which it is.
+    // Archive content from the previous CKEditor wraps images and tables in a
+    // figure and marks which it is. Nothing new emits one.
     figure: ["class", "style"],
     code: ["class"],
     th: ["colspan", "rowspan", "scope"],
     td: ["colspan", "rowspan"],
+    div: ["class"],
   },
 
   allowedClasses: {
     figure: ["image", "image_resized", "image-style-*", "table", "media"],
+    // The horizontal scroll container `wrapTables` puts around a bare table.
+    div: ["table-scroll"],
     // Whatever the code block's language was, for highlighting later.
     code: ["language-*"],
   },
@@ -136,7 +143,7 @@ const OPTIONS: sanitizeHtml.IOptions = {
 
   // Drops the empty shells pasted documents are full of — a link with no text,
   // a stray bullet, a quote containing nothing. An empty <p> is deliberately
-  // kept: that is how CKEditor records a blank line the author left in.
+  // kept: that is how the editor records a blank line the author left in.
   exclusiveFilter: (frame) =>
     ["a", "li", "blockquote"].includes(frame.tag) && !frame.text.trim() && !frame.mediaChildren.length,
 };
@@ -157,7 +164,30 @@ function tidy(html: string) {
 }
 
 /**
- * Sanitises a CKEditor document and stamps ids onto its headings.
+ * Gives every bare table a horizontal scroll container.
+ *
+ * Tiptap emits `<table>` on its own. A table is the one element in an article
+ * that legitimately wants to be wider than the column, and without a container
+ * to scroll inside it widens the *page* instead — which on a phone breaks the
+ * layout of everything around it. `.table-scroll` is the class the article
+ * stylesheet already scrolls, and the class the legacy TipTap renderer already
+ * emits, so this is the third caller of an existing rule rather than a new one.
+ *
+ * Tables cannot nest in anything this editor can produce, so the non-greedy
+ * match is exact. Archive content whose table already sits in CKEditor's
+ * `figure.table` is left alone: that figure is the same scroll container under
+ * a different name, and wrapping it twice would draw two borders.
+ */
+function wrapTables(html: string) {
+  return html.replace(
+    /(<(?:figure|div)[^>]*>\s*)?<table[\s\S]*?<\/table>/g,
+    (match, wrapped: string | undefined) =>
+      wrapped ? match : `<div class="table-scroll">${match}</div>`,
+  );
+}
+
+/**
+ * Sanitises an editor document and stamps ids onto its headings.
  *
  * Returns an empty string for a document with no words and no media, so "the
  * author cleared the body" and "the author left one empty paragraph" are the
@@ -166,7 +196,7 @@ function tidy(html: string) {
 export function sanitizeArticleHtml(dirty: unknown): string {
   if (typeof dirty !== "string" || !dirty.trim()) return "";
 
-  const clean = tidy(sanitizeHtml(dirty, OPTIONS));
+  const clean = wrapTables(tidy(sanitizeHtml(dirty, OPTIONS)));
 
   const hasWords = htmlToPlainText(clean).length > 0;
   const hasMedia = /<(?:img|table|hr)\b/.test(clean);

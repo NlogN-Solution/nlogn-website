@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, Loader2, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Code2, Download, ExternalLink, Loader2, Mail, ShieldCheck } from "lucide-react";
+import type { ResourceDestination } from "@/config/resources";
 
 /**
  * The email gate: one field, and everything else subordinate to it.
@@ -13,17 +14,30 @@ import { ArrowRight, Check, Loader2, Mail, ShieldCheck } from "lucide-react";
  * so the browser can still help, and the name left optional because it is worth
  * having only when giving it is free.
  *
- * On success the file unlocks in place and the same link is emailed. The
- * in-page unlock is what they came for; the email is what they still have
+ * On success the repository link unlocks in place and the same link is emailed.
+ * The in-page unlock is what they came for; the email is what they still have
  * tomorrow on a different device.
  */
 export function ResourceGate({
   slug,
   buttonLabel,
+  destination,
 }: {
   slug: string;
   buttonLabel: string;
+  /**
+   * Where the grant leads, decided by `resourceDestination` on the server so the
+   * button in front of the form and the redirect behind it cannot disagree.
+   *
+   * A repository or an external URL opens in its own tab, and the unlocked panel
+   * is worth keeping on screen behind it: it holds the only copy of the link the
+   * visitor has until the email lands. A streamed file must *not* open a new
+   * tab, or they are left staring at a blank one.
+   */
+  destination: ResourceDestination | null;
 }) {
+  const opensNewTab = destination === "repo" || destination === "external";
+  const Icon = destination === "repo" ? Code2 : destination === "external" ? ExternalLink : Download;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [consent, setConsent] = useState(false);
@@ -63,13 +77,16 @@ export function ResourceGate({
           It&rsquo;s yours
         </p>
         <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-muted">
-          A copy is on its way to <strong className="font-medium text-ink">{unlocked.emailed}</strong>{" "}
-          as well, so you have it on your laptop later.
+          The link is on its way to{" "}
+          <strong className="font-medium text-ink">{unlocked.emailed}</strong> as well, so you have
+          it on your laptop later. Clone it, fork it, ship it.
         </p>
         <a
           href={unlocked.url}
+          {...(opensNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5"
         >
+          <Icon className="size-4" aria-hidden />
           {buttonLabel}
           <ArrowRight className="size-4" aria-hidden />
         </a>
@@ -84,10 +101,10 @@ export function ResourceGate({
     >
       <p className="flex items-center gap-2 font-display text-lg font-bold tracking-[-0.02em] text-ink">
         <Mail className="size-5 text-violet" aria-hidden />
-        Where should it go?
+        Where should the link go?
       </p>
       <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-muted">
-        One field. You get the download straight away and a copy by email.
+        One field. The repository opens straight away and the link is emailed to you as well.
       </p>
 
       <div className="mt-6 space-y-3">
@@ -169,7 +186,7 @@ export function ResourceGate({
 
       <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-muted">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-violet" aria-hidden />
-        Your address is used to send this file and nothing else unless you tick the box.
+        Your address is used to send you this link and nothing else unless you tick the box.
       </p>
     </form>
   );

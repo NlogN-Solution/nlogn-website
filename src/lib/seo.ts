@@ -83,11 +83,17 @@ export function organizationSchema() {
     legalName: siteConfig.legalName,
     alternateName: "nlogn Digital Growth",
     url: siteConfig.url,
+    /*
+     * A real PNG at a real path. Google reads this for the logo beside a
+     * result, and it wants a file it can fetch and cache — an extensionless
+     * route that happens to return an image is a worse bet than a static file,
+     * and 512px leaves it room to downscale.
+     */
     logo: {
       "@type": "ImageObject",
-      url: absoluteUrl("/apple-icon"),
-      width: 180,
-      height: 180,
+      url: absoluteUrl("/icon-512.png"),
+      width: 512,
+      height: 512,
     },
     image: absoluteUrl("/opengraph-image"),
     description: siteConfig.description,

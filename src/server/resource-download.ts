@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import type { Resource } from "@/generated/prisma";
 import { prisma } from "@/server/db";
+import { resourceDestination } from "@/config/resources";
 
 /**
  * Handing over the payload, once something has decided the visitor may have it.
  *
- * Two shapes, and the difference matters. An `externalUrl` is a redirect — the
- * bytes live in Notion or Figma and were never ours to serve. A `fileMedia` is
- * **streamed through this server** rather than redirected to Cloudinary.
+ * Three shapes, and the differences matter. A `repoUrl` or an `externalUrl` is a
+ * redirect — the thing lives on GitHub or in Notion and was never ours to
+ * serve, and a repo takes precedence over both of the others for the reason
+ * given on `resourceDestination`. A `fileMedia` is **streamed through this server**
+ * rather than redirected to Cloudinary.
  *
  * That proxying is the whole reason the gate is worth anything. Uploads go to
  * Cloudinary as ordinary public objects (see `uploadToCloudinary`), so a
@@ -28,6 +31,21 @@ function safeFilename(resource: Resource, original: string | null, format: strin
 }
 
 export async function deliver(resource: Resource): Promise<NextResponse> {
+  // `resourceDestination` decides, not the order of the `if`s below: the button
+  // the visitor pressed was labelled from the same function, and the two
+  // disagreeing is how somebody ends up with a zip after being promised a repo.
+  const route = resourceDestination({
+    repo: Boolean(resource.repoUrl),
+    external: Boolean(resource.externalUrl),
+    file: Boolean(resource.fileMediaId),
+  });
+
+  if (route === "repo" || route === "external") {
+    return NextResponse.redirect((route === "repo" ? resource.repoUrl : resource.externalUrl)!, 302);
+  }
+
+  // Narrowed by the id rather than by `route`, which TypeScript cannot use to
+  // prove the column is non-null.
   if (resource.fileMediaId) {
     const media = await prisma.media.findUnique({
       where: { id: resource.fileMediaId },
@@ -67,9 +85,6 @@ export async function deliver(resource: Resource): Promise<NextResponse> {
 
     return new NextResponse(upstream.body, { status: 200, headers });
   }
-
-  const destination = resource.externalUrl ?? resource.repoUrl;
-  if (destination) return NextResponse.redirect(destination, 302);
 
   // Publishing validation should have made this unreachable; if it happens, the
   // visitor has already paid the price of admission and deserves a real answer.

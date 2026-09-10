@@ -9,6 +9,38 @@ import type { MediaType, Prisma } from "@/generated/prisma";
 
 /** The central media library. Every asset row points at a Cloudinary object. */
 
+/**
+ * The shape of a media row that an admin form can render.
+ *
+ * It exists because the obvious short select is a trap. A picker slot
+ * (`ImageField`, `FileField`, `MediaThumb`) decides what to draw from
+ * `item.type`: an `IMAGE` gets a thumbnail, anything else gets a document icon.
+ * Select only `{ id, secureUrl, alt }` and `type` comes back `undefined`, so a
+ * cover image that saved perfectly well reappears after a reload as a grey file
+ * icon with `undefined` beneath it — which reads, correctly enough, as "the
+ * cover image did not save".
+ *
+ * So every relation an editor loads back into a picker is selected with this,
+ * and it matches `MediaItem` in `components/admin/media-picker.tsx` field for
+ * field. Public reads are unaffected: they project through their own `toPublic`
+ * and only ever want the URL.
+ */
+export const editorMediaSelect = {
+  id: true,
+  publicId: true,
+  secureUrl: true,
+  type: true,
+  format: true,
+  width: true,
+  height: true,
+  bytes: true,
+  originalName: true,
+  folder: true,
+  alt: true,
+  caption: true,
+  createdAt: true,
+} as const;
+
 export async function listMedia(filters: {
   q?: string;
   type?: string;

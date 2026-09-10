@@ -2,6 +2,7 @@ import { prisma, dbRead } from "@/server/db";
 import { slugify } from "@/server/schemas/common";
 import { sanitizeArticleHtml } from "@/server/content-sanitize";
 import { cdnUrl } from "@/server/integrations/cloudinary";
+import { editorMediaSelect } from "@/server/services/media.service";
 import type { CreateResourceInput, UpdateResourceInput } from "@/server/schemas/resources";
 import type { ContentStatus, Prisma, ResourceType } from "@/generated/prisma";
 
@@ -18,13 +19,13 @@ import type { ContentStatus, Prisma, ResourceType } from "@/generated/prisma";
 const listInclude = {
   category: { select: { id: true, name: true, slug: true } },
   tags: { select: { id: true, name: true, slug: true } },
-  coverMedia: { select: { id: true, secureUrl: true, alt: true, width: true, height: true } },
+  coverMedia: { select: editorMediaSelect },
 };
 
 const detailInclude = {
   ...listInclude,
-  fileMedia: { select: { id: true, secureUrl: true, bytes: true, format: true, originalName: true } },
-  ogImage: { select: { id: true, secureUrl: true } },
+  fileMedia: { select: editorMediaSelect },
+  ogImage: { select: editorMediaSelect },
 };
 
 /** A slug unique across the library. The counter suffix keeps a second "Starter kit" saveable. */
@@ -230,8 +231,15 @@ export type PublicResource = {
   repoUrl: string | null;
   externalUrl: string | null;
   demoUrl: string | null;
-  /** Whether bytes are attached, so the page can label the button without the URL. */
+  /**
+   * Whether each destination exists at all, regardless of the gate. A gated
+   * resource keeps its URLs to itself, but the button in front of the form
+   * still has to say what it opens — "Take me to the repo" rather than
+   * "Download" — and a boolean says that without leaking where.
+   */
   hasFile: boolean;
+  hasRepo: boolean;
+  hasExternal: boolean;
   coverUrl: string | null;
   coverAlt: string | null;
   category: { name: string; slug: string } | null;
@@ -272,6 +280,8 @@ function toPublic(row: ResourceRow): PublicResource {
     externalUrl: row.gate === "FREE" ? row.externalUrl : null,
     demoUrl: row.demoUrl,
     hasFile: Boolean(row.fileMediaId),
+    hasRepo: Boolean(row.repoUrl),
+    hasExternal: Boolean(row.externalUrl),
     coverUrl: row.coverMedia ? cdnUrl(row.coverMedia.secureUrl, "card") : null,
     coverAlt: row.coverMedia?.alt ?? null,
     category: row.category ? { name: row.category.name, slug: row.category.slug } : null,

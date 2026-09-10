@@ -7,6 +7,7 @@ import {
   readingMinutesFromHtml,
 } from "@/server/content-sanitize";
 import type { CreateArticleInput, UpdateArticleInput } from "@/server/schemas/content";
+import { editorMediaSelect } from "@/server/services/media.service";
 import type { ContentStatus, Prisma } from "@/generated/prisma";
 
 /**
@@ -37,13 +38,13 @@ function delegate(kind: ArticleKind): ArticleDelegate {
 const listInclude = {
   category: { select: { id: true, name: true, slug: true } },
   tags: { select: { id: true, name: true, slug: true } },
-  coverMedia: { select: { id: true, secureUrl: true, alt: true, width: true, height: true } },
+  coverMedia: { select: editorMediaSelect },
   author: { select: { id: true, name: true, email: true } },
 };
 
 const detailInclude = {
   ...listInclude,
-  ogImage: { select: { id: true, secureUrl: true } },
+  ogImage: { select: editorMediaSelect },
 };
 
 /**
