@@ -206,7 +206,16 @@ header nav a:hover {
   transform-origin: 50% 40%;
 }
 .curtain {
+  /* Hero + client strip always fill the screen below the header (96px, or
+     78px on phones), so the next section never peeks in at load. Inside the
+     zoomed curtain, 100svh / --zoom is one full screen. */
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh / var(--zoom) - 96px);
   background: var(--paper);
+}
+.curtain > .hero {
+  flex: 1;
 }
 .curtain-shade {
   position: absolute;
@@ -1099,8 +1108,20 @@ footer {
   position: relative;
   min-height: 790px;
 }
+/* Let the hero content stretch when the curtain is taller than 790px. */
+.hero-v2 {
+  display: flex;
+  flex-direction: column;
+}
+.hero-v2 .hero-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 .hero-inner {
   position: relative;
+  flex: 1;
   min-height: inherit;
 }
 .hero-backdrop {
@@ -2650,4 +2671,9 @@ footer {
 .motion-paused .sd .sd-fill {
   transform: scaleX(1);
   transition: none;
+}
+@media (max-width: 700px) {
+  .curtain {
+    min-height: calc(100svh / var(--zoom) - 78px);
+  }
 }
