@@ -1,0 +1,56 @@
+/* CardSwap — React Bits, adapted. See card-swap.tsx. */
+
+.cs-container {
+  position: relative;
+  perspective: 900px;
+  overflow: visible;
+}
+
+.cs-card {
+  --cs-dim: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Matches GSAP's first placement, so the server paint doesn't jump. */
+  transform: translate(-50%, -50%);
+  border-radius: 14px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Depth: cards further back sit in a faint violet shade. */
+.cs-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: rgb(27 19 64 / calc(var(--cs-dim) * 100%));
+}
+
+/* Each screenshot pans slowly inside its card, like a camera drifting. */
+.cs-pan {
+  animation: cs-pan 16s ease-in-out infinite alternate;
+  transform-origin: left top;
+}
+
+.cs-card:nth-child(2) .cs-pan { animation-delay: -5s; }
+.cs-card:nth-child(3) .cs-pan { animation-delay: -10s; }
+
+@keyframes cs-pan {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.1) translate(-4%, -3%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-pan {
+    animation: none;
+  }
+
+  .cs-card {
+    will-change: auto;
+  }
+}

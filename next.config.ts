@@ -1,0 +1,68 @@
+import type { NextConfig } from "next";
+
+const securityHeaders = [
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+];
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  compress: true,
+  reactStrictMode: true,
+
+  images: {
+    // CMS media lives on Cloudinary, so every uploaded cover and gallery image
+    // is a remote URL. Next refuses to optimise a host that is not listed here
+    // and answers /_next/image with a 400 — which never shows up locally while
+    // the local database has no CMS rows, and breaks every card in production.
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2678400,
+    // Next 16 only serves qualities listed here — anything else is coerced to
+    // the nearest one. 95 is for photography (the team portraits), which visibly
+    // softens at the 75 default. 90 is for the home page hero and intro art.
+    qualities: [75, 90, 95],
+  },
+
+  async headers() {
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/videos/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
+
+  // Keep old and mistyped URLs out of 404s — every redirect preserves link equity.
+  async redirects() {
+    return [
+      { source: "/blog/feed", destination: "/blog/rss.xml", permanent: true },
+      { source: "/rss.xml", destination: "/blog/rss.xml", permanent: true },
+      { source: "/portfolio", destination: "/case-studies", permanent: true },
+      // Case studies moved off /works, which is now the areas-of-work page.
+      { source: "/works/:slug", destination: "/case-studies/:slug", permanent: true },
+      // The per-service pages are gone; the disciplines live on /works. Listed
+      // explicitly so this can never shadow a static file under /public/services.
+      {
+        source:
+          "/services/:slug(web-development|seo-and-content|digital-marketing|it-solutions|brand-and-design|growth-retainers|web-design|seo)",
+        destination: "/works",
+        permanent: true,
+      },
+      // Retired software write-ups — fold their URLs back into the index.
+      { source: "/software/tapri", destination: "/software", permanent: true },
+      { source: "/software/pulseboard", destination: "/software", permanent: true },
+      // The pricing page is retired; "Services" in the nav is the areas-of-work page.
+      { source: "/services", destination: "/works", permanent: true },
+      { source: "/about-us", destination: "/about", permanent: true },
+      { source: "/contact-us", destination: "/contact", permanent: true },
+    ];
+  },
+};
+
+export default nextConfig;

@@ -1,0 +1,1298 @@
+/*
+ * Cascade order. `landing` (the home page's design, (home)/landing.css) sits
+ * after Tailwind's preflight, which it overrides, and before utilities, so a
+ * Tailwind island inside a landing page still styles itself. Declared ahead
+ * of the import because the first declaration fixes a layer's position.
+ */
+@layer theme, base, landing, components, utilities;
+@import "tailwindcss";
+
+/*
+ * `hero-dark:` — styles for chrome that sits over the home page's black hero.
+ * Keyed off an attribute the hero renders on the server and drops once its
+ * black ground has faded, so the header is right from the first paint.
+ */
+@custom-variant hero-dark (:root:has([data-hero-dark]) &);
+
+/* ─────────────────────────────────────────────────────────────
+   PP Neue Machina Inktrap — headline face (licensed, Pangram Pangram).
+   Self-hosted from /public/fonts/neue-machina/. Loaded with @font-face rather
+   than next/font/local so the site still builds and falls back to Plus
+   Jakarta Sans while those files are absent. Only the weights actually
+   supplied are declared, so the browser never has to fake a bold.
+   ───────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "PP Neue Machina Inktrap";
+  src: url("/fonts/neue-machina/PPNeueMachina-InktrapLight.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Machina Inktrap";
+  src: url("/fonts/neue-machina/PPNeueMachina-InktrapRegular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Machina Inktrap";
+  src: url("/fonts/neue-machina/PPNeueMachina-InktrapUltrabold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   nlogn design tokens
+   Canvas: warm-neutral off-white. Ink: near-black.
+   Accent: a single violet ramp, spent only on growth signals.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --color-ink: #0b0b0f;
+  --color-ink-soft: #3f3f4a;
+  --color-muted: #74747f;
+  --color-canvas: #f4f1f9;
+  --color-canvas-2: #eae5f4;
+  --color-surface: #ffffff;
+  --color-line: #e8e4f2;
+  --color-line-soft: #f0edf7;
+
+  --color-violet: #6c47ff;
+  --color-violet-soft: #a78bfa;
+  --color-violet-deep: #4526c9;
+  --color-violet-wash: #f1edff;
+
+  /* Dark hero */
+  --color-night: #0a0611;
+  --color-night-2: #150c24;
+  --color-night-3: #1d1233;
+  --color-magenta: #e879f9;
+  --color-night-line: #ffffff1a;
+  --color-night-muted: #a5a0b5;
+  /* The home hero's accent, sampled from the eagle reference. */
+  --color-electric: #2e79fe;
+  --color-electric-deep: #1d63e0;
+
+  /* Headlines and main section headings only; see `.type-heading`. */
+  --font-heading: "PP Neue Machina Inktrap", var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /* Smaller UI headings, card titles and labels keep Jakarta. */
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 34px;
+
+  /*
+   * Soft-UI depth. Every raised surface carries a matched pair: a white
+   * highlight up-left and a diffuse shadow down-right, so the element reads as
+   * pressed out of the same material as the page rather than floated above it.
+   * `--shadow-inset` is the pressed state, for inputs and :active controls.
+   * Palette is untouched — this is all neutral light and ink at low alpha.
+   */
+  --shadow-soft-sm:
+    -3px -3px 8px rgb(255 255 255 / 0.85),
+    3px 4px 12px -4px rgb(11 11 15 / 0.12);
+  --shadow-soft:
+    -6px -6px 16px rgb(255 255 255 / 0.9),
+    7px 8px 22px -6px rgb(11 11 15 / 0.13);
+  --shadow-lift:
+    -9px -9px 24px rgb(255 255 255 / 0.95),
+    16px 20px 44px -12px rgb(11 11 15 / 0.2);
+  --shadow-inset:
+    inset 2px 2px 6px rgb(11 11 15 / 0.1),
+    inset -2px -2px 6px rgb(255 255 255 / 0.85);
+  --shadow-glass: 0 30px 80px -30px rgb(69 38 201 / 0.35);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-marquee: marquee 42s linear infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 14s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -18px, 0); }
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes streak {
+  0%, 100% { opacity: 0.12; transform: scaleY(0.75); }
+  50% { opacity: 0.5; transform: scaleY(1); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  /*
+   * The layout is drawn against a 16px root, which reads oversized on a laptop
+   * — type, spacing and radii all scale from it. Stepping the root down on wide
+   * viewports shrinks the whole system proportionally instead of retuning every
+   * section. Media queries always resolve rem against the initial 16px, so no
+   * breakpoint moves.
+   */
+  @media (min-width: 1024px) {
+    html { font-size: 93.75%; } /* 15px */
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-violet);
+    color: #fff;
+  }
+
+  /*
+   * Horizontal overflow, removed at the source.
+   *
+   * A grid or flex item defaults to `min-width: auto`, which means one
+   * intrinsically wide child — a code block, a text input, an unbroken URL, an
+   * oversized image — can size its track wider than the page and make the whole
+   * document drag sideways on a phone. These caps take away the usual sources
+   * rather than clipping the symptom afterwards.
+   */
+  img, video, canvas, svg, iframe {
+    max-width: 100%;
+  }
+  img, video, canvas {
+    height: auto;
+  }
+  /* Form controls carry an intrinsic width of roughly 20 characters. */
+  input, select, textarea {
+    max-width: 100%;
+    min-width: 0;
+  }
+  /* A long URL or identifier wraps instead of widening its column. */
+  body {
+    overflow-wrap: break-word;
+  }
+  /*
+   * The last line of defence, and only that — every rule above exists so this
+   * one never has to fire. `clip` rather than `hidden`: hidden would turn the
+   * body into a scroll container and break every `position: sticky` sidebar on
+   * the site, clip does not. `contain` stops a sideways swipe from rubber-
+   * banding the page or triggering a browser back gesture mid-scroll.
+   */
+  html {
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: contain;
+  }
+  body {
+    max-width: 100%;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  :focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* Utility label — mono, tracked out. Used for eyebrows and data. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .container-x {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .container-x { padding-inline: 2rem; } }
+
+  /* The hero runs slightly wider than the rest of the site, per the design. */
+  .container-hero {
+    width: 100%;
+    max-width: 1304px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .container-hero { padding-inline: 2rem; } }
+  @media (min-width: 1280px) { .container-x { padding-inline: 2.5rem; } }
+
+  /*
+   * Headline type: the hero headline, page titles and main section headings.
+   * Regular weight — Neue Machina carries its character in its shapes, not its
+   * weight — with a light negative track. Size, line-height and colour stay on
+   * each heading, since those vary by placement. `font-synthesis: none` stops
+   * the browser inventing a bold or italic the font files don't supply, and
+   * `balance` evens out line lengths so a headline never strands one word.
+   */
+  .type-heading {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    font-synthesis: none;
+    text-wrap: balance;
+  }
+
+  /* "real growth." — light violet deepening into indigo, left to right */
+  .text-gradient-hero {
+    background: linear-gradient(94deg, #a78bfa 0%, #8b5cf6 24%, #6c47ff 50%, #4526c9 78%, #2f0f9e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-violet {
+    background: linear-gradient(96deg, var(--color-violet) 0%, var(--color-violet-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: linear-gradient(150deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.42));
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.85);
+  }
+  .hairline { border-color: var(--color-line); }
+
+  /*
+   * Soft-UI surfaces. `.surface-neu` is a raised panel, `.surface-neu-inset` a
+   * recessed one (form fields, wells). Both keep the existing border and colour
+   * tokens and only add the matched highlight/shadow pair.
+   */
+  .surface-neu {
+    box-shadow: var(--shadow-soft);
+  }
+  .surface-neu-inset {
+    box-shadow: var(--shadow-inset);
+  }
+
+  /* Above-the-fold entrances run in CSS, so nothing depends on JS to be seen. */
+  .anim-in {
+    animation: fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .anim-pop {
+    animation: pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+
+  /*
+   * Home hero: the eagle scene. See `components/home/home-scene.tsx`.
+   *
+   * `--ew` is the eagle's width. Its rest position is written as the point its
+   * pupil sits at (`--hx`, `--hy`, fractions of the stage) minus the pupil's
+   * offset inside the 1760x894 image (623, 526.2 px), and the transform origin
+   * is the pupil too, so every scale and bank happens about the eye. The script
+   * reads the rendered box back, so tuning here needs no JS change.
+   */
+  .hero-stage {
+    position: relative;
+    height: 100svh;
+    min-height: 34rem;
+    overflow: clip;
+  }
+  .hero-eagle {
+    --ew: min(150vw, 118svh);
+    --hx: 0.6;
+    --hy: 0.3;
+    position: absolute;
+    width: var(--ew);
+    left: calc(var(--hx) * 100% - var(--ew) * 0.35398);
+    top: calc(var(--hy) * 100% - var(--ew) * 0.29898);
+    transform-origin: 35.398% 58.859%;
+    pointer-events: none;
+  }
+  /* The close-up photograph of the eye. Placed, scaled and masked per frame
+     by the script, from its top-left corner. */
+  .hero-eye-closeup {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 25;
+    width: 1254px;
+    height: 1254px;
+    max-width: none;
+    transform-origin: 0 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  @media (min-width: 1024px) {
+    .hero-stage {
+      height: 100vh;
+      min-height: 40rem;
+    }
+    .hero-eagle {
+      --ew: min(92vw, 185vh);
+      --hx: 0.575;
+      --hy: 0.42;
+    }
+  }
+  /* While the dive runs, anything below the stage stays night. */
+  .home-scene[data-eye] {
+    background: #020203;
+  }
+
+  /*
+   * "Selected work". The default is a readable vertical list — phones,
+   * reduced motion and a failed script all get it. `[data-stage]` (desktop,
+   * set by the script) stacks every project into one pinned display.
+   */
+  .showcase {
+    --sc-bg: #0b0c10;
+    background: var(--sc-bg);
+    color: #fff;
+    overflow-x: clip;
+  }
+  .sc-frame {
+    padding-block: 6.5rem 4rem;
+  }
+  .sc-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem 2.5rem;
+  }
+  .sc-title {
+    margin-top: 0.75rem;
+    font-size: clamp(3rem, 1.4rem + 6vw, 5.75rem);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+  }
+  .sc-tabs {
+    display: flex;
+    max-width: 100%;
+    gap: 0.25rem;
+    overflow-x: auto;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 999px;
+    padding: 0.3rem;
+    scrollbar-width: none;
+  }
+  .sc-tab {
+    flex-shrink: 0;
+    border-radius: 999px;
+    padding: 0.55rem 1.05rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.7);
+    white-space: nowrap;
+    transition: color 0.2s, background-color 0.2s;
+  }
+  .sc-tab:hover {
+    color: #fff;
+  }
+  .sc-tab[aria-selected="true"] {
+    background: #fff;
+    color: var(--sc-bg);
+  }
+  .sc-tab-count {
+    margin-left: 0.45rem;
+    font-size: 0.75rem;
+    opacity: 0.55;
+  }
+  .sc-list {
+    margin-top: 3rem;
+    display: grid;
+    gap: 4.5rem;
+  }
+  .sc-item {
+    display: grid;
+    gap: 1.75rem;
+  }
+  .sc-visual {
+    order: -1;
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 14px;
+    perspective: 1600px;
+  }
+  .sc-visual-in {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: #15161b;
+    transform-origin: 50% 0%;
+  }
+  .sc-dim {
+    position: absolute;
+    inset: 0;
+    background: #020203;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sc-shade {
+    position: absolute;
+    inset: 0;
+    background: #020203;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sc-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    margin: -2.125rem 0 0 -2.125rem;
+    border-radius: 999px;
+    background: var(--color-electric);
+    color: #fff;
+    transition: transform 0.3s var(--ease-out-expo);
+  }
+  button:hover > .sc-play {
+    transform: scale(1.06);
+  }
+  .sc-text > * + * {
+    margin-top: 0.85rem;
+  }
+  .sc-line {
+    overflow: hidden;
+  }
+  .sc-line-in {
+    display: block;
+  }
+  .sc-num {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    color: var(--color-electric);
+  }
+  .sc-of {
+    color: rgb(255 255 255 / 0.35);
+  }
+  .sc-kind {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.55);
+  }
+  .sc-name {
+    font-size: clamp(2.5rem, 1.6rem + 3vw, 4rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .sc-headline {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.9);
+  }
+  .sc-desc {
+    max-width: 34rem;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: rgb(255 255 255 / 0.62);
+  }
+  .sc-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .sc-tags > li {
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 0.72);
+  }
+  .sc-cta {
+    display: inline-flex;
+    height: 2.875rem;
+    align-items: center;
+    gap: 0.55rem;
+    border-radius: 0.45rem;
+    background: var(--color-electric);
+    padding-inline: 1.15rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    transition: background-color 0.2s;
+  }
+  .sc-cta:hover {
+    background: var(--color-electric-deep);
+  }
+  .sc-foot {
+    margin-top: 3.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+    padding-top: 1.25rem;
+  }
+  .sc-index,
+  .sc-progress {
+    display: none;
+  }
+  .sc-continue {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.75);
+    transition: color 0.2s;
+  }
+  .sc-continue:hover {
+    color: #fff;
+  }
+  .showcase :focus-visible {
+    outline-color: var(--color-electric);
+  }
+
+  /* Wide screens without the stage (reduced motion): the same text-beside-
+     picture composition, as a readable list. */
+  @media (min-width: 1024px) {
+    .sc-item {
+      grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+      align-items: center;
+      gap: 3.5rem;
+    }
+    .sc-visual {
+      order: 0;
+    }
+  }
+
+  /* ── desktop stage ─────────────────────────────────────────────────── */
+  /*
+   * Sized to the viewport exactly, and scaled by its height as well as its
+   * width, so a short laptop window keeps the same composition in less room.
+   * Below 560px tall the script doesn't build the stage at all (list instead).
+   */
+  .showcase[data-stage] .sc-frame {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* clears the fixed header, whose height steps at md */
+    padding-block: calc(5.5rem + min(2vh, 1rem)) min(3vh, 1.5rem);
+  }
+  .showcase[data-stage] .sc-title {
+    margin-top: 0.4rem;
+    font-size: min(clamp(3rem, 1rem + 4.2vw, 5.25rem), 9vh);
+  }
+  .showcase[data-stage] .sc-list {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    margin-top: min(3.5vh, 2rem);
+    display: block;
+  }
+  .showcase[data-stage] .sc-visual-in {
+    will-change: transform;
+  }
+  .showcase[data-stage] .sc-text {
+    align-self: center;
+    max-height: 100%;
+    overflow: hidden;
+  }
+  .showcase[data-stage] .sc-text > * + * {
+    margin-top: min(1.6vh, 0.85rem);
+  }
+  .showcase[data-stage] .sc-name {
+    font-size: min(clamp(2.5rem, 1.6rem + 3vw, 4rem), 8vh);
+  }
+  .showcase[data-stage] .sc-item {
+    position: absolute;
+    inset: 0;
+    grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+    align-items: center;
+    gap: 3.5rem;
+    pointer-events: none;
+  }
+  .showcase[data-stage] .sc-item[data-active] {
+    pointer-events: auto;
+  }
+  .showcase[data-stage] .sc-visual {
+    order: 0;
+    width: 100%;
+    max-height: 100%;
+    align-self: center;
+  }
+  .showcase[data-stage] .sc-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* every project after the first waits below its frame, lines below theirs */
+  .showcase[data-stage] .sc-item + .sc-item .sc-visual-in {
+    transform: translateY(101%);
+  }
+  .showcase[data-stage] .sc-item + .sc-item .sc-line-in {
+    transform: translateY(110%);
+  }
+  .showcase[data-stage] .sc-foot {
+    margin-top: min(2.5vh, 1.5rem);
+    padding-top: min(1.8vh, 1rem);
+    /* keeps "Continue below" clear of the floating chat button */
+    padding-right: 4.5rem;
+  }
+  @media (max-height: 820px) {
+    .showcase[data-stage] .sc-desc {
+      -webkit-line-clamp: 3;
+    }
+  }
+  @media (max-height: 700px) {
+    .showcase[data-stage] .sc-desc {
+      -webkit-line-clamp: 2;
+    }
+    .showcase[data-stage] .sc-tags {
+      display: none;
+    }
+    .showcase[data-stage] .sc-cta {
+      height: 2.5rem;
+    }
+  }
+  .showcase[data-stage] .sc-index {
+    display: block;
+    min-width: 0;
+  }
+  .sc-index ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.5rem;
+  }
+  .sc-index button {
+    position: relative;
+    padding-block: 0.4rem;
+    font-size: 0.8125rem;
+    color: rgb(255 255 255 / 0.45);
+    transition: color 0.2s;
+  }
+  .sc-index button:hover {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .sc-index button[aria-current="true"] {
+    color: #fff;
+  }
+  .sc-index button::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: var(--color-electric);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--ease-out-expo);
+  }
+  .sc-index button[aria-current="true"]::after {
+    transform: scaleX(1);
+  }
+  .sc-index-n {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    margin-right: 0.35rem;
+    opacity: 0.7;
+  }
+  .showcase[data-stage] .sc-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+  .sc-bar {
+    position: relative;
+    margin-left: 0.75rem;
+    width: 7rem;
+    height: 2px;
+    background: rgb(255 255 255 / 0.15);
+  }
+  .sc-bar > span {
+    position: absolute;
+    inset: 0;
+    background: var(--color-electric);
+    transform-origin: left;
+  }
+}
+
+/* ===========================================================================
+   ARTICLE CONTENT
+   The single typography system for long-form content on this site.
+
+   It is applied in two places:
+
+     1. `<div class="article-content">` on the public blog, insight and case
+        study pages.
+     2. Tiptap's editing surface, which `components/admin/rich-editor.tsx` gives
+        the same class to.
+
+   That is deliberate, and it is the whole reason the editor and the published
+   page agree: they are not two stylesheets kept in sync by hand, they are one
+   stylesheet applied twice. A heading whose size changes here changes in both.
+
+   Every selector is doubled - `.article-content.article-content` - to raise its
+   specificity above any rule a future editor's own stylesheet might land after
+   this file in the cascade. Doubling a class is the least invasive way to win
+   that without `!important` on sixty declarations.
+
+   Content reaching this container has been through the allow-list in
+   `server/content-sanitize.ts` (editor HTML) or `server/content-render.ts`
+   (legacy TipTap documents). The element set below is exactly what those two
+   can emit - nothing here styles markup that could not appear. The `figure.*`
+   rules are for archive content written in the previous CKEditor; nothing new
+   emits them.
+   =========================================================================== */
+
+.article-content.article-content {
+  /* ~700px. Long enough not to feel cramped, short enough that the eye finds
+     the start of the next line without effort. */
+  max-width: 46rem;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--color-ink-soft);
+  /* Wide children (tables, code) scroll inside themselves; the column shrinks. */
+  min-width: 0;
+}
+
+/* -- flow ----------------------------------------------------------------- */
+
+.article-content.article-content > :first-child { margin-top: 0; }
+.article-content.article-content > :last-child { margin-bottom: 0; }
+
+.article-content.article-content p { margin: 0 0 1.25em; }
+
+/* -- headings ----------------------------------------------------------------
+   H1 belongs to the page template. The sanitiser demotes any h1 in the body to
+   h2, so this hierarchy starts where the article's own structure starts. */
+
+.article-content.article-content h2,
+.article-content.article-content h3,
+.article-content.article-content h4 {
+  font-family: var(--font-display);
+  color: var(--color-ink);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  /* Clears the sticky site header when a contents link jumps here. */
+  scroll-margin-top: 7rem;
+}
+
+.article-content.article-content h2 {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  line-height: 1.2;
+  margin: 2.75em 0 0.75em;
+  /* A rule rather than a bigger type size: the separation is structural, so a
+     new section reads as one without the heading having to shout. */
+  padding-top: 1.1em;
+  border-top: 1px solid var(--color-line);
+}
+
+/* The first heading needs no divider - the article header sits above it. */
+.article-content.article-content > h2:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.article-content.article-content h3 {
+  font-size: clamp(1.3rem, 1.15rem + 0.5vw, 1.5rem);
+  line-height: 1.3;
+  margin: 2.25em 0 0.6em;
+}
+
+.article-content.article-content h4 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  margin: 1.9em 0 0.5em;
+}
+
+/* -- inline --------------------------------------------------------------- */
+
+.article-content.article-content strong { color: var(--color-ink); font-weight: 600; }
+.article-content.article-content em { font-style: italic; }
+.article-content.article-content u { text-decoration: underline; text-underline-offset: 2px; }
+.article-content.article-content s { text-decoration: line-through; }
+
+.article-content.article-content a {
+  color: var(--color-violet-deep);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.article-content.article-content a:hover { color: var(--color-violet); }
+.article-content.article-content a:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* rehype-autolink-headings wraps MDX heading text in an anchor - keep it a
+   heading, not a link. */
+.article-content.article-content :is(h2, h3, h4) a {
+  color: inherit;
+  text-decoration: none;
+}
+.article-content.article-content :is(h2, h3, h4) a:hover { color: var(--color-violet-deep); }
+
+/* -- lists ---------------------------------------------------------------- */
+
+.article-content.article-content ul,
+.article-content.article-content ol {
+  margin: 0 0 1.25em;
+  padding-left: 1.5em;
+}
+.article-content.article-content ul { list-style: disc; }
+.article-content.article-content ol { list-style: decimal; }
+.article-content.article-content li { margin-bottom: 0.5em; }
+.article-content.article-content li::marker { color: var(--color-violet-soft); }
+
+/* Nested lists change marker so the level is visible, and tuck in rather than
+   restarting the block rhythm. */
+.article-content.article-content ul ul { list-style: circle; }
+.article-content.article-content ul ul ul { list-style: square; }
+.article-content.article-content ol ol { list-style: lower-alpha; }
+.article-content.article-content :is(ul, ol) :is(ul, ol) { margin: 0.5em 0 0; }
+
+/* Google Docs wraps each list item's text in a paragraph. Without this every
+   bullet would carry a full paragraph's bottom margin. */
+.article-content.article-content li > p { margin: 0 0 0.5em; }
+.article-content.article-content li > p:last-child { margin-bottom: 0; }
+
+/* -- blockquote ----------------------------------------------------------- */
+
+.article-content.article-content blockquote {
+  margin: 2em 0;
+  padding: 1.4em 1.6em;
+  border: 0;
+  border-left: 3px solid var(--color-violet);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-violet-wash);
+  font-family: var(--font-display);
+  font-size: 1.125em;
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  font-style: normal;
+}
+.article-content.article-content blockquote > :last-child { margin-bottom: 0; }
+.article-content.article-content blockquote p { margin-bottom: 0.7em; }
+
+/* -- images --------------------------------------------------------------- */
+
+.article-content.article-content figure {
+  margin: 2.25em 0;
+  /* CKEditor sets `display: table` on image figures, which shrink-wraps them
+     and breaks the percentage widths its own resize handles write. */
+  display: block;
+  max-width: 100%;
+}
+
+.article-content.article-content img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
+}
+
+.article-content.article-content figcaption {
+  margin-top: 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+  text-align: center;
+  /* CKEditor gives captions their own background and padding in the editor. */
+  background: none;
+  padding: 0;
+}
+
+/* A resized image carries its width on the figure; centre it in the column. */
+.article-content.article-content figure.image_resized { margin-inline: auto; }
+.article-content.article-content figure.image_resized img { width: 100%; }
+.article-content.article-content figure.image-style-align-left { margin-inline: 0 auto; }
+.article-content.article-content figure.image-style-align-right { margin-inline: auto 0; }
+
+/* -- tables --------------------------------------------------------------- */
+
+/* CKEditor wraps tables in `figure.table`; the TipTap renderer emits
+   `div.table-scroll`. Both are the horizontal scroll container, so a wide table
+   scrolls inside itself and never widens the page. */
+.article-content.article-content figure.table,
+.article-content.article-content .table-scroll,
+.article-content.article-content .article-table-wrapper {
+  display: block;
+  margin: 2em 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-content.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  /* Forces the wrapper to scroll rather than the columns crushing on a phone. */
+  min-width: 34rem;
+}
+
+.article-content.article-content :is(th, td) {
+  border: 1px solid var(--color-line);
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+}
+.article-content.article-content th {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.article-content.article-content :is(th, td) > p { margin: 0; }
+
+/* The wrapper already draws the outer frame. */
+.article-content.article-content :is(figure.table, .table-scroll) :is(th, td):first-child { border-left: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) :is(th, td):last-child { border-right: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) tr:first-child :is(th, td) { border-top: 0; }
+.article-content.article-content :is(figure.table, .table-scroll) tr:last-child :is(th, td) { border-bottom: 0; }
+
+/* -- code ----------------------------------------------------------------- */
+
+.article-content.article-content code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-canvas-2);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  color: var(--color-violet-deep);
+  /* A long identifier wraps rather than widening the column. */
+  overflow-wrap: break-word;
+}
+
+.article-content.article-content pre {
+  margin: 2em 0;
+  padding: 1.25rem 1.4rem;
+  background: #0b0b0f;
+  color: #e7e7ef;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre;
+  tab-size: 2;
+}
+.article-content.article-content pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  white-space: inherit;
+}
+
+/* sugar-high tokens, for the committed MDX posts. */
+.article-content.article-content pre .sh__token--keyword { color: #c4b5fd; }
+.article-content.article-content pre .sh__token--string { color: #a5e6b8; }
+.article-content.article-content pre .sh__token--comment { color: #6b6b7a; }
+.article-content.article-content pre .sh__token--identifier { color: #e7e7ef; }
+.article-content.article-content pre .sh__token--property { color: #93c5fd; }
+.article-content.article-content pre .sh__token--entity { color: #fcd34d; }
+
+/* -- rules, media, callouts ----------------------------------------------- */
+
+.article-content.article-content hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 2.75em 0;
+}
+
+.article-content.article-content video {
+  display: block;
+  width: 100%;
+  margin: 2.25em 0;
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+/* Emitted by the TipTap renderer's callout node. */
+.article-content.article-content .callout {
+  margin: 2em 0;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--color-line);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
+  font-size: 1rem;
+}
+.article-content.article-content .callout > :last-child { margin-bottom: 0; }
+.article-content.article-content .callout--info {
+  border-color: color-mix(in srgb, var(--color-violet) 25%, var(--color-line));
+  border-left-color: var(--color-violet);
+  background: var(--color-violet-wash);
+}
+.article-content.article-content .callout--warn {
+  border-color: #f5d9a8;
+  border-left-color: #d98a04;
+  background: #fdf6e7;
+}
+.article-content.article-content .callout--success {
+  border-color: #b8e3c9;
+  border-left-color: #10804d;
+  background: #edf8f2;
+}
+
+/* -- inside the admin editor only --------------------------------------------
+   Chrome, not typography. The rules above already gave the content its shape;
+   these stop the editor's own furniture from fighting it.
+
+   `.nlogn-editor` is the frame drawn by `components/admin/rich-editor.tsx`;
+   `.ProseMirror` is the editing surface Tiptap creates inside it, which that
+   component also stamps with `article-content`. */
+
+.nlogn-editor {
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+.nlogn-editor .ProseMirror {
+  /* A writing surface sized like a page, not like a form field. */
+  min-height: 30rem;
+  padding: 2rem 2.25rem;
+  outline: none;
+  /* The canvas fills the panel; the measure applies to the text inside it. */
+  max-width: none;
+}
+.nlogn-editor .ProseMirror > * { max-width: 46rem; margin-inline: auto; }
+
+/* Tiptap's placeholder: an attribute on the first node, not a real character,
+   so it never ends up in `getHTML()`. */
+.nlogn-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-muted);
+}
+
+/* Selected images and other atoms, so a click reads as a selection. */
+.nlogn-editor .ProseMirror .ProseMirror-selectednode {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* A table being edited needs its own scroll container and visible cell edges
+   even before the published page wraps it in `.table-scroll`. */
+.nlogn-editor .ProseMirror .tableWrapper { overflow-x: auto; margin: 2em 0; }
+.nlogn-editor .ProseMirror table { min-width: 0; }
+.nlogn-editor .ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-violet) 14%, transparent);
+  pointer-events: none;
+}
+.nlogn-editor .ProseMirror :is(th, td) { position: relative; }
+.nlogn-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-violet);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .nlogn-editor .ProseMirror { padding: 1.25rem 1rem; }
+}
+
+/* Scroll reveals are an enhancement: without scripting, show everything. */
+@media (scripting: none) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Site theme — Tailwind "islands" inside the home page's design.
+
+   Public pages are drawn with the home page's own markup and styles (`.nlh`,
+   see (home)/landing.css and (site)/site.css). The parts that are app UI —
+   forms, article bodies, comments, the download gate — stay in Tailwind and
+   are wrapped in `.site-theme`. That wrapper re-points the tokens they are
+   built from (bg-canvas, text-ink, bg-violet, font-display …) at the home
+   page's palette and type, and sets them at the home page's scale.
+
+   The rules below are deliberately unlayered: unlayered declarations win
+   over Tailwind's layered utilities whatever their specificity, so one rule
+   restyles every `rounded-*`, `shadow-*` and `font-bold` heading at once.
+   ───────────────────────────────────────────────────────────── */
+.site-theme {
+  --color-ink: #171819;
+  --color-ink-soft: #525555;
+  --color-muted: #646768;
+  --color-canvas: #f5f5f2;
+  --color-canvas-2: #e9ebea;
+  --color-surface: #fbfbf9;
+  --color-line: #d4d5d1;
+  --color-line-soft: #e4e5e1;
+
+  --color-violet: #2563ff;
+  --color-violet-soft: #afc8ff;
+  --color-violet-deep: #174ad1;
+  --color-violet-wash: #e8eeff;
+
+  --color-night: #171819;
+  --color-night-2: #1f2224;
+  --color-night-3: #2a2e31;
+  --color-magenta: #afc8ff;
+  --color-night-line: #ffffff1f;
+  --color-night-muted: #a3a6a6;
+  --color-electric: #2563ff;
+  --color-electric-deep: #174ad1;
+
+  --font-sans: var(--font-dm-sans), Arial, sans-serif;
+  --font-display: var(--font-space-grotesk), Arial, sans-serif;
+  --font-heading: var(--font-space-grotesk), Arial, sans-serif;
+
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: auto;
+}
+/*
+ * Scale. A landing section is zoomed by --zoom and sizes its type by --type
+ * (see the "Page scale" block in landing.css). An island inside one is zoomed
+ * once more by --type, so Tailwind's rem sizes land at the same visual size
+ * as the landing copy around them. One directly in <main> takes both.
+ */
+.nlh main > .site-theme {
+  zoom: calc(var(--zoom) * var(--type));
+}
+.nlh :is(main > section, main > article > section):not(.site-theme) .site-theme:not(.site-theme .site-theme) {
+  zoom: var(--type);
+}
+/* Landing controls inside an island (.button, .chip …) size themselves with
+   --type already, so they step back out of the island's extra zoom. */
+.nlh .site-theme :is(.button, .chip, .eyebrow, .text-link, .tag) {
+  zoom: calc(1 / var(--type));
+}
+/* The landing column: 1512 real pixels, 5.3% gutters. */
+.nlh main > .site-theme .container-x {
+  max-width: calc(1512px / var(--zoom) / var(--type));
+  padding-inline: 5.3%;
+}
+@media (max-width: 700px) {
+  .nlh main > .site-theme .container-x {
+    padding-inline: 6%;
+  }
+}
+
+.site-theme ::selection {
+  background: #2563ff;
+  color: #fff;
+}
+.site-theme :focus-visible {
+  outline: 3px solid #2563ff;
+  outline-offset: 4px;
+  border-radius: 0;
+}
+
+/* Headings: Space Grotesk at 500 with the home page's tight tracking. */
+.site-theme :is(h1, h2, h3, h4, h5, h6, .type-heading, .font-display) {
+  font-family: var(--font-space-grotesk), Arial, sans-serif;
+  font-weight: 500;
+}
+.site-theme :is(h1, h2, .type-heading) {
+  letter-spacing: -0.055em;
+  line-height: 1.06;
+}
+.site-theme :is(h3, h4, h5, h6) {
+  letter-spacing: -0.035em;
+}
+.site-theme :is(strong, b) {
+  font-weight: 600;
+}
+
+/* Eyebrows and data labels: the home page's tracked uppercase, not mono. */
+.site-theme .label {
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.075em;
+  font-weight: 550;
+}
+
+/* Accent text is the one flat blue, as in the home page's <em>. */
+.site-theme :is(.text-gradient-hero, .text-gradient-violet) {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: #2563ff;
+}
+
+/* Square corners everywhere; circles (dots, avatars, arrow discs) stay round. */
+.site-theme :not(.rounded-full) {
+  border-radius: 0;
+}
+
+/* Flat surfaces: hairlines carry the structure, not soft-UI shadows. */
+.site-theme :where(
+    [class*="shadow-soft"],
+    [class*="shadow-lift"],
+    [class*="shadow-inset"],
+    [class*="shadow-glass"],
+    [class*="shadow-["],
+    .surface-neu,
+    .surface-neu-inset,
+    .glass
+  ) {
+  box-shadow: none;
+}
+.site-theme .glass {
+  background: #f5f5f2e6;
+  border-color: var(--color-line);
+}

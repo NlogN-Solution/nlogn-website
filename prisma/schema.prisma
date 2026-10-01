@@ -1,0 +1,882 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String
+  /// Argon2-class hash from bcrypt. Never a plaintext password.
+  passwordHash String
+  role         AdminRole      @default(VIEWER)
+  avatarUrl    String?
+  isActive     Boolean        @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  activity     ActivityLog[]
+  sessions     AdminSession[]
+  blogs        Blog[]
+  caseStudies  CaseStudy[]
+  insights     Insight[]
+  media        Media[]
+
+  @@index([email])
+}
+
+/// Server-side session records, so a logout or a disabled account revokes
+/// access immediately — a stateless JWT alone could not.
+model AdminSession {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 of the token. A leaked database row cannot be replayed as a cookie.
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  blogs       Blog[]
+  caseStudies CaseStudy[]
+  insights    Insight[]
+  resources   Resource[]
+
+  @@index([slug])
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  createdAt   DateTime    @default(now())
+  blogs       Blog[]      @relation("BlogToTag")
+  caseStudies CaseStudy[] @relation("CaseStudyToTag")
+  insights    Insight[]   @relation("InsightToTag")
+  resources   Resource[]  @relation("ResourceToTag")
+
+  @@index([slug])
+}
+
+/// Fields every published content type carries. Repeated rather than modelled
+/// as inheritance because Prisma has none, and because a shared table would
+/// make the per-type queries the admin lists actually run slower.
+model Blog {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String?
+  /// TipTap JSON. Structured, so it can be re-rendered safely without trusting
+  /// stored HTML; `contentHtml` is the sanitised render kept for fast reads.
+  content        Json?
+  contentHtml    String?
+  contentFormat  ContentFormat @default(HTML)
+  status         ContentStatus @default(DRAFT)
+  featured       Boolean       @default(false)
+  authorId       String?
+  /// Free-text byline for guest authors who have no admin account.
+  authorName     String?
+  authorRole     String?
+  categoryId     String?
+  coverMediaId   String?
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogTitle        String?
+  ogDescription  String?
+  ogImageId      String?
+  noIndex        Boolean       @default(false)
+  readingMinutes Int?
+  publishedAt    DateTime?
+  /// Set to publish in the future; the read path treats it as a draft until due.
+  scheduledFor   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  author         AdminUser?    @relation(fields: [authorId], references: [id])
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  coverMedia     Media?        @relation("BlogCover", fields: [coverMediaId], references: [id])
+  ogImage        Media?        @relation("BlogOg", fields: [ogImageId], references: [id])
+  tags           Tag[]         @relation("BlogToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+  @@index([categoryId])
+}
+
+model Insight {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String?
+  content        Json?
+  contentHtml    String?
+  contentFormat  ContentFormat @default(HTML)
+  status         ContentStatus @default(DRAFT)
+  featured       Boolean       @default(false)
+  authorId       String?
+  authorName     String?
+  authorRole     String?
+  categoryId     String?
+  coverMediaId   String?
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogTitle        String?
+  ogDescription  String?
+  ogImageId      String?
+  noIndex        Boolean       @default(false)
+  readingMinutes Int?
+  publishedAt    DateTime?
+  scheduledFor   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  author         AdminUser?    @relation(fields: [authorId], references: [id])
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  coverMedia     Media?        @relation("InsightCover", fields: [coverMediaId], references: [id])
+  ogImage        Media?        @relation("InsightOg", fields: [ogImageId], references: [id])
+  tags           Tag[]         @relation("InsightToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+/// A case study is structured, not a long blog post — the public template reads
+/// discrete fields (challenge, approach, metrics) rather than one content blob.
+model CaseStudy {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  status           ContentStatus @default(DRAFT)
+  featured         Boolean       @default(false)
+  projectName      String
+  clientName       String
+  industry         String?
+  projectType      String?
+  shortDescription String?
+  summary          String?
+  challenge        String?
+  approach         Json?
+  solution         String?
+  implementation   String?
+  outcome          String?
+  /// The long-form narrative, authored in the same editor as blogs and
+  /// insights. Sanitised HTML — the structured fields above stay structured.
+  contentHtml      String?
+  readingMinutes   Int?
+  technologies     String[]      @default([])
+  servicesUsed     String[]      @default([])
+  clientObjective  String?
+  /// [{ value: "+240%", label: "Direct online orders" }]
+  metrics          Json?
+  timeline         String?
+  year             String?
+  /// Brand accent used by the public template's header wash.
+  accent           String?       @default("#6c47ff")
+  testimonialQuote String?
+  testimonialName  String?
+  testimonialRole  String?
+  heroMediaId      String?
+  thumbnailId      String?
+  categoryId       String?
+  authorId         String?
+  seoTitle         String?
+  seoDescription   String?
+  canonicalUrl     String?
+  ogImageId        String?
+  noIndex          Boolean       @default(false)
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  author           AdminUser?    @relation(fields: [authorId], references: [id])
+  category         Category?     @relation(fields: [categoryId], references: [id])
+  heroMedia        Media?        @relation("CaseHero", fields: [heroMediaId], references: [id])
+  ogImage          Media?        @relation("CaseOg", fields: [ogImageId], references: [id])
+  thumbnail        Media?        @relation("CaseThumb", fields: [thumbnailId], references: [id])
+  gallery          Media[]       @relation("CaseGallery")
+  tags             Tag[]         @relation("CaseStudyToTag")
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+/// A slug that used to be live. The public route 301s to `toPath` so changing a
+/// published URL never orphans an indexed page.
+model Redirect {
+  id         String   @id @default(cuid())
+  fromPath   String   @unique
+  toPath     String
+  statusCode Int      @default(301)
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  @@index([fromPath])
+}
+
+/// One row per Cloudinary asset. The app never stores bytes itself.
+model Media {
+  id             String      @id @default(cuid())
+  publicId       String      @unique
+  secureUrl      String
+  resourceType   String
+  type           MediaType   @default(IMAGE)
+  format         String?
+  width          Int?
+  height         Int?
+  bytes          Int         @default(0)
+  duration       Float?
+  originalName   String?
+  folder         String?
+  alt            String?
+  caption        String?
+  uploadedById   String?
+  createdAt      DateTime    @default(now())
+  blogCovers     Blog[]      @relation("BlogCover")
+  blogOg         Blog[]      @relation("BlogOg")
+  caseHeroes     CaseStudy[] @relation("CaseHero")
+  caseOg         CaseStudy[] @relation("CaseOg")
+  caseThumbs     CaseStudy[] @relation("CaseThumb")
+  insightCovers  Insight[]   @relation("InsightCover")
+  insightOg      Insight[]   @relation("InsightOg")
+  uploadedBy     AdminUser?  @relation(fields: [uploadedById], references: [id])
+  caseGalleries  CaseStudy[] @relation("CaseGallery")
+  resourceCovers Resource[]  @relation("ResourceCover")
+  resourceFiles  Resource[]  @relation("ResourceFile")
+  resourceOg     Resource[]  @relation("ResourceOg")
+
+  @@index([type, createdAt])
+  @@index([folder])
+}
+
+model ContactMessage {
+  id             String        @id @default(cuid())
+  name           String
+  email          String
+  company        String?
+  phone          String?
+  service        String?
+  budget         String?
+  message        String
+  source         MessageSource @default(CONTACT_FORM)
+  /// The package or built stack the visitor was looking at when they wrote in.
+  context        Json?
+  status         MessageStatus @default(NEW)
+  isRead         Boolean       @default(false)
+  notes          String?
+  /// Whether the notification and acknowledgement emails actually went out.
+  emailDelivered Boolean       @default(false)
+  ip             String?
+  userAgent      String?
+  referer        String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@index([source])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  isActive       Boolean   @default(true)
+  source         String?
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([email])
+}
+
+/// Key/value site settings, so the WhatsApp number, social links and SEO
+/// defaults stop being hardcoded across components.
+model SiteSetting {
+  key       String   @id
+  value     Json
+  group     String   @default("general")
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id         String     @id @default(cuid())
+  userId     String?
+  /// Kept so the trail survives the account being deleted.
+  userEmail  String?
+  action     String
+  resource   String
+  resourceId String?
+  summary    String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime   @default(now())
+  user       AdminUser? @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([resource, resourceId])
+}
+
+/// Coarse roles. Fine-grained checks live in `src/server/permissions.ts` so a
+/// new capability is a table edit there rather than a migration here.
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  MARKETING_MANAGER
+  VIEWER
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// How a row's body was authored.
+///
+/// TIPTAP rows predate the CKEditor migration: their source of truth is the
+/// `content` JSON column, rendered to `contentHtml` by the allow-list renderer
+/// in `server/content-render.ts`. HTML rows are authored in CKEditor and their
+/// source of truth *is* `contentHtml`, sanitised on the way in.
+///
+/// Either way the public pages read `contentHtml` and nothing else, so this
+/// field is about where the HTML came from, never about how it is displayed.
+enum ContentFormat {
+  TIPTAP
+  HTML
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+  SPAM
+}
+
+/// Where a submission came from, so the pricing enquiries can be read apart
+/// from general contact without a second table.
+enum MessageSource {
+  CONTACT_FORM
+  PACKAGE_ENQUIRY
+  CUSTOM_QUOTE
+  GROWTH_STACK
+  NEWSLETTER
+  CHAT_WIDGET
+}
+
+/**
+ * ── SEO & website performance ───────────────────────────────────────────────
+ * A `Website` is a domain we report on — nlogn.com itself, or a client's site.
+ * Everything below hangs off it, so adding a second site never means a second
+ * code path.
+ * Storage is deliberately two-tier. Daily totals (`SearchConsoleDaily`,
+ * `AnalyticsDaily`) are kept forever because both upstream APIs forget:
+ * Search Console holds 16 months, GA4's user-scoped data can expire at 2. The
+ * wide, high-cardinality reports (per-query, per-page) are not stored row by
+ * row — they live in `SeoReportCache` as whole payloads, which keeps a year of
+ * keyword data from becoming half a million rows nobody queries individually,
+ * and doubles as the "show the last good data" store when an API is down.
+ */
+
+model Website {
+  id            String   @id @default(cuid())
+  name          String
+  /// Canonical hostname, lowercase, no scheme or trailing slash: "nlogn.com".
+  domain        String   @unique
+  /// Numeric GA4 property id (the Data API needs this, not the G- tag id).
+  ga4PropertyId String?
+  /// Search Console property: "sc-domain:nlogn.com" or "https://nlogn.com/".
+  gscSiteUrl    String?
+  /// Reserved for Ahrefs. Free Webmaster Tools has no API, so this stays null
+  /// until a paid API v3 token exists — see `server/integrations/ahrefs.ts`.
+  ahrefsDomain  String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  analyticsDaily     AnalyticsDaily[]
+  connections        SeoConnection[]
+  crawlRuns          CrawlRun[]
+  issues             SeoIssue[]
+  pageSpeedSnapshots PageSpeedSnapshot[]
+  reportCache        SeoReportCache[]
+  searchConsoleDaily SearchConsoleDaily[]
+
+  @@index([domain])
+}
+
+/// One row per provider per website. Tokens are AES-256-GCM ciphertext written
+/// by `server/crypto.ts`; nothing here is ever serialised to the browser.
+model SeoConnection {
+  id                    String           @id @default(cuid())
+  websiteId             String
+  provider              SeoProvider
+  status                ConnectionStatus @default(DISCONNECTED)
+  /// Which Google account or Ahrefs plan this is, for the settings page.
+  accountLabel          String?
+  /// Granted OAuth scopes, so the UI can tell "connected" from "connected but
+  /// missing the Analytics scope" without a failing API call to find out.
+  scopes                String[]         @default([])
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  lastSyncedAt          DateTime?
+  lastSyncError         String?
+  /// What the plan actually permits, discovered by probing rather than assumed.
+  capabilities          Json?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  website               Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, provider])
+  @@index([provider, status])
+}
+
+/// Search Console daily totals. `date` is the UTC day Google reports against.
+model SearchConsoleDaily {
+  id          String   @id @default(cuid())
+  websiteId   String
+  date        DateTime @db.Date
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  /// Stored as Google returns it (0–1), formatted as a percentage on read.
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  syncedAt    DateTime @default(now())
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, date])
+  @@index([websiteId, date])
+}
+
+/// GA4 daily totals. Null means "the API did not return this metric", which is
+/// not the same as zero and must not be rendered as one.
+model AnalyticsDaily {
+  id                String   @id @default(cuid())
+  websiteId         String
+  date              DateTime @db.Date
+  users             Int      @default(0)
+  newUsers          Int      @default(0)
+  sessions          Int      @default(0)
+  engagedSessions   Int      @default(0)
+  /// 0–1, as GA4 reports it.
+  engagementRate    Float    @default(0)
+  /// Seconds per active user.
+  avgEngagementTime Float    @default(0)
+  screenPageViews   Int      @default(0)
+  organicUsers      Int      @default(0)
+  directUsers       Int      @default(0)
+  referralUsers     Int      @default(0)
+  conversions       Float?
+  syncedAt          DateTime @default(now())
+  website           Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, date])
+  @@index([websiteId, date])
+}
+
+/// Whole API payloads, keyed by report + parameters. Serves three jobs at once:
+/// it keeps us inside upstream quotas, makes the dashboard fast, and is what
+/// "showing the last successful data" reads from when a provider is failing —
+/// which is why rows are kept past `expiresAt` rather than deleted on expiry.
+model SeoReportCache {
+  id        String      @id @default(cuid())
+  websiteId String
+  provider  SeoProvider
+  /// e.g. "gsc:queries:2026-08-01:2026-08-28".
+  key       String
+  payload   Json
+  fetchedAt DateTime    @default(now())
+  expiresAt DateTime
+  website   Website     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, key])
+  @@index([websiteId, provider])
+  @@index([expiresAt])
+}
+
+/// A finding from our own crawler or from an API that reports issues. Rows are
+/// kept and re-stamped rather than deleted and re-inserted, so "first seen" is
+/// real history and a fixed issue can be shown as resolved instead of vanishing.
+model SeoIssue {
+  id          String        @id @default(cuid())
+  websiteId   String
+  /// Stable identifier from the catalogue in `config/seo-issues.ts`, which is
+  /// where the client-facing wording lives.
+  code        String
+  severity    IssueSeverity
+  url         String
+  /// The offending value, when quoting it helps — a duplicate title, say.
+  detail      String?
+  firstSeenAt DateTime      @default(now())
+  lastSeenAt  DateTime      @default(now())
+  resolvedAt  DateTime?
+  website     Website       @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, code, url])
+  @@index([websiteId, severity, resolvedAt])
+  @@index([websiteId, code])
+}
+
+model CrawlRun {
+  id           String      @id @default(cuid())
+  websiteId    String
+  status       CrawlStatus @default(RUNNING)
+  pagesCrawled Int         @default(0)
+  issuesFound  Int         @default(0)
+  startedAt    DateTime    @default(now())
+  finishedAt   DateTime?
+  error        String?
+  website      Website     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, startedAt])
+}
+
+/// One PageSpeed Insights run. Lab and field metrics are stored side by side
+/// but never merged: `lcpField` can exist while `lcpLab` disagrees, and INP is
+/// field-only, so a site without enough Chrome traffic genuinely has none.
+model PageSpeedSnapshot {
+  id                 String            @id @default(cuid())
+  websiteId          String
+  url                String
+  strategy           PageSpeedStrategy
+  performanceScore   Int?
+  seoScore           Int?
+  accessibilityScore Int?
+  bestPracticesScore Int?
+  /// Lab (Lighthouse), milliseconds — except CLS, which is unitless.
+  lcpLab             Float?
+  fcpLab             Float?
+  clsLab             Float?
+  tbtLab             Float?
+  ttfbLab            Float?
+  /// Field (CrUX). Null when the URL has too little real-world traffic.
+  lcpField           Float?
+  inpField           Float?
+  clsField           Float?
+  fcpField           Float?
+  ttfbField          Float?
+  hasFieldData       Boolean           @default(false)
+  fetchedAt          DateTime          @default(now())
+  website            Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, strategy, fetchedAt])
+}
+
+enum SeoProvider {
+  GOOGLE_SEARCH_CONSOLE
+  GOOGLE_ANALYTICS
+  PAGESPEED
+  AHREFS
+}
+
+enum ConnectionStatus {
+  DISCONNECTED
+  CONNECTED
+  /// Credentials exist but the provider rejected them — usually a revoked
+  /// refresh token. Distinct from DISCONNECTED so the UI can say which.
+  NEEDS_REAUTH
+  ERROR
+  /// The provider works, but this account or plan does not include it. Ahrefs
+  /// Webmaster Tools lands here: real access, no API behind it.
+  UNAVAILABLE
+}
+
+enum IssueSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum CrawlStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum PageSpeedStrategy {
+  MOBILE
+  DESKTOP
+}
+
+/**
+ * ── Engagement ──────────────────────────────────────────────────────────────
+ * Views, likes and comments for every piece of published content.
+ * Keyed by `kind` + `slug` rather than by a foreign key, because half the
+ * content on this site has no database row at all: the committed MDX posts in
+ * `src/content/blog` and the hardcoded case studies in `config/site.ts` are
+ * files, and they need to count exactly like a CMS record does. A relation
+ * would have silently excluded them.
+ */
+
+enum ContentKind {
+  BLOG
+  INSIGHT
+  CASE_STUDY
+  RESOURCE
+}
+
+enum CommentStatus {
+  PUBLISHED
+  HIDDEN
+  SPAM
+}
+
+/// Denormalised counters, so a listing of nine cards is one row-per-card read
+/// rather than three aggregate queries each. The ledgers below are the truth;
+/// this is the fast copy, updated in the same transaction as the ledger write.
+model ContentStat {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  views     Int         @default(0)
+  likes     Int         @default(0)
+  /// Published comments only — the number the public page shows.
+  comments  Int         @default(0)
+  updatedAt DateTime    @updatedAt
+
+  @@unique([kind, slug])
+}
+
+/// One row per visitor per item, which is what makes a view count mean
+/// something: a refresh does not move it, and the unique constraint is the
+/// deduplication rather than a timer somebody can wait out.
+model ContentView {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  visitorId String
+  createdAt DateTime    @default(now())
+
+  @@unique([kind, slug, visitorId])
+  @@index([kind, slug])
+}
+
+/// A like is a toggle, so the row's existence is the state. Deleting it is an
+/// unlike; there is no `active` flag to get out of step with the counter.
+model ContentLike {
+  id        String      @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  visitorId String
+  createdAt DateTime    @default(now())
+
+  @@unique([kind, slug, visitorId])
+  @@index([kind, slug])
+}
+
+model ContentComment {
+  id        String        @id @default(cuid())
+  kind      ContentKind
+  slug      String
+  name      String
+  /// Collected so a real person is behind the comment and can be replied to.
+  /// Never sent to the browser — the public thread returns name and body only.
+  email     String
+  body      String
+  status    CommentStatus @default(PUBLISHED)
+  ip        String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([kind, slug, status, createdAt])
+  @@index([status, createdAt])
+}
+
+/**
+ * ── resources ───────────────────────────────────────────────────────────────
+ * The downloadable library: repos, templates, workflow exports, asset packs.
+ * Traffic arrives from a reel, so the shape of these tables is decided by that
+ * journey rather than by the CMS — see `ShortLink` and `ResourceLead`.
+ */
+
+/// What the thing *is*, which is also what the card and the schema.org type say.
+enum ResourceType {
+  REPO
+  TEMPLATE
+  ASSET_PACK
+  WORKFLOW
+  SNIPPET
+  VIDEO
+  EBOOK
+}
+
+/// How much a visitor has to give up to get it.
+///
+/// FREE is not a lesser tier — a public GitHub URL cannot be gated by anything
+/// (the first person through re-posts it in the comments), so pretending
+/// otherwise only costs conversions. Gate what is genuinely private and let the
+/// public repos do the work of earning trust.
+///
+/// ACCOUNT is declared but unused: nothing in the app issues visitor logins yet.
+/// It exists so the column does not need a migration the day something does.
+enum ResourceGate {
+  FREE
+  EMAIL
+  ACCOUNT
+}
+
+model Resource {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  /// One line, used on the card and as the meta description fallback.
+  summary         String?
+  /// Long-form, written in the same CKEditor as an article and sanitised by
+  /// the same allow-list before it is stored.
+  descriptionHtml String?
+  type            ResourceType  @default(TEMPLATE)
+  gate            ResourceGate  @default(EMAIL)
+  status          ContentStatus @default(DRAFT)
+  featured        Boolean       @default(false)
+
+  /// What the visitor gets, listed above the gate. Showing the contents is what
+  /// makes an email feel like a fair trade.
+  includes  String[]
+  /// "MIT", "CC BY 4.0", "Personal use" — stated before the download, not after.
+  licence   String?
+  /// Free text: "v2.1", "Next 16", "n8n 1.4x". Rendered as a chip.
+  version   String?
+  /// Rough size for the button label ("ZIP · 4.2 MB"), when a file is attached.
+  fileLabel String?
+
+  /// The gated payload. Exactly one delivery route is used per resource:
+  /// `fileMedia` for bytes we host, `externalUrl` for a Notion/Figma/Drive
+  /// destination, `repoUrl` for a public repo (which should be gate FREE).
+  fileMediaId String?
+  externalUrl String?
+  repoUrl     String?
+  demoUrl     String?
+
+  coverMediaId String?
+  categoryId   String?
+
+  /// Denormalised counters. `unlocks` counts leads captured, `downloads` counts
+  /// grants actually redeemed — the gap between them is the drop-off worth
+  /// looking at.
+  unlocks   Int @default(0)
+  downloads Int @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogImageId      String?
+  noIndex        Boolean @default(false)
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category   Category?       @relation(fields: [categoryId], references: [id])
+  coverMedia Media?          @relation("ResourceCover", fields: [coverMediaId], references: [id])
+  fileMedia  Media?          @relation("ResourceFile", fields: [fileMediaId], references: [id])
+  ogImage    Media?          @relation("ResourceOg", fields: [ogImageId], references: [id])
+  tags       Tag[]           @relation("ResourceToTag")
+  leads      ResourceLead[]
+  grants     DownloadGrant[]
+  links      ShortLink[]
+
+  @@index([status, publishedAt])
+  @@index([type, status])
+  @@index([featured])
+}
+
+/// One row per address per resource.
+///
+/// Separate from `NewsletterSubscriber` on purpose: this records *which* asset
+/// earned the address and which reel sent them, which is the only way to tell
+/// a good hook from a bad one. The subscriber list is still upserted alongside,
+/// so there stays exactly one mailing list.
+model ResourceLead {
+  id               String   @id @default(cuid())
+  resourceId       String
+  email            String
+  name             String?
+  /// Where the click came from — "ig-reel-42", "fb", "newsletter". Taken from
+  /// the ShortLink that set the attribution cookie, not from the query string
+  /// alone, so it survives the visitor browsing around before converting.
+  campaign         String?
+  source           String?
+  referer          String?
+  /// Consent to be emailed *beyond* the delivery of this file. Kept apart from
+  /// the download itself: sending the asset is fulfilling a request, marketing
+  /// to them afterwards is not, and one checkbox cannot honestly cover both.
+  marketingConsent Boolean  @default(false)
+  ip               String?
+  userAgent        String?
+  createdAt        DateTime @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, email])
+  @@index([createdAt])
+  @@index([campaign])
+}
+
+/// A capability to download, handed out once the gate is satisfied.
+///
+/// The database stores only the SHA-256 of the token, exactly as `AdminSession`
+/// does: a dump of this table cannot be replayed as a download link. The grant
+/// expires and counts its uses, so a link pasted into a group chat stops
+/// working instead of becoming a permanent public mirror.
+model DownloadGrant {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  resourceId String
+  email      String
+  expiresAt  DateTime
+  maxUses    Int       @default(5)
+  useCount   Int       @default(0)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId])
+  @@index([expiresAt])
+}
+
+/// `/r/<code>` — the link that goes in a reel caption, a comment reply or a DM.
+///
+/// Short because people transcribe it by hand off a phone screen, and one per
+/// video because "which reel actually converted" is otherwise unanswerable:
+/// Instagram sends no referer worth having from its in-app browser.
+model ShortLink {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  resourceId  String
+  /// "instagram", "facebook", "youtube", "newsletter" — free text, grouped in
+  /// the admin rather than constrained here, because a new channel should not
+  /// need a migration.
+  platform    String?
+  /// What this link was for, in the admin's own words: "reel: 5 VS Code tricks".
+  note        String?
+  clicks      Int       @default(0)
+  lastClickAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId])
+}

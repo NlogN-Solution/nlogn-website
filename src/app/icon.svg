@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nlogn">
+  <title>nlogn</title>
+  <rect width="64" height="64" rx="14" fill="#0b0b0f"/>
+  <!-- One glyph of the n···n mark (LOGO.paths.markGlyphs, first subpath), scaled
+       into the tile. The full pair is illegible at 16px; a single letterform
+       with the accent dot is the mark people actually recognise in a tab. -->
+  <g transform="translate(6 19) scale(0.2231)">
+    <path fill="#ffffff" d="M42.78,5.56 48.89,0.00 175.00,0.00 197.22,24.44 161.67,100.00 117.22,100.00 140.00,48.89 150.00,28.33 145.56,20.00 83.33,19.44 42.22,98.89 0.00,100.00Z"/>
+  </g>
+  <circle cx="54" cy="39" r="6.2" fill="#a78bfa"/>
+</svg>

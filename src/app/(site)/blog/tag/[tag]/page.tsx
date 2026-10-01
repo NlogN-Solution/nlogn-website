@@ -1,0 +1,80 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { PageHero } from "@/components/site/page-hero";
+import { PostGrid } from "@/components/blog/post-grid";
+import { JsonLd } from "@/components/seo/json-ld";
+import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { getTags } from "@/lib/blog";
+import { getMergedAllPosts, getMergedTags } from "@/server/public-content";
+import { slugify } from "@/lib/utils";
+import { absoluteUrl } from "@/lib/utils";
+import { EngagementProvider } from "@/components/engagement/provider";
+import { engagementKey, kindFromPost } from "@/lib/engagement";
+
+type Params = { params: Promise<{ tag: string }> };
+
+export const revalidate = 60;
+
+export function generateStaticParams() {
+  return getTags().map((t) => ({ tag: t.slug }));
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { tag } = await params;
+  const match = getTags().find((t) => t.slug === tag);
+  if (!match)
+    return buildMetadata({ title: "Tag not found", description: "", path: "/blog", noIndex: true });
+
+  return buildMetadata({
+    title: `${match.name} — tagged articles`,
+    description: `Every nlogn article tagged ${match.name}. ${match.count} ${match.count === 1 ? "post" : "posts"}.`,
+    path: `/blog/tag/${match.slug}`,
+  });
+}
+
+export default async function TagPage({ params }: Params) {
+  const { tag } = await params;
+  const match = (await getMergedTags()).find((t) => t.slug === tag);
+  if (!match) notFound();
+
+  const posts = (await getMergedAllPosts()).filter((p) =>
+    p.tags.some((t) => slugify(t) === tag),
+  );
+  const crumbs = [
+    { name: "Home", path: "/" },
+    { name: "Blog", path: "/blog" },
+    { name: `#${match.name}`, path: `/blog/tag/${match.slug}` },
+  ];
+
+  return (
+    <>
+      <PageHero
+        eyebrow="Tag"
+        title={`#${match.name}`}
+        lead={`${match.count} ${match.count === 1 ? "article" : "articles"} tagged ${match.name}.`}
+        crumbs={crumbs}
+      />
+
+      <EngagementProvider keys={posts.map((p) => engagementKey(kindFromPost(p.kind), p.slug))}>
+        <section className="page-section">
+          <div className="wrap">
+            <PostGrid posts={posts} />
+          </div>
+        </section>
+      </EngagementProvider>
+
+      <JsonLd
+        schema={[
+          breadcrumbSchema(crumbs),
+          {
+            "@type": "CollectionPage",
+            name: `#${match.name}`,
+            url: absoluteUrl(`/blog/tag/${match.slug}`),
+            isPartOf: { "@id": absoluteUrl("/blog#blog") },
+          },
+        ]}
+        id="tag-schema"
+      />
+    </>
+  );
+}

@@ -1,0 +1,127 @@
+import type { Metadata, Viewport } from "next";
+import Script from "next/script";
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
+import { CONSENT_BOOTSTRAP } from "@/lib/consent";
+import { siteConfig } from "@/config/site";
+import { dmSans, spaceGrotesk } from "./fonts";
+import "./globals.css";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+  weight: ["500", "600", "700", "800"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono-jb",
+  display: "swap",
+  weight: ["400", "500"],
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: "nlogn — Digital growth agency for your business",
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  authors: [{ name: siteConfig.legalName, url: siteConfig.url }],
+  creator: siteConfig.legalName,
+  publisher: siteConfig.legalName,
+  keywords: [
+    "digital agency",
+    "web development agency",
+    "Next.js development",
+    "Node.js development",
+    "SEO agency",
+    "custom software development",
+    "website design Nepal",
+  ],
+  category: "technology",
+  alternates: {
+    canonical: "/",
+    types: { "application/rss+xml": [{ url: "/blog/rss.xml", title: "nlogn blog" }] },
+  },
+  openGraph: {
+    type: "website",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: "nlogn — Digital growth agency for for your business",
+    description: siteConfig.description,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: siteConfig.twitterHandle,
+    creator: siteConfig.twitterHandle,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  /*
+   * No `icons` here on purpose.
+   *
+   * `app/favicon.ico`, `app/icon.svg` and `app/apple-icon.tsx` are file
+   * conventions: Next emits the <link> tags for them, with the right `type` and
+   * `sizes`, from the files that actually exist. The block that used to sit here
+   * emitted them by hand and named `/apple-icon.png`, which nothing serves —
+   * `apple-icon.tsx` answers at `/apple-icon`. A 404 in a `rel="icon"` link is
+   * exactly how a site ends up with a generic globe next to it in search.
+   */
+  manifest: "/manifest.webmanifest",
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f3f3f6",
+  colorScheme: "light",
+  width: "device-width",
+  initialScale: 1,
+};
+
+/**
+ * The document shell, and nothing else.
+ *
+ * The marketing chrome lives in `(site)/layout.tsx` and the dashboard chrome in
+ * `admin/(shell)/layout.tsx`, so neither product inherits the other's — and
+ * this layout stays static, which is what keeps the public pages prerendered.
+ */
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${jakarta.variable} ${inter.variable} ${mono.variable} ${dmSans.variable} ${spaceGrotesk.variable}`}>
+      <body className="min-h-screen antialiased">
+        {/* Consent Mode defaults, set ahead of every other script so no Google
+            tag can store anything before the visitor has chosen. */}
+        <Script
+          id="consent-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: CONSENT_BOOTSTRAP }}
+        />
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-medium focus:text-white"
+        >
+          Skip to content
+        </a>
+        {children}
+      </body>
+    </html>
+  );
+}
